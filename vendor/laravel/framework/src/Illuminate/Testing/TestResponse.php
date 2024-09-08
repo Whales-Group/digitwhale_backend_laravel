@@ -914,12 +914,12 @@ class TestResponse implements ArrayAccess
                         break;
                     }
                 }
-            }
 
-            if ($errorMissing) {
-                PHPUnit::withResponse($this)->fail(
-                    "Failed to find a validation error in the response for key and message: '$key' => '$expectedMessage'".PHP_EOL.PHP_EOL.$errorMessage
-                );
+                if ($errorMissing) {
+                    PHPUnit::withResponse($this)->fail(
+                        "Failed to find a validation error in the response for key and message: '$key' => '$expectedMessage'".PHP_EOL.PHP_EOL.$errorMessage
+                    );
+                }
             }
         }
 
@@ -1036,7 +1036,7 @@ class TestResponse implements ArrayAccess
     }
 
     /**
-     * Validate and return the decoded response JSON.
+     * Validate the decoded response JSON.
      *
      * @return \Illuminate\Testing\AssertableJsonString
      *
@@ -1060,7 +1060,7 @@ class TestResponse implements ArrayAccess
     }
 
     /**
-     * Validate and return the decoded response JSON.
+     * Return the decoded response JSON.
      *
      * @param  string|null  $key
      * @return mixed
