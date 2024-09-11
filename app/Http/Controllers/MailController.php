@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-
-use App\Services\MailService;
+use App\Modules\MailModule\MailModule;
 use Illuminate\Http\Request;
 
 class MailController extends Controller
 {
-    public  function sendOtpMail(Request $request)
+    public function sendOtpMail(Request $request): bool
     {
-        return MailService::sendOtpMail($request);
-
+        return MailModule::sendOtpMail($request);
     }
 
-    public  function sendWelcomeMail(Request $request): bool
+    public function sendWelcomeMail(Request $request): bool
     {
-        return MailService::sendWelcomeMail($request);
+        return MailModule::sendWelcomeMail($request);
     }
 }

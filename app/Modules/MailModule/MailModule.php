@@ -2,17 +2,14 @@
 
 namespace App\Modules\MailModule;
 
-use App\Helpers\ResponseHelpers;
-use App\Mail\GeneralMail;
 use App\Mail\WelcomeMail;
-use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
 use Illuminate\Http\Request;
 
 class MailModule
 {
-    public static function sendOtpMail(Request $request)
+    public static function sendOtpMail(Request $request): bool
     {
         $mail = new OtpMail([
             "name" => $request->first_name,

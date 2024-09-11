@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Modules\AuthenticationModules\Services;
+namespace App\Modules\AuthenticationModule\Services;
 
 class SignInService
 {
-    public function signIn()
+    public function signIn(LoginDto $loginDto)
     {
     }
 

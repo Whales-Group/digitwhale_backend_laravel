@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
+class ComposerStaticIniteba04bbb24b3180d2a6614993a886c4b
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -338,8 +338,8 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -514,17 +514,28 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
 
     public static $classMap = array (
         'App\\Common\\Common' => __DIR__ . '/../..' . '/app/Common/Common.php',
+        'App\\Common\\Dto\\BaseDto' => __DIR__ . '/../..' . '/app/Common/Dto/BaseDto.php',
+        'App\\Common\\Enums\\Rule' => __DIR__ . '/../..' . '/app/Common/Enums/Rule.php',
+        'App\\Common\\Enums\\TokenAbility' => __DIR__ . '/../..' . '/app/Common/Enums/TokenAbility.php',
+        'App\\Common\\Helpers\\DateHelper' => __DIR__ . '/../..' . '/app/Common/Helpers/DateHelper.php',
         'App\\Common\\Helpers\\ResponseHelpers' => __DIR__ . '/../..' . '/app/Common/Helpers/ResponseHelpers.php',
+        'App\\Http\\Controllers\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuthController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\MailController' => __DIR__ . '/../..' . '/app/Http/Controllers/MailController.php',
         'App\\Http\\Middleware\\ApiKeyMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/ApiKeyMiddleware.php',
+        'App\\Http\\Middleware\\HandleCors' => __DIR__ . '/../..' . '/app/Http/Middleware/HandleCors.php',
         'App\\Mail\\OtpMail' => __DIR__ . '/../..' . '/app/Mail/OtpMail.php',
         'App\\Mail\\WelcomeMail' => __DIR__ . '/../..' . '/app/Mail/WelcomeMail.php',
         'App\\Models\\Profile' => __DIR__ . '/../..' . '/app/Models/Profile.php',
         'App\\Models\\Tag' => __DIR__ . '/../..' . '/app/Models/Tag.php',
         'App\\Models\\TagHistory' => __DIR__ . '/../..' . '/app/Models/TagHistory.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
+        'App\\Modules\\AuthenticationModule\\AuthenticationModuleMain' => __DIR__ . '/../..' . '/app/Modules/AuthenticationModule/AuthenticationModuleMain.php',
+        'App\\Modules\\AuthenticationModule\\Dto\\LoginDto' => __DIR__ . '/../..' . '/app/Modules/AuthenticationModule/Dto/LoginDto.php',
+        'App\\Modules\\AuthenticationModule\\Dto\\RegisterDto' => __DIR__ . '/../..' . '/app/Modules/AuthenticationModule/Dto/RegisterDto.php',
         'App\\Modules\\AuthenticationModule\\Services\\AccountCreationService' => __DIR__ . '/../..' . '/app/Modules/AuthenticationModule/Services/AccountCreationService.php',
+        'App\\Modules\\AuthenticationModule\\Services\\SignInService' => __DIR__ . '/../..' . '/app/Modules/AuthenticationModule/Services/SignInService.php',
+        'App\\Modules\\BillsAndPaymentsModule\\BillsAndPaymentsModuleMain' => __DIR__ . '/../..' . '/app/Modules/BillsAndPaymentsModule/BillsAndPaymentsModuleMain.php',
         'App\\Modules\\MailModule\\MailModule' => __DIR__ . '/../..' . '/app/Modules/MailModule/MailModule.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
@@ -6465,9 +6476,9 @@ class ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit7e8c3c14ff33b199b4a0838993eb8423::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticIniteba04bbb24b3180d2a6614993a886c4b::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticIniteba04bbb24b3180d2a6614993a886c4b::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticIniteba04bbb24b3180d2a6614993a886c4b::$classMap;
 
         }, null, ClassLoader::class);
     }

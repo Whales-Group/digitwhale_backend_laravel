@@ -17,7 +17,6 @@ class User extends Authenticatable
         "password",
         "enabled",
         "emailVerifiedAt",
-        "tag_id",
     ];
 
     protected $hidden = ["password", "remember_token"];

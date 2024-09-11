@@ -14,8 +14,6 @@ abstract class ResponseHelpers
         return self::buildResponse(true, $message, $data, $statusCode);
     }
 
-    // BZX-SERVER-UPGRADE
-
     public static function error(
         string $message = "An error occurred",
         int $statusCode = 400,
@@ -51,6 +49,7 @@ abstract class ResponseHelpers
     ): JsonResponse {
         return self::buildResponse(false, $message, [], $statusCode);
     }
+
     public static function unauthenticated(
         string $message = "Unauthenticated",
         int $statusCode = 401
@@ -85,7 +84,7 @@ abstract class ResponseHelpers
         mixed $data = [],
         int $statusCode = 200
     ): JsonResponse {
-        return response()->json(
+        return new JsonResponse(
             [
                 "status" => $status,
                 "statusCode" => $statusCode,
@@ -105,13 +104,11 @@ abstract class ResponseHelpers
             if (isset($data[$key]) && is_array($data[$key])) {
                 $implodedValue = implode($separator, $data[$key]);
                 if (!empty($implodedValue)) {
-                    // Return the first error message if found
                     return $implodedValue;
                 }
             }
         }
 
-        // Return empty string if no errors found
         return "";
     }
 }
