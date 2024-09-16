@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use \App\Common\Helpers\DateHelper;
-use \App\Common\Helpers\ResponseHelpers;
+use App\Common\Helpers\DateHelper;
+use App\Common\Helpers\ResponseHelper;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +19,7 @@ class ApiKeyMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $apiKey = $request->header("x-api-key");
-        
+
         if ($apiKey) {
             if ($apiKey !== env("API_KEY")) {
                 Log::error(
@@ -27,10 +27,10 @@ class ApiKeyMiddleware
                         DateHelper::now() .
                         "]"
                 );
-                return ResponseHelpers::unauthorized("Invalid API_KEY");
+                return ResponseHelper::unauthorized("Invalid API_KEY");
             }
         } else {
-            return ResponseHelpers::unauthorized("API_KEY not found");
+            return ResponseHelper::unauthorized("API_KEY not found");
         }
         return $next($request);
     }

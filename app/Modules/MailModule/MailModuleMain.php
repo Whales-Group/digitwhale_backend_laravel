@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
 use Illuminate\Http\Request;
 
-class MailModule
+class MailModuleMain
 {
     public static function sendOtpMail(Request $request): bool
     {

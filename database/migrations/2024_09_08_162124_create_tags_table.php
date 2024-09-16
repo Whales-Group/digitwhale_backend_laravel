@@ -16,15 +16,6 @@ return new class extends Migration {
             $table->string("tag");
             $table->timestamps();
         });
-
-        Schema::create("tag_history", function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger("tag_id");
-            $table->unsignedBigInteger("user_id");
-            $table->string("old_tag");
-            $table->string("new_tag");
-            $table->timestamps();
-        });
     }
 
     /**

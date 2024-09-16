@@ -19,10 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             "ability" =>
                 \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             "VerifyApiKey" => \App\Http\Middleware\ApiKeyMiddleware::class,
+            "SetStructure" => \App\Http\Middleware\StructuralMiddleware::class,
         ]);
         $middleware->append(HandleCors::class);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })
+    ->withExceptions(function (Exceptions $exceptions) {})
     ->create();

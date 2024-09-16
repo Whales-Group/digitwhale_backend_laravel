@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Modules\AuthenticationModule\Services\SignInService;
+use App\Modules\AuthenticationModule\AuthenticationModuleMain;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Common\Helpers\ResponseHelpers;
 
 class AuthController extends Controller
 {
-    protected SignInService $signInService;
+    protected AuthenticationModuleMain $authenticationModuleMain;
+
+    public function __construct(
+        AuthenticationModuleMain $authenticationModuleMain
+    ) {
+        $this->authenticationModuleMain = $authenticationModuleMain;
+    }
 
     /**
      * Handle user sign-in.
@@ -20,6 +24,85 @@ class AuthController extends Controller
      */
     public function signIn(Request $request): JsonResponse
     {
+        return $this->authenticationModuleMain->signInService->login($request);
+    }
+
+    /**
+     * Handle user registration.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function register(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountCreationService->register(
+            $request
+        );
+    }
+
+    /**
+     * Send OTP for account creation or recovery.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function sendOtp(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountCreationService->sendOtp(
+            $request
+        );
+    }
+
+    /**
+     * Verify account using OTP.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyAccount(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountCreationService->verifyAccount(
+            $request
+        );
+    }
+
+    /**
+     * Change user password.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->changePasswordService->changePassword(
+            $request
+        );
+    }
+
+    /**
+     * Initiate password recovery process.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function initiatePasswordRecovery(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountRecoveryService->initiatePasswordRecovery(
+            $request
+        );
+    }
+
+    /**
+     * Complete password recovery with new password.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function completePasswordRecovery(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountRecoveryService->completePasswordRecovery(
+            $request
+        );
     }
 
     /**
@@ -29,8 +112,6 @@ class AuthController extends Controller
      */
     public function logout(): JsonResponse
     {
-        $this->signInService->logout();
-
-        return ResponseHelpers::success("Successfully logged out");
+        return $this->authenticationModuleMain->signInService->logout();
     }
 }
