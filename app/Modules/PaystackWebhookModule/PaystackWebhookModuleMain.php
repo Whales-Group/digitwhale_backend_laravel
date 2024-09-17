@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Modules\PaystackModule;
+namespace App\Modules\PaystackWebhookModule;
 
 use App\Common\Helpers\ResponseHelper;
 use App\Common\Enums\PaystackWebhookEvent;
-use App\Modules\PaystackModule\Services\HandleChargeSuccess;
-use App\Modules\PaystackModule\Services\HandleCustomerIdentificationSuccess;
-use App\Modules\PaystackModule\Services\HandleCustomerIdentificationFailed;
-use App\Modules\PaystackModule\Services\HandleDedicatedAccountAssignSuccess;
-use App\Modules\PaystackModule\Services\HandleDedicatedAccountAssignFailed;
-use App\Modules\PaystackModule\Services\HandleTransferSuccess;
-use App\Modules\PaystackModule\Services\HandleTransferFailed;
-use App\Modules\PaystackModule\Services\HandleTransferReversed;
+use App\Modules\PaystackWebhookModule\Services\HandleChargeSuccess;
+use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationSuccess;
+use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationFailed;
+use App\Modules\PaystackWebhookModule\Services\HandleDedicatedAccountAssignSuccess;
+use App\Modules\PaystackWebhookModule\Services\HandleDedicatedAccountAssignFailed;
+use App\Modules\PaystackWebhookModule\Services\HandleTransferSuccess;
+use App\Modules\PaystackWebhookModule\Services\HandleTransferFailed;
+use App\Modules\PaystackWebhookModule\Services\HandleTransferReversed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 
-class PaystackModuleMain
+class PaystackWebhookModuleMain
 {
     public static function handle(Request $request): ?JsonResponse
     {

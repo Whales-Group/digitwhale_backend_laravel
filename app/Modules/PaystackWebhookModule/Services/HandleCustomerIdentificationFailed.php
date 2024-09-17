@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\PaystackModule\Services;
+namespace App\Modules\PaystackWebhookModule\Services;
 
 use App\Common\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;

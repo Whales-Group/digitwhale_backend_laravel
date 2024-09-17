@@ -27,6 +27,7 @@ class Account extends Model
         "account_name",
         "balance",
         "status",
+        "type",
     ];
 
     /**
@@ -88,5 +89,15 @@ class Account extends Model
     public function isActive(): bool
     {
         return $this->status === "active";
+    }
+
+    /**
+     * Check the account type
+     *
+     * @return bool
+     */
+    public function accountType(): string
+    {
+        return $this->type;
     }
 }

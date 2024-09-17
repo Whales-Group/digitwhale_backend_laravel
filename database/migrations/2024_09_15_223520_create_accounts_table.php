@@ -19,7 +19,9 @@ return new class extends Migration {
             $table
                 ->enum("status", ["active", "inactive", "suspended"])
                 ->default("active");
+            $table->enum("type", ["tire1", "tire2", "tire3"])->default("tire1");
             $table->timestamps();
+            $table->timestamp("deleted_at")->nullable();
         });
     }
 

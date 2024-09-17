@@ -7,15 +7,18 @@ use App\Dtos\PaystackDtos\BankDto\BankResponse;
 use App\Dtos\PaystackDtos\CountryDto\Country;
 use App\Dtos\PaystackDtos\CountryDto\CountryResponse;
 use App\Dtos\PaystackDtos\CreateAndStoreRecipientResponse;
-use App\Dtos\PaystackDtos\DVADto\Customer;
-use App\Dtos\PaystackDtos\DVADto\DVACreationData;
-use App\Dtos\PaystackDtos\DVADto\DVACreationResponse;
 use App\Dtos\PaystackDtos\StateDto\State;
 use App\Dtos\PaystackDtos\StateDto\StateResponse;
+use App\Models\PaystackCustomer;
+use App\Models\PaystackDVA;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
+use App\Common\Helpers\CodeHelper;
 
-class PaystackRepository extends Repository
+class PaystackRepository
 {
     protected $description = "Paystack Repository - (Contains methods for payments, transaction verification, customer management)";
 
@@ -33,6 +36,82 @@ class PaystackRepository extends Repository
             "Content-Type" => "application/json",
             "Cache-Control: no-cache",
         ];
+    }
+
+    /**
+     * Create a new Paystack customer using the given User data and save the customer details to the database.
+     *
+     * @param User $user
+     * @return array|null The response data from Paystack or null if the request fails.
+     */
+    public function createAndSaveCustomer(User $user): ?PaystackCustomer
+    {
+        $endpoint = "customer";
+        $url = $this->baseUrl . $endpoint;
+
+        $data = [
+            "email" => $user->email,
+            "first_name" => $user->first_name,
+            "last_name" => $user->last_name,
+            "phone" => $user->phone,
+        ];
+
+        try {
+            $response = Http::withHeaders($this->headers)->post($url, $data);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                // Check if the response has the correct structure
+                if (
+                    isset($responseData["status"]) &&
+                    $responseData["status"] === true &&
+                    isset($responseData["data"])
+                ) {
+                    $customerData = $responseData["data"];
+
+                    // Ensure all necessary fields are present
+                    $paystackCustomer = PaystackCustomer::updateOrCreate(
+                        ["paystack_id" => $customerData["id"]],
+                        [
+                            "email" => $customerData["email"],
+                            "integration" => $customerData["integration"],
+                            "domain" => $customerData["domain"],
+                            "customer_code" => $customerData["customer_code"],
+                            "identified" => $customerData["identified"],
+                            "identifications" =>
+                                $customerData["identifications"],
+                            "created_at" => $customerData["createdAt"],
+                            "updated_at" => $customerData["updatedAt"],
+                        ]
+                    );
+
+                    Log::info("Paystack customer creation done", [
+                        "response" => $responseData,
+                        "paystackCustomer" => $paystackCustomer,
+                    ]);
+
+                    return $paystackCustomer;
+                } else {
+                    Log::error(
+                        "Paystack response has an unexpected structure",
+                        [
+                            "response" => $responseData,
+                        ]
+                    );
+                }
+            } else {
+                Log::error("Paystack customer creation failed", [
+                    "response" => $response->json(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception occurred while creating Paystack customer", [
+                "exception" => $e->getMessage(),
+            ]);
+        }
+
+        return null;
     }
 
     /**
@@ -297,65 +376,142 @@ class PaystackRepository extends Repository
         return $statesResponse;
     }
 
-    public function generateDVA(
-        string $customerCode,
-        string $preferredBank
-    ): DVACreationResponse {
-        $endpoint = "/dedicated_account";
+    public function generateDVA(string $customerCode): ?PaystackDVA
+    {
+        $endpoint = "dedicated_account";
         $url = $this->baseUrl . $endpoint;
 
         $requestBody = [
             "customer" => $customerCode,
-            "preferred_bank" => $preferredBank,
+            "preferred_bank" => "Wema Bank",
         ];
 
-        $response = Http::withHeaders($this->headers)->post($url, $requestBody);
+        try {
+            $response = Http::withHeaders($this->headers)->post(
+                $url,
+                $requestBody
+            );
+            $responseData = $response->json();
 
-        $responseData = $response->json();
+            // Check if the response was successful
+            if (!$responseData["status"]) {
+                // Log the failure and rollback the transaction
+                Log::error("DVA creation failed", [
+                    "response" => $responseData,
+                ]);
+                DB::rollBack();
+                return null;
+            }
 
-        // Map the response data to the DVACreationResponse object
-        $dvaCreationResponse = new DVACreationResponse();
-        $dvaCreationResponse->status = $responseData["status"];
-        $dvaCreationResponse->message = $responseData["message"];
+            // Map the response data to the PaystackDVA model
+            $paystackDVA = PaystackDVA::create([
+                "bank_name" => $responseData["data"]["bank"]["name"],
+                "bank_id" => $responseData["data"]["bank"]["id"],
+                "bank_slug" => $responseData["data"]["bank"]["slug"],
+                "account_name" => $responseData["data"]["account_name"],
+                "account_number" => $responseData["data"]["account_number"],
+                "assigned" => $responseData["data"]["assigned"],
+                "currency" => $responseData["data"]["currency"],
+                "active" => $responseData["data"]["active"],
+                "dva_id" => $responseData["data"]["id"],
+                "integration" => $responseData["data"]["integration"],
+                "assignee_id" => $responseData["data"]["assignee_id"],
+                "assignee_type" => $responseData["data"]["assignee_type"],
+                "expired" => $responseData["data"]["expired"],
+                "account_type" => $responseData["data"]["account_type"],
+                "assigned_at" => $responseData["data"]["assigned_at"],
+                "customer_id" => $responseData["data"]["customer"]["id"],
+                "customer_first_name" =>
+                    $responseData["data"]["customer"]["first_name"],
+                "customer_last_name" =>
+                    $responseData["data"]["customer"]["last_name"],
+                "customer_email" => $responseData["data"]["customer"]["email"],
+                "customer_code" =>
+                    $responseData["data"]["customer"]["customer_code"],
+                "customer_phone" => $responseData["data"]["customer"]["phone"],
+                "customer_risk_action" =>
+                    $responseData["data"]["customer"]["risk_action"],
+            ]);
 
-        if ($dvaCreationResponse->status) {
-            $dvaCreationResponse->data = new DVACreationData();
-            $dvaCreationResponse->data->account_name =
-                $responseData["data"]["account_name"];
-            $dvaCreationResponse->data->account_number =
-                $responseData["data"]["account_number"];
-            $dvaCreationResponse->data->assigned =
-                $responseData["data"]["assigned"];
-            $dvaCreationResponse->data->currency =
-                $responseData["data"]["currency"];
-            $dvaCreationResponse->data->active =
-                $responseData["data"]["active"];
-
-            // Map the bank details
-            $dvaCreationResponse->data->bank = new Bank();
-            $dvaCreationResponse->data->bank->name =
-                $responseData["data"]["bank"]["name"];
-            $dvaCreationResponse->data->bank->id =
-                $responseData["data"]["bank"]["id"];
-            $dvaCreationResponse->data->bank->slug =
-                $responseData["data"]["bank"]["slug"];
-
-            // Map the customer details
-            $dvaCreationResponse->data->customer = new Customer();
-            $dvaCreationResponse->data->customer->id =
-                $responseData["data"]["customer"]["id"];
-            $dvaCreationResponse->data->customer->first_name =
-                $responseData["data"]["customer"]["first_name"];
-            $dvaCreationResponse->data->customer->last_name =
-                $responseData["data"]["customer"]["last_name"];
-            $dvaCreationResponse->data->customer->email =
-                $responseData["data"]["customer"]["email"];
-            $dvaCreationResponse->data->customer->customer_code =
-                $responseData["data"]["customer"]["customer_code"];
-            $dvaCreationResponse->data->customer->phone =
-                $responseData["data"]["customer"]["phone"];
+            return $paystackDVA;
+        } catch (Exception $e) {
+            Log::error("Error generating DVA", ["error" => $e->getMessage()]);
+            return null;
         }
+    }
+    public function testGenerateDVA(User $user, string $customerCode)
+    {
+        // Define static data for testing
+        $responseData = [
+            "status" => true,
+            "message" => "NUBAN successfully created",
+            "data" => [
+                "bank" => [
+                    "name" => "Titan Paystack",
+                    "id" => 1,
+                    "slug" => "titan-paystack",
+                ],
+                "account_name" => $user->getFullName(),
+                "account_number" => User::generateUniqueBankAccountNumber(),
+                "assigned" => true,
+                "currency" => "NGN",
+                "metadata" => null,
+                "active" => true,
+                "id" => CodeHelper::generate(3, true),
+                "created_at" => "2019-12-12T12:39:04.000Z",
+                "updated_at" => "2020-01-06T15:51:24.000Z",
+                "assignment" => [
+                    "integration" => CodeHelper::generate(6, true),
+                    "assignee_id" => CodeHelper::generate(7, true),
+                    "assignee_type" => "Customer",
+                    "expired" => false,
+                    "account_type" => "PAY-WITH-TRANSFER-RECURRING",
+                    "assigned_at" => "2020-01-06T15:51:24.764Z",
+                ],
+                "customer" => [
+                    "id" => CodeHelper::generate(7, true),
+                    "first_name" => $user->first_name,
+                    "last_name" => $user->last_name,
+                    "email" => $user->email,
+                    "customer_code" => $customerCode,
+                    "phone" => "+1234567890",
+                    "risk_action" => "default",
+                ],
+            ],
+        ];
 
-        return $dvaCreationResponse;
+        // Map the response data to the PaystackDVA model
+        $paystackDVA = PaystackDVA::create([
+            "bank_name" => $responseData["data"]["bank"]["name"],
+            "bank_id" => $responseData["data"]["bank"]["id"],
+            "bank_slug" => $responseData["data"]["bank"]["slug"],
+            "account_name" => $responseData["data"]["account_name"],
+            "account_number" => $responseData["data"]["account_number"],
+            "assigned" => $responseData["data"]["assigned"],
+            "currency" => $responseData["data"]["currency"],
+            "active" => $responseData["data"]["active"],
+            "dva_id" => $responseData["data"]["id"],
+            "integration" => $responseData["data"]["assignment"]["integration"],
+            "assignee_id" => $responseData["data"]["assignment"]["assignee_id"],
+            "assignee_type" =>
+                $responseData["data"]["assignment"]["assignee_type"],
+            "expired" => $responseData["data"]["assignment"]["expired"],
+            "account_type" =>
+                $responseData["data"]["assignment"]["account_type"],
+            "assigned_at" => $responseData["data"]["assignment"]["assigned_at"],
+            "customer_id" => $responseData["data"]["customer"]["id"],
+            "customer_first_name" =>
+                $responseData["data"]["customer"]["first_name"],
+            "customer_last_name" =>
+                $responseData["data"]["customer"]["last_name"],
+            "customer_email" => $responseData["data"]["customer"]["email"],
+            "customer_code" =>
+                $responseData["data"]["customer"]["customer_code"],
+            "customer_phone" => $responseData["data"]["customer"]["phone"],
+            "customer_risk_action" =>
+                $responseData["data"]["customer"]["risk_action"],
+        ]);
+
+        return $paystackDVA;
     }
 }

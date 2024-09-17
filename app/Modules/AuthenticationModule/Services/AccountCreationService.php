@@ -16,8 +16,6 @@ class AccountCreationService
 {
     public function register(Request $request)
     {
-        DB::beginTransaction();
-
         try {
             $validator = Validator::make($request->all(), [
                 "first_name" => "required|string",
@@ -35,6 +33,8 @@ class AccountCreationService
             }
 
             $hashedPassword = Hash::make($request->password);
+
+            DB::beginTransaction();
 
             // Create user
             $user = User::create([
@@ -65,18 +65,15 @@ class AccountCreationService
             $status = MailModuleMain::sendOtpMail($mailRequest);
 
             if (!$status) {
-                DB::rollBack();
                 return ResponseHelper::success(
-                    data: [],
                     message: "User registered successfully",
                     error: "Failed to send OTP Mail."
                 );
             }
 
             DB::commit();
-
             return ResponseHelper::success([], "User registered successfully");
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return ResponseHelper::error(
                 message: "An error occurred during registration",
