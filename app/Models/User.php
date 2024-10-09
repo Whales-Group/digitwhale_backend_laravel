@@ -52,7 +52,7 @@ class User extends Authenticatable
 
     public function account()
     {
-        return $this->hasOne(Account::class);
+        return $this->hasMany(Account::class);
     }
 
     protected static function booted()
@@ -66,7 +66,6 @@ class User extends Authenticatable
 
             Account::create([
                 "user_id" => $user->id,
-                // "account_number" => self::generateUniqueBankAccountNumber(),
                 "account_number" => self::resolveUser($user),
                 "account_name" => $user->fullName,
                 "balance" => 0.0,

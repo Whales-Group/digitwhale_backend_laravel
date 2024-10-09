@@ -439,8 +439,11 @@ class PaystackRepository
             return null;
         }
     }
-    public function testGenerateDVA(User $user, string $customerCode)
-    {
+
+    public function testGenerateDVA(
+        User $user,
+        string $customerCode
+    ): PaystackDVA {
         // Define static data for testing
         $responseData = [
             "status" => true,
