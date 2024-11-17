@@ -28,7 +28,7 @@ class MailModuleMain
             "companyName" => "Whales Finance",
         ]);
 
-        $status = Mail::mailer("support_smtp")
+        $status = Mail::mailer("test_smtp")
             ->to($request->email)
             ->send($mail);
 
@@ -49,7 +49,7 @@ class MailModuleMain
             "companyName" => "Whales Finance",
         ]);
 
-        $status = Mail::mailer("support_smtp")
+        $status = Mail::mailer("test_smtp")
             ->to($request->email)
             ->send($mail);
 

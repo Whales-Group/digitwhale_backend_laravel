@@ -37,8 +37,8 @@ class SignInService
             // Determine if the identifier is an email or tag
             $identifier = $request->identifier;
             $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
-                ? User::where("email", $identifier)->with("tag")->first()
-                : User::where("tag", $identifier)->with("tag")->first();
+                ? User::where("email", $identifier)->first()
+                : User::where("tag", $identifier)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
                 return ResponseHelper::error(

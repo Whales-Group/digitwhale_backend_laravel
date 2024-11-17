@@ -21,7 +21,7 @@ class AccountCreationService
                 "first_name" => "required|string",
                 "last_name" => "required|string",
                 "email" => "required|email|unique:users,email",
-                "tag" => "required|string|unique:tags,tag",
+                "tag" => "required|string|unique:users,tag",
                 "password" => "required|string",
             ]);
 
@@ -43,6 +43,8 @@ class AccountCreationService
                 "email" => $request->email,
                 "tag" => $request->tag,
                 "password" => $hashedPassword,
+                // temp
+                "email_verified_at" => now(),
             ]);
 
             // Create OTP record
@@ -62,14 +64,14 @@ class AccountCreationService
                 "len_in_min" => 5,
             ]);
 
-            $status = MailModuleMain::sendOtpMail($mailRequest);
+            // $status = MailModuleMain::sendOtpMail($mailRequest);
 
-            if (!$status) {
-                return ResponseHelper::success(
-                    message: "User registered successfully",
-                    error: "Failed to send OTP Mail."
-                );
-            }
+            // if (!$status) {
+            //     return ResponseHelper::success(
+            //         message: "User registered successfully",
+            //         error: "Failed to send OTP Mail."
+            //     );
+            // }
 
             DB::commit();
             return ResponseHelper::success([], "User registered successfully");

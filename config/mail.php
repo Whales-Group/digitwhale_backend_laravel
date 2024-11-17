@@ -62,6 +62,20 @@ return [
             ],
         ],
 
+        'test_smtp' => [
+            'transport' => env('TEST_MAIL_MAILER', 'smtp'),
+            'host' => env('TEST_MAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('TEST_MAIL_PORT', 587),
+            'encryption' => env('TEST_MAIL_ENCRYPTION', 'ssl'),
+            'username' => env('TEST_MAIL_USERNAME'),
+            'password' => env('TEST_MAIL_PASSWORD'),
+            'from' => [
+                'address' => env('TEST_MAIL_FROM_ADDRESS', 'jessedan160@gmail.com'),
+                'name' => env('TEST_MAIL_FROM_NAME', 'Whales Finance'),
+            ],
+        ],
+
+
 
         'ses' => [
             'transport' => 'ses',

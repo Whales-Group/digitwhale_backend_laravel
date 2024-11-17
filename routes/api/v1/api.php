@@ -5,6 +5,7 @@ use App\Http\Controllers\PaystackController;
 
 use Illuminate\Support\Facades\Route;
 use App\Common\Enums\TokenAbility;
+use App\Http\Controllers\AccountController;
 
 Route::middleware(["VerifyApiKey", "SetStructure"])->group(function () {
     Route::post("/paystack-whale-webhook", [
@@ -35,6 +36,11 @@ Route::middleware([
     "ability:" . TokenAbility::ACCESS_API->value,
 ])->group(function () {
     Route::post("/logout", [AuthController::class, "logout"]);
+
+    // Account
+    Route::group(['prefix' => 'account'], function () {
+        Route::get('/', [AccountController::class, 'getAccount']);
+    });
 });
 
 Route::middleware([

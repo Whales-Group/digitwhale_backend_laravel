@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Repositories\PaystackRepository;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -17,6 +16,7 @@ class User extends Authenticatable
         "first_name",
         "last_name",
         "email",
+        "tag",
         "password",
         "email_verified_at",
     ];
@@ -45,11 +45,6 @@ class User extends Authenticatable
         return $this->first_name . " " . $this->last_name;
     }
 
-    public function tag()
-    {
-        return $this->hasOne(Tag::class);
-    }
-
     public function account()
     {
         return $this->hasMany(Account::class);
@@ -58,45 +53,15 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::created(function ($user) {
-            // Create a new tag for the user
-            Tag::create([
-                "tag" => request()->tag,
-                "user_id" => $user->id,
-            ]);
 
             Account::create([
                 "user_id" => $user->id,
-                "account_number" => self::resolveUser($user),
+                "account_number" => self::generateUniqueBankAccountNumber(),
                 "account_name" => $user->fullName,
                 "balance" => 0.0,
                 "type" => "tire1",
             ]);
         });
-    }
-
-    /**
-     * Create Paystack Customer
-     * Generate DVA
-     *
-     * @return string
-     */
-    private static function resolveUser(User $user): ?string
-    {
-        $paystackRepo = new PaystackRepository();
-        // Create Paystack Customer
-        $paystackCustomer = $paystackRepo->createAndSaveCustomer($user);
-
-        // Create DVA
-        // $paystackDVA = $paystackRepo->generateDVA(
-        //     $paystackCustomer->customer_code
-        // );
-        //
-        $paystackDVA = $paystackRepo->testGenerateDVA(
-            $user,
-            $paystackCustomer->customer_code
-        );
-
-        return $paystackDVA->account_number;
     }
 
     /**
