@@ -27,9 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (
-            RouteNotFoundException $exception, $request) {
-            return ResponseHelper::unprocessableEntity($exception->getMessage());
-        });
+        // $exceptions->render(function (
+        //     RouteNotFoundException $exception, $request) {
+        //     return ResponseHelper::unprocessableEntity();
+        // });
     })
     ->create();

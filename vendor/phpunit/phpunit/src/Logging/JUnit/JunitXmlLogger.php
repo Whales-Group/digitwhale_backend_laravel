@@ -184,17 +184,11 @@ final class JunitXmlLogger
         $this->createTestCase($event);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function testPreparationFailed(): void
     {
         $this->preparationFailed = true;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function testPrepared(): void
     {
         $this->prepared = true;
@@ -309,7 +303,6 @@ final class JunitXmlLogger
         $this->document->formatOutput = true;
 
         $this->root = $this->document->createElement('testsuites');
-        $this->root->setAttribute('name', 'PHPUnit tests');
         $this->document->appendChild($this->root);
     }
 

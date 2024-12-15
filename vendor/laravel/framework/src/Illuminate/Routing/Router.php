@@ -709,7 +709,7 @@ class Router implements BindingRegistrar, RegistrarContract
     {
         $route->setAction($this->mergeWithLastGroup(
             $route->getAction(),
-            $prependExistingPrefix = false
+            prependExistingPrefix: false
         ));
     }
 
@@ -829,11 +829,11 @@ class Router implements BindingRegistrar, RegistrarContract
      */
     public function resolveMiddleware(array $middleware, array $excluded = [])
     {
-        $excluded = collect($excluded)->map(function ($name) {
+        $excluded = (new Collection($excluded))->map(function ($name) {
             return (array) MiddlewareNameResolver::resolve($name, $this->middleware, $this->middlewareGroups);
         })->flatten()->values()->all();
 
-        $middleware = collect($middleware)->map(function ($name) {
+        $middleware = (new Collection($middleware))->map(function ($name) {
             return (array) MiddlewareNameResolver::resolve($name, $this->middleware, $this->middlewareGroups);
         })->flatten()->reject(function ($name) use ($excluded) {
             if (empty($excluded)) {
@@ -854,7 +854,7 @@ class Router implements BindingRegistrar, RegistrarContract
 
             $reflection = new ReflectionClass($name);
 
-            return collect($excluded)->contains(
+            return (new Collection($excluded))->contains(
                 fn ($exclude) => class_exists($exclude) && $reflection->isSubclassOf($exclude)
             );
         })->values();
@@ -1344,7 +1344,7 @@ class Router implements BindingRegistrar, RegistrarContract
     /**
      * Alias for the "currentRouteUses" method.
      *
-     * @param  array  ...$patterns
+     * @param  array|string  ...$patterns
      * @return bool
      */
     public function uses(...$patterns)
