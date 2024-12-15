@@ -22,11 +22,11 @@ class ApiKeyMiddleware
 
         if ($apiKey) {
             if ($apiKey !== env("API_KEY")) {
-                Log::error(
-                    message: "Unauthorized Request: Invalid API-KEY [Date: [" .
-                        DateHelper::now() .
-                        "]"
-                );
+                // Log::error(
+                //     message: "Unauthorized Request: Invalid API-KEY [Date: [" .
+                //         DateHelper::now() .
+                //         "]"
+                // );
                 return ResponseHelper::unauthorized("Invalid API_KEY");
             }
         } else {

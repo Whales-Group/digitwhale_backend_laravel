@@ -17,15 +17,15 @@ class StructuralMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Log the incoming request
-        Log::debug("Request data: ", $request->all());
+        // Log::debug("Request data: ", $request->all());
 
         // Pass the request to the next middleware and get the response
         $response = $next($request);
 
         // Log the response data (if needed)
-        Log::debug("Response status: ", [
-            "status" => $response->getStatusCode(),
-        ]);
+        // Log::debug("Response status: ", [
+        //     "status" => $response->getStatusCode(),
+        // ]);
 
         // Modify the response headers
         $response->headers->set("Accept", "application/json");
