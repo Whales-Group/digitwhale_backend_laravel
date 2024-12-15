@@ -2,99 +2,14 @@
   "version": 2,
   "framework": null,
   "functions": {
-    "api/index.php": { "runtime": "vercel-php@0.6.0" }
+    "api/index.php": {
+      "runtime": "vercel-php@0.6.0"
+    }
   },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
-  ],
-  "env": {
-    "APP_ENV": "production",
-    "APP_KEY": "base64:cDZsb3JpcW93ZWt3bGdlN2tmc2xib2tsejJscmgwOTM=",
-    "APP_DEBUG": "true",
-    "APP_URL": "https://whales-finance-laravel-server.vercel.app",
-
-    "APP_CONFIG_CACHE": "/tmp/config.php",
-    "APP_EVENTS_CACHE": "/tmp/events.php",
-    "APP_PACKAGES_CACHE": "/tmp/packages.php",
-    "APP_ROUTES_CACHE": "/tmp/routes.php",
-    "APP_SERVICES_CACHE": "/tmp/services.php",
-    "VIEW_COMPILED_PATH": "/tmp",
-
-    "CACHE_DRIVER": "array",
-    "LOG_CHANNEL": "stderr",
-    "SESSION_DRIVER": "cookie",
-
-    "APP_NAME": "Laravel",
-    "APP_TIMEZONE": "UTC",
-    "APP_LOCALE": "en",
-    "APP_FALLBACK_LOCALE": "en",
-    "APP_FAKER_LOCALE": "en_US",
-    "BCRYPT_ROUNDS": "12",
-
-    "DB_CONNECTION": "pgsql",
-    "DATABASE_URL": "postgresql://postgres.mxcshqhkyrdsinnnaaer:mibced-miWxo0-darmiw@aws-0-eu-central-1.pooler.supabase.com:6543/postgres",
-
-    "SESSION_DRIVER": "database",
-    "SESSION_LIFETIME": "120",
-    "SESSION_ENCRYPT": "false",
-    "SESSION_PATH": "/",
-    "SESSION_DOMAIN": "null",
-
-    "BROADCAST_CONNECTION": "log",
-    "FILESYSTEM_DISK": "local",
-    "QUEUE_CONNECTION": "database",
-
-    "CACHE_STORE": "database",
-    "CACHE_PREFIX": "",
-
-    "MEMCACHED_HOST": "127.0.0.1",
-
-    "REDIS_CLIENT": "phpredis",
-    "REDIS_HOST": "127.0.0.1",
-    "REDIS_PASSWORD": "null",
-    "REDIS_PORT": "6379",
-
-    "MAIL_MAILER": "log",
-    "MAIL_HOST": "127.0.0.1",
-    "MAIL_PORT": "2525",
-    "MAIL_USERNAME": "null",
-    "MAIL_PASSWORD": "null",
-    "MAIL_ENCRYPTION": "null",
-    "MAIL_FROM_ADDRESS": "hello@example.com",
-    "MAIL_FROM_NAME": "Laravel",
-
-    "AWS_ACCESS_KEY_ID": "",
-    "AWS_SECRET_ACCESS_KEY": "",
-    "AWS_DEFAULT_REGION": "us-east-1",
-    "AWS_BUCKET": "",
-    "AWS_USE_PATH_STYLE_ENDPOINT": "false",
-
-    "SUPPORT_MAIL_MAILER": "smtp",
-    "SUPPORT_MAIL_HOST": "wolverine.hkdns.host",
-    "SUPPORT_MAIL_PORT": "587",
-    "SUPPORT_MAIL_ENCRYPTION": "ssl",
-    "SUPPORT_MAIL_USERNAME": "support@whales.com.ng",
-    "SUPPORT_MAIL_PASSWORD": "Whales2024.",
-    "SUPPORT_MAIL_FROM_ADDRESS": "support@whales.com.ng",
-    "SUPPORT_MAIL_FROM_NAME": "Whales Team",
-
-    "TEST_MAIL_MAILER": "smtp",
-    "TEST_MAIL_HOST": "smtp.gmail.com",
-    "TEST_MAIL_PORT": "587",
-    "TEST_MAIL_ENCRYPTION": "ssl",
-    "TEST_MAIL_USERNAME": "jessedan160@gmail.com",
-    "TEST_MAIL_PASSWORD": "gtimwrmgvtzsljsq",
-    "TEST_MAIL_FROM_ADDRESS": "jessedan160@gmail.com",
-    "TEST_MAIL_FROM_NAME": "Whales Team",
-
-    "PAYSTACK_TEST_SK": "sk_test_bb3fc97c4a0729e6742033225e4cdef97e231f3f",
-    "PAYSTACK_TEST_PK": "pk_test_00f3abee8ef937c3a745a0ef626da6c53362b9d6",
-    "PAYSTACK_PROD_SK": "",
-    "PAYSTACK_PROD_PK": "",
-
-    "API_KEY": "wnSJpwpRe3YTU94YiN0YxJiLaoa14egWqhlnCYL9avR8reD6KaBXrMlIauffMiUeHXPwuwvHBVroUWrhyF3rTZxbj0fGJpBmZvARlhXYQHWjMGkxtqPGsyjRe4hlxI8PA3FzZYdlCnwJn3LTTN1gncmgLg1ekouSonPLPmYQBV8o94pux2EOrKyhcM7AiTK0WJV37aO7"
-  }
+  ]
 }

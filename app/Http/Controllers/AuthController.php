@@ -46,7 +46,7 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function sendOtp(Request $request): JsonResponse
+    public function sendOtp(Request $request): mixed
     {
         return $this->authenticationModuleMain->accountCreationService->sendOtp(
             $request
@@ -59,7 +59,7 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function verifyAccount(Request $request): JsonResponse
+    public function verifyAccount(Request $request): mixed
     {
         return $this->authenticationModuleMain->accountCreationService->verifyAccount(
             $request
@@ -85,9 +85,9 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function initiatePasswordRecovery(Request $request): JsonResponse
+    public function initiatePasswordRecovery(Request $request)
     {
-        return $this->authenticationModuleMain->accountRecoveryService->initiatePasswordRecovery(
+        return $this->authenticationModuleMain->initiatePasswordRecovery(
             $request
         );
     }
@@ -98,9 +98,9 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function completePasswordRecovery(Request $request): JsonResponse
+    public function completePasswordRecovery(Request $request)
     {
-        return $this->authenticationModuleMain->accountRecoveryService->completePasswordRecovery(
+        return $this->authenticationModuleMain->completePasswordRecovery(
             $request
         );
     }
@@ -110,8 +110,8 @@ class AuthController extends Controller
      *
      * @return JsonResponse
      */
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        return $this->authenticationModuleMain->signInService->logout();
+        return $this->authenticationModuleMain->signInService->logout($request);
     }
 }

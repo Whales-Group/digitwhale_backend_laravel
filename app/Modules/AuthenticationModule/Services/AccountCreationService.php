@@ -64,14 +64,14 @@ class AccountCreationService
                 "len_in_min" => 5,
             ]);
 
-            // $status = MailModuleMain::sendOtpMail($mailRequest);
-
-            // if (!$status) {
-            //     return ResponseHelper::success(
-            //         message: "User registered successfully",
-            //         error: "Failed to send OTP Mail."
-            //     );
-            // }
+            $status = MailModuleMain::sendOtpMail($mailRequest);
+// d11488bf2fc2bb96af744c78115ab527
+            if (!$status) {
+                return ResponseHelper::success(
+                    message: "User registered successfully",
+                    error: "Failed to send OTP Mail."
+                );
+            }
 
             DB::commit();
             return ResponseHelper::success([], "User registered successfully");

@@ -51,29 +51,29 @@ return [
 
         'support_smtp' => [
             'transport' => env('SUPPORT_MAIL_MAILER', 'smtp'),
-            'host' => env('SUPPORT_MAIL_HOST', 'whales.com.ng'),
+            'host' => env('SUPPORT_MAIL_HOST', 'wolverine.hkdns.host'),
             'port' => env('SUPPORT_MAIL_PORT', 587),
-            'encryption' => env('SUPPORT_MAIL_ENCRYPTION', 'tls'),
-            'username' => env('SUPPORT_MAIL_USERNAME'),
-            'password' => env('SUPPORT_MAIL_PASSWORD'),
+            'encryption' => env('SUPPORT_MAIL_ENCRYPTION', 'ssl'),
+            'username' => env('SUPPORT_MAIL_USERNAME', 'support@whales.com.ng'),
+            'password' => env('SUPPORT_MAIL_PASSWORD', 'Vivian2024.'),
             'from' => [
                 'address' => env('SUPPORT_MAIL_FROM_ADDRESS', 'support@whales.com.ng'),
-                'name' => env('SUPPORT_MAIL_FROM_NAME', 'Whales Finance'),
+                'name' => env('SUPPORT_MAIL_FROM_NAME', 'DigitWhale Team'),
             ],
         ],
 
-        'test_smtp' => [
-            'transport' => env('TEST_MAIL_MAILER', 'smtp'),
-            'host' => env('TEST_MAIL_HOST', 'smtp.gmail.com'),
-            'port' => env('TEST_MAIL_PORT', 587),
-            'encryption' => env('TEST_MAIL_ENCRYPTION', 'ssl'),
-            'username' => env('TEST_MAIL_USERNAME'),
-            'password' => env('TEST_MAIL_PASSWORD'),
-            'from' => [
-                'address' => env('TEST_MAIL_FROM_ADDRESS', 'jessedan160@gmail.com'),
-                'name' => env('TEST_MAIL_FROM_NAME', 'Whales Finance'),
-            ],
-        ],
+        // 'test_smtp' => [
+        //     'transport' => env('TEST_MAIL_MAILER', 'smtp'),
+        //     'host' => env('TEST_MAIL_HOST', 'smtp.gmail.com'),
+        //     'port' => env('TEST_MAIL_PORT', 587),
+        //     'encryption' => env('TEST_MAIL_ENCRYPTION', 'ssl'),
+        //     'username' => env('TEST_MAIL_USERNAME'),
+        //     'password' => env('TEST_MAIL_PASSWORD'),
+        //     'from' => [
+        //         'address' => env('TEST_MAIL_FROM_ADDRESS', 'jessedan160@gmail.com'),
+        //         'name' => env('TEST_MAIL_FROM_NAME', 'Whales Finance'),
+        //     ],
+        // ],
 
 
 

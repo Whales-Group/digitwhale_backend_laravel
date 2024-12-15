@@ -6,6 +6,7 @@ use App\Http\Controllers\PaystackController;
 use Illuminate\Support\Facades\Route;
 use App\Common\Enums\TokenAbility;
 use App\Http\Controllers\AccountController;
+use Illuminate\Support\Facades\Artisan;
 
 Route::middleware(["VerifyApiKey", "SetStructure"])->group(function () {
     Route::post("/paystack-whale-webhook", [
@@ -37,10 +38,7 @@ Route::middleware([
 ])->group(function () {
     Route::post("/logout", [AuthController::class, "logout"]);
 
-    // Account
-    Route::group(['prefix' => 'account'], function () {
-        Route::get('/', [AccountController::class, 'getAccount']);
-    });
+    
 });
 
 Route::middleware([
@@ -49,3 +47,9 @@ Route::middleware([
     "auth:sanctum",
     "ability:" . TokenAbility::ISSUE_ACCESS_TOKEN->value,
 ])->group(function () {});
+
+Route::get('/clear-cache', function() {
+    $exitCode = Artisan::call('cache:clear');
+    $exitCode = Artisan::call('config:cache');
+    return 'DONE';
+});

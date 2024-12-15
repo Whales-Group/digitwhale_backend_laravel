@@ -15,7 +15,7 @@ return [
     |
     */
 
-    "default" => env("DB_CONNECTION", "supabase"),
+    "default" => env("DB_CONNECTION", "mysql"),
 
     /*
     |--------------------------------------------------------------------------
