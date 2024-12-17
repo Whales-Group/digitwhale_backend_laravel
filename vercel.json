@@ -11,5 +11,13 @@
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
-  ]
+  ],
+  "build": {
+    "commands": [
+      "mkdir -p storage/framework/views",
+      "chmod -R 775 storage",
+      "php artisan config:cache",
+      "php artisan view:clear"
+    ]
+  }
 }
