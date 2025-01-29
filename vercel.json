@@ -53,7 +53,13 @@
         "API_KEY": "wnSJpwpRe3YTU94YiN0YxJiLaoa14egWqhlnCYL9avR8reD6KaBXrMlIauffMiUeHXPwuwvHBVroUWrhyF3rTZxbj0fGJpBmZvARlhXYQHWjMGkxtqPGsyjRe4hlxI8PA3FzZYdlCnwJn3LTTN1gncmgLg1ekouSonPLPmYQBV8o94pux2EOrKyhcM7AiTK0WJV37aO7"
       },
       "commands":[
-        "php artisan cache:table"
-      ]
+        "mkdir -p storage/framework/views",
+        "mkdir -p storage/framework/cache",
+        "mkdir -p storage/framework/sessions",
+        "mkdir -p bootstrap/cache",
+        "composer install --no-dev --optimize-autoloader",
+        "php artisan config:cache",
+        "php artisan route:cache",
+        "php artisan view:cache"      ]
     }
   }

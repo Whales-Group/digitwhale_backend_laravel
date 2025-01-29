@@ -9,7 +9,7 @@ use Illuminate\Foundation\Exceptions\Handler;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\Routing\Exception;
+use Symfony\Component\Routing\Exception\InvalidArgumentException;
 
 use Illuminate\Foundation\Configuration\Exceptions;
 return Application::configure(basePath: dirname(__DIR__))
@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return ResponseHelper::unprocessableEntity();
         });
         $exceptions->render(function (
-            Exception $exception, $request) {
+            InvalidArgumentException $exception, $request) {
             return ResponseHelper::unprocessableEntity();
         });
     })
