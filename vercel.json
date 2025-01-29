@@ -1,30 +1,73 @@
 {
-  "version": 2,
-  "framework": null,
-  "functions": {
-      "api/index.php": { "runtime": "vercel-php@0.6.0" }
-  },
-  "routes": [
-      {
-          "src": "/(.*)",
-          "dest": "/api/index.php"
+    "version": 2,
+    "framework": null,
+    "functions": {
+        "api/index.php": { "runtime": "vercel-php@0.6.0" }
+    },
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        }
+    ],
+    "build": {
+      "env": {
+        "APP_NAME": "Laravel",
+        "APP_ENV": "development",
+        "APP_KEY": "base64:cDZsb3JpcW93ZWt3bGdlN2tmc2xib2tsejJscmgwOTM=",
+        "APP_DEBUG": "true",
+        "APP_TIMEZONE": "UTC",
+        "APP_URL": "https://api.whales.com.ng",
+        "APP_LOCALE": "en",
+        "APP_FALLBACK_LOCALE": "en",
+        "APP_FAKER_LOCALE": "en_US",
+        "APP_MAINTENANCE_DRIVER": "file",
+        "APP_MAINTENANCE_STORE": "database",
+        "BCRYPT_ROUNDS": "12",
+        "LOG_CHANNEL": "stack",
+        "LOG_STACK": "single",
+        "LOG_DEPRECATIONS_CHANNEL": "null",
+        "LOG_LEVEL": "debug",
+        "DB_CONNECTION": "mysql",
+        "DB_HOST": "localhost",
+        "DB_PORT": "3306",
+        "DB_DATABASE": "digit_whale_db",
+        "DB_USERNAME": "root",
+        "DB_PASSWORD": "",
+        "SESSION_DRIVER": "database",
+        "SESSION_LIFETIME": "120",
+        "SESSION_ENCRYPT": "false",
+        "SESSION_PATH": "/",
+        "SESSION_DOMAIN": "null",
+        "BROADCAST_CONNECTION": "log",
+        "FILESYSTEM_DISK": "local",
+        "QUEUE_CONNECTION": "database",
+        "CACHE_STORE": "database",
+        "CACHE_PREFIX": "",
+        "MEMCACHED_HOST": "127.0.0.1",
+        "REDIS_CLIENT": "phpredis",
+        "REDIS_HOST": "127.0.0.1",
+        "REDIS_PASSWORD": "null",
+        "REDIS_PORT": "6379",
+        "MAIL_MAILER": "log",
+        "MAIL_HOST": "127.0.0.1",
+        "MAIL_PORT": "2525",
+        "MAIL_USERNAME": "null",
+        "MAIL_PASSWORD": "null",
+        "MAIL_ENCRYPTION": "null",
+        "MAIL_FROM_ADDRESS": "\"hello@example.com\"",
+        "MAIL_FROM_NAME": "\"${APP_NAME}\"",
+        "AWS_ACCESS_KEY_ID": "",
+        "AWS_SECRET_ACCESS_KEY": "",
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "AWS_BUCKET": "",
+        "AWS_USE_PATH_STYLE_ENDPOINT": "false",
+        "VITE_APP_NAME": "\"${APP_NAME}\"",
+        "PAYSTACK_TEST_SK": "sk_test_bb3fc97c4a0729e6742033225e4cdef97e231f3f",
+        "PAYSTACK_TEST_PK": "pk_test_00f3abee8ef937c3a745a0ef626da6c53362b9d6",
+        "PAYSTACK_PROD_SK": "",
+        "PAYSTACK_PROD_PK": "",
+        "API_KEY": "wnSJpwpRe3YTU94YiN0YxJiLaoa14egWqhlnCYL9avR8reD6KaBXrMlIauffMiUeHXPwuwvHBVroUWrhyF3rTZxbj0fGJpBmZvARlhXYQHWjMGkxtqPGsyjRe4hlxI8PA3FzZYdlCnwJn3LTTN1gncmgLg1ekouSonPLPmYQBV8o94pux2EOrKyhcM7AiTK0WJV37aO7"
       }
-  ],
-  "env": {
-      "APP_ENV": "production",
-      "APP_DEBUG": "true",
-      "APP_URL": "https://your.url.from.vercel.app",
-      "APP_KEY": "base64:cDZsb3JpcW93ZWt3bGdlN2tmc2xib2tsejJscmgwOTM=",
-      
-      "APP_CONFIG_CACHE": "/tmp/config.php",
-      "APP_EVENTS_CACHE": "/tmp/events.php",
-      "APP_PACKAGES_CACHE": "/tmp/packages.php",
-      "APP_ROUTES_CACHE": "/tmp/routes.php",
-      "APP_SERVICES_CACHE": "/tmp/services.php",
-      "VIEW_COMPILED_PATH": "/tmp",
-
-      "CACHE_DRIVER": "array",
-      "LOG_CHANNEL": "stderr",
-      "SESSION_DRIVER": "cookie"
+    }
   }
-}
