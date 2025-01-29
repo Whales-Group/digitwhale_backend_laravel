@@ -53,7 +53,7 @@
         "API_KEY": "wnSJpwpRe3YTU94YiN0YxJiLaoa14egWqhlnCYL9avR8reD6KaBXrMlIauffMiUeHXPwuwvHBVroUWrhyF3rTZxbj0fGJpBmZvARlhXYQHWjMGkxtqPGsyjRe4hlxI8PA3FzZYdlCnwJn3LTTN1gncmgLg1ekouSonPLPmYQBV8o94pux2EOrKyhcM7AiTK0WJV37aO7"
       },
       "commands":[
-
+        "php artisan cache:table"
       ]
     }
   }
