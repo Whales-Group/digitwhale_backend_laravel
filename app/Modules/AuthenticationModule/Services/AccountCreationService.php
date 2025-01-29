@@ -20,8 +20,12 @@ class AccountCreationService
             $validator = Validator::make($request->all(), [
                 "first_name" => "required|string",
                 "last_name" => "required|string",
+                "middle_name" => "optional|string",
+                "dob" => "required|string",
+                "profile_url" => "optional|string",
+                "other_url" => "optional|string",
+                "phone_number" => "required|string|max:10",
                 "email" => "required|email|unique:users,email",
-                "tag" => "required|string|unique:users,tag",
                 "password" => "required|string",
             ]);
 
@@ -36,15 +40,21 @@ class AccountCreationService
 
             DB::beginTransaction();
 
+            $tag = generateNewEmail($request->email);
+
             // Create user
             $user = User::create([
                 "first_name" => $request->first_name,
+                "middle_name" => $request->middle_name,
                 "last_name" => $request->last_name,
                 "email" => $request->email,
-                "tag" => $request->tag,
+                "tag" => $tag,
                 "password" => $hashedPassword,
-                // temp
-                "email_verified_at" => now(),
+                "dob" => $request->dob,
+                "profile_url" => $request->profile_url,
+                "other_url" => $request->other_url,
+                "phone_number" => $request->phone_number,
+                "email_verified_at" => null,
             ]);
 
             // Create OTP record
@@ -189,4 +199,10 @@ class AccountCreationService
             );
         }
     }
+
+    function generateNewEmail($email) {
+        $localPart = explode('@', $email)[0];
+        $newLocalPart = '@' . $localPart . '_' . rand(100000, 999999);
+        return $newLocalPart;
+      }
 }

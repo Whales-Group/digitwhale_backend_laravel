@@ -36,7 +36,7 @@ Route::middleware([
     "auth:sanctum",
     "ability:" . TokenAbility::ACCESS_API->value,
 ])->group(function () {
-    Route::post("/logout", [AuthController::class, "logout"]);
+    Route::get("/logout", [AuthController::class, "logout"]);
 
     
 });

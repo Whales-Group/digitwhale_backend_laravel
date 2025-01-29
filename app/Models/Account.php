@@ -9,35 +9,36 @@ class Account extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = "accounts";
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
-        "user_id",
-        "account_number",
-        "account_name",
-        "balance",
-        "status",
-        "type",
+        'user_id',
+        'email',
+        'phone_number',
+        'tag',
+        'account_id',
+        'balance',
+        'account_type',
+        'currency',
+        'validated_name',
+        'blacklisted',
+        'enabled',
+        'intrest_rate',
+        'max_balance',
+        'daily_transaction_limit',
+        'daily_transaction_count',
+        'pnd',
+        'dedicated_account_id',
+        'account_number',
+        'customer_id',
+        'customer_code',
+        'service_provider',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
-        "balance" => "decimal:2",
-        "status" => "string",
+        'blacklisted' => 'boolean',
+        'enabled' => 'boolean',
+        'pnd' => 'boolean',
+        'intrest_rate' => 'integer',
+        'dedicated_account_id' => 'integer',
     ];
 
     /**
@@ -49,55 +50,10 @@ class Account extends Model
     }
 
     /**
-     * Scope a query to only include active accounts.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Get the transactions for the account.
      */
-    public function scopeActive($query)
+    public function transactions()
     {
-        return $query->where("status", "active");
-    }
-
-    /**
-     * Increment the balance of the account.
-     *
-     * @param float $amount
-     * @return void
-     */
-    public function incrementBalance(float $amount): void
-    {
-        $this->increment("balance", $amount);
-    }
-
-    /**
-     * Decrement the balance of the account.
-     *
-     * @param float $amount
-     * @return void
-     */
-    public function decrementBalance(float $amount): void
-    {
-        $this->decrement("balance", $amount);
-    }
-
-    /**
-     * Check if the account is active.
-     *
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->status === "active";
-    }
-
-    /**
-     * Check the account type
-     *
-     * @return bool
-     */
-    public function accountType(): string
-    {
-        return $this->type;
+        return $this->hasMany(TransactionEntry::class);
     }
 }

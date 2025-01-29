@@ -25,7 +25,7 @@ class PaystackWebhookModuleMain
         try {
             $eventEnum = PaystackWebhookEvent::from($event);
         } catch (\ValueError $e) {
-            // Log::warning("Unhandled webhook event", ["event" => $event]);
+            Log::warning("Unhandled webhook event", ["event" => $event]);
             return ResponseHelper::unprocessableEntity(
                 message: "Unhandled webhook event",
                 error: ["event" => $event]

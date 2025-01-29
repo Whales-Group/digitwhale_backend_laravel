@@ -14,13 +14,20 @@ return new class extends Migration {
             $table->id();
             $table->string("first_name");
             $table->string("last_name");
+            $table->string("middle_name");
             $table->string("email", 100)->unique();
             $table->string("tag", 20)->unique();
+            $table->string("dob");
+            $table->string("profile_url");
+            $table->string("other_url");
+            $table->string("phone_number");
             $table->timestamp("email_verified_at")->nullable();
             $table->string("password");
             $table->rememberToken();
+            $table->softDeletes();
             $table->timestamps();
         });
+
 
         Schema::create("password_reset_tokens", function (Blueprint $table) {
             $table->string("email", 60)->index();

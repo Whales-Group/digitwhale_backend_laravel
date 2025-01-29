@@ -1,23 +1,37 @@
 {
   "version": 2,
-  "framework": null,
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.6.1"
+      "runtime": "vercel-php@0.7.3"
     }
   },
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/api/index.php"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ],
   "build": {
+    "env": {
+      "APP_ENV": "production",
+      "APP_KEY": "base64:cDZsb3JpcW93ZWt3bGdlN2tmc2xib2tsejJscmgwOTM=",
+      "APP_DEBUG": "false",
+      "APP_URL": "https://api.whales.com.ng"
+    },
     "commands": [
-      "mkdir -p storage/framework/views",
-      "chmod -R 775 storage",
+      "composer install --no-dev --optimize-autoloader",
       "php artisan config:cache",
-      "php artisan view:clear"
+      "php artisan route:cache",
+      "php artisan view:cache"
     ]
-  }
+  },
+  "public": "public"
 }

@@ -40,9 +40,16 @@ class SignInService
                 ? User::where("email", $identifier)->first()
                 : User::where("tag", $identifier)->first();
 
+            if (!$user) {
+                return ResponseHelper::error(
+                    "Invalid identifier.",
+                    401
+                );
+            }
+
             if (!$user || !Hash::check($request->password, $user->password)) {
                 return ResponseHelper::error(
-                    "Invalid identifier or password.",
+                    "Invalid password.",
                     401
                 );
             }
