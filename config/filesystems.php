@@ -73,4 +73,9 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+
+    'tmpfs' => [
+        'driver' => 'tmpfs',
+        'root' => '/tmp',
+    ],
 ];
