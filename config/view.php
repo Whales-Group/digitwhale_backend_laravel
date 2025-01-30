@@ -1,4 +1,0 @@
-<?php
-     [        
-        'compiled' => false,
-    ];
