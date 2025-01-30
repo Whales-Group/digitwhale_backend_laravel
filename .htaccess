@@ -1,19 +1,10 @@
-# Block access to sensitive files
-<FilesMatch "^\..*">
-    Order allow,deny
-    Deny from all<IfModule mod_rewrite.c>
-
-    RewriteEngine On
-    RewriteBase /temp-api.whales.com.ng/
-
-    RewriteRule ^$ public/index.php [L]
-
-    RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
-
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_URI} !^public
+RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
-</FilesMatch>
 
-<FilesMatch "\.(env|gitignore|gitattributes|lock)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+<Files .env>
+Order allow,deny
+Deny from all
+</Files>

@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_DRIVER', 'database'),
+    'default' => env('CACHE_STORE', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -47,9 +47,9 @@ return [
         ],
 
         'file' => [
-            'driver' => 'database',
-            'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+            'lock_path' => storage_path('framework/cache/data'),
         ],
 
         'memcached' => [
