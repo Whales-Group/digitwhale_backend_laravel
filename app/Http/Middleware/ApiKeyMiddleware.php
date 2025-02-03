@@ -21,12 +21,10 @@ class ApiKeyMiddleware
         $apiKey = $request->header("x-api-key");
 
         if ($apiKey) {
-            if ($apiKey !== env("API_KEY")) {
-                // Log::error(
-                //     message: "Unauthorized Request: Invalid API-KEY [Date: [" .
-                //         DateHelper::now() .
-                //         "]"
-                // );
+            if ($apiKey !== "cDZsb3JpcW93ZWt3bGdlN2tmc2xib2tsejJscmgwOTM") {
+                // echo "apiKey: ^". $apiKey . "^\n";
+                // echo "API_KEY: ^".  env("API_KEY") . "^\n";
+
                 return ResponseHelper::unauthorized("Invalid API_KEY");
             }
         } else {

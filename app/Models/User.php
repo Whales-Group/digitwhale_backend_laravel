@@ -58,11 +58,10 @@ class User extends Authenticatable
      *
      * @return Attribute
      */
-    public function fullName(): Attribute
+    public function fullName(): string
     {
-        return new Attribute(
-            get: fn () => "{$this->first_name} {$this->middle_name} {$this->last_name}"
-        );
+        return "{$this->first_name} {$this->middle_name} {$this->last_name}";
+
     }
 
     /**
@@ -82,31 +81,8 @@ class User extends Authenticatable
      */
     protected static function booted()
     {
-        static::created(function ($user) {
-            Account::create([
-                "user_id" => $user->id,
-                "account_number" => self::generateUniqueBankAccountNumber(),
-                "account_name" => $user->fullName, 
-                "balance" => 0.0,
-                "type" => "tire1",
-            ]);
+        static::created(function () {
+
         });
-    }
-
-    /**
-     * Generate a unique 11-digit bank account number (TEST).
-     *
-     * @return string The generated unique 11-digit bank account number (TEST).
-     */
-    public static function generateUniqueBankAccountNumber(): string
-    {
-        do {
-            $randomNumber = mt_rand(0, 9999999999);
-            $accountNumber = str_pad($randomNumber, 11, "0", STR_PAD_LEFT);
-
-            $exists = Account::where("account_number", $accountNumber)->exists();
-        } while ($exists);
-
-        return $accountNumber;
     }
 }

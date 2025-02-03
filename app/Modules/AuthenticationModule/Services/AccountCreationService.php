@@ -20,10 +20,10 @@ class AccountCreationService
             $validator = Validator::make($request->all(), [
                 "first_name" => "required|string",
                 "last_name" => "required|string",
-                "middle_name" => "optional|string",
+                "middle_name" => "sometimes|nullable|string",
                 "dob" => "required|string",
-                "profile_url" => "optional|string",
-                "other_url" => "optional|string",
+                "profile_url" => "sometimes|string",
+                "other_url" => "sometimes|string",
                 "phone_number" => "required|string|max:10",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string",
@@ -40,7 +40,7 @@ class AccountCreationService
 
             DB::beginTransaction();
 
-            $tag = generateNewEmail($request->email);
+            $tag = $this->generateNewEmail($request->email);
 
             // Create user
             $user = User::create([

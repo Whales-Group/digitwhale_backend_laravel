@@ -18,7 +18,7 @@ class ResponseHelper
     private static function buildResponse(
         bool $status,
         string $message,
-        array $data,
+        mixed $data,
         int $statusCode,
         mixed $error = null
     ): JsonResponse {
@@ -43,14 +43,14 @@ class ResponseHelper
     /**
      * Success response.
      *
-     * @param array $data
+     * @param mixed $data
      * @param string $message
      * @param int $statusCode
      * @param string|null $error
      * @return JsonResponse
      */
     public static function success(
-        array $data = [],
+        mixed $data = [],
         string $message = "Successful",
         int $statusCode = 200,
         mixed $error = null
@@ -63,14 +63,14 @@ class ResponseHelper
      *
      * @param string $message
      * @param int $statusCode
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function error(
         string $message = "An error occurred",
         int $statusCode = 400,
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, $statusCode, $error);
@@ -79,13 +79,13 @@ class ResponseHelper
     /**
      * Created response.
      *
-     * @param array $data
+     * @param mixed $data
      * @param string $message
      * @param string|null $error
      * @return JsonResponse
      */
     public static function created(
-        array $data = [],
+        mixed $data = [],
         string $message = "Resource created successfully",
         mixed $error = null
     ): JsonResponse {
@@ -95,13 +95,13 @@ class ResponseHelper
     /**
      * Updated response.
      *
-     * @param array $data
+     * @param mixed $data
      * @param string $message
      * @param string|null $error
      * @return JsonResponse
      */
     public static function updated(
-        array $data = [],
+        mixed $data = [],
         string $message = "Resource updated successfully",
         mixed $error = null
     ): JsonResponse {
@@ -112,13 +112,13 @@ class ResponseHelper
      * Internal Server Error response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function internalServerError(
         string $message = "Internal Server Error",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 500, $error);
@@ -128,13 +128,13 @@ class ResponseHelper
      * Unauthorized response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function unauthorized(
         string $message = "Unauthorized",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 401, $error);
@@ -144,13 +144,13 @@ class ResponseHelper
      * Unauthenticated response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function unauthenticated(
         string $message = "Unauthenticated",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 403, $error);
@@ -160,13 +160,13 @@ class ResponseHelper
      * Forbidden response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function forbidden(
         string $message = "Forbidden",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 403, $error);
@@ -176,13 +176,13 @@ class ResponseHelper
      * Not Found response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param string|null $error
      * @return JsonResponse
      */
     public static function notFound(
         string $message = "Resource not found",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 404, $error);
@@ -192,13 +192,13 @@ class ResponseHelper
      * Unprocessable Entity response.
      *
      * @param string $message
-     * @param array $data
+     * @param mixed $data
      * @param mixed|null $error
      * @return JsonResponse
      */
     public static function unprocessableEntity(
         string $message = "Unprocessable entity",
-        array $data = [],
+        mixed $data = [],
         mixed $error = null
     ): JsonResponse {
         return self::buildResponse(false, $message, $data, 422, $error);
@@ -207,12 +207,12 @@ class ResponseHelper
     /**
      * Method to implode nested arrays.
      *
-     * @param array $array
+     * @param mixed $mixed
      * @param string $separator
-     * @return array
+     * @return mixed
      */
     public static function implodeNestedArrays(
-        array $array,
+        mixed $array,
         string $separator = ", "
     ): array {
         return array_map(function ($value) use ($separator) {

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Account extends Model
 {
     use HasFactory;
-
+  
     protected $fillable = [
         'user_id',
         'email',
@@ -31,6 +31,7 @@ class Account extends Model
         'customer_id',
         'customer_code',
         'service_provider',
+        'service_bank'
     ];
 
     protected $casts = [
@@ -55,5 +56,20 @@ class Account extends Model
     public function transactions()
     {
         return $this->hasMany(TransactionEntry::class);
+    }
+
+     /**
+     * Update the account details.
+     *
+     * @param array $data The data to update.
+     * @return bool Indicates if the update was successful.
+     */
+    public function updateAccount(array $data): bool
+    {
+        // Validate and sanitize input data
+        $fillableFields = array_intersect_key($data, array_flip($this->fillable));
+
+        // Ensure only updatable fields are updated
+        return $this->fill($fillableFields)->save();
     }
 }

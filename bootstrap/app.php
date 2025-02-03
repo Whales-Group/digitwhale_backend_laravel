@@ -1,17 +1,12 @@
 <?php
 
 use App\Common\Helpers\ResponseHelper;
+use App\Exceptions\AppException;
 use App\Http\Middleware\HandleCors;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Foundation\Exceptions\Handler;
-use Laravel\Sanctum\Http\Middleware\CheckAbilities;
-use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
+use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\Routing\Exception\InvalidArgumentException;
 
-use Illuminate\Foundation\Configuration\Exceptions;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
@@ -19,23 +14,41 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up'
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function ($middleware) {
         $middleware->alias([
-            'abilities' => CheckAbilities::class,
-            'ability' => CheckForAnyAbility::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'VerifyApiKey' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'SetStructure' => \App\Http\Middleware\StructuralMiddleware::class,
         ]);
         $middleware->append(HandleCors::class);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (
-            RouteNotFoundException $exception, $request) {
-            return ResponseHelper::unprocessableEntity();
+    ->withExceptions(function ($exceptions) {
+        // Define custom exception handlers
+        // $exceptions->render(function (RouteNotFoundException $exception, $request) {
+        //     return ResponseHelper::unprocessableEntity(
+        //         message: 'The requested route was not found.',
+        //     );
+        // });
+
+        // $exceptions->render(function (InvalidParameterException $exception, $request) {
+        //     return ResponseHelper::unprocessableEntity(
+        //         message: 'Invalid parameters provided.',
+        //     );
+        // });
+
+        $exceptions->render(function (AppException $exception, $request) {
+            return ResponseHelper::error(
+                message: $exception->getMessage(),
+            );
         });
-        $exceptions->render(function (
-            InvalidArgumentException $exception, $request) {
-            return ResponseHelper::unprocessableEntity();
+
+        // Fallback for all other exceptions
+        $exceptions->render(function (\Throwable $exception, $request) {
+            return ResponseHelper::internalServerError(
+                message: 'An unexpected error occurred.',
+                error: config('app.debug') ? $exception->getMessage() : null
+            );
         });
     })
     ->create();

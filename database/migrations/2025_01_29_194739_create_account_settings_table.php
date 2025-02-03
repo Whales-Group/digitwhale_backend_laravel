@@ -67,6 +67,7 @@ class CreateAccountSettingsTable extends Migration
             $table->foreignId('account_setting_id')->constrained()->onDelete('cascade');
             $table->string('type');
             $table->string('status');
+            $table->boolean('allow_file')->default(false);
             $table->string('value')->nullable();
             $table->string('url')->nullable();
             $table->timestamps();

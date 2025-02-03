@@ -12,6 +12,7 @@ class VerificationRecord extends Model
     protected $fillable = [
         'account_setting_id',
         'type',
+        'allow_file',
         'status',
         'value',
         'url',
