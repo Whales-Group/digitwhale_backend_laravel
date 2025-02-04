@@ -1,54 +1,19 @@
 <?php
 
-use App\Common\Helpers\ResponseHelper;
-use App\Exceptions\AppException;
-use App\Http\Middleware\HandleCors;
 use Illuminate\Foundation\Application;
-use Symfony\Component\Routing\Exception\InvalidParameterException;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        api: __DIR__ . '/../routes/api.php',
-        commands: __DIR__ . '/../routes/console.php',
-        health: '/up'
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
     )
-    ->withMiddleware(function ($middleware) {
-        $middleware->alias([
-            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
-            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
-            'VerifyApiKey' => \App\Http\Middleware\ApiKeyMiddleware::class,
-            'SetStructure' => \App\Http\Middleware\StructuralMiddleware::class,
-        ]);
-        $middleware->append(HandleCors::class);
+    ->withMiddleware(function (Middleware $middleware) {
+        //
     })
-    ->withExceptions(function ($exceptions) {
-        // Define custom exception handlers
-        // $exceptions->render(function (RouteNotFoundException $exception, $request) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: 'The requested route was not found.',
-        //     );
-        // });
-
-        // $exceptions->render(function (InvalidParameterException $exception, $request) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: 'Invalid parameters provided.',
-        //     );
-        // });
-
-        $exceptions->render(function (AppException $exception, $request) {
-            return ResponseHelper::error(
-                message: $exception->getMessage(),
-            );
-        });
-
-        // Fallback for all other exceptions
-        $exceptions->render(function (\Throwable $exception, $request) {
-            return ResponseHelper::internalServerError(
-                message: 'An unexpected error occurred.',
-                error: config('app.debug') ? $exception->getMessage() : null
-            );
-        });
-    })
-    ->create();
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
