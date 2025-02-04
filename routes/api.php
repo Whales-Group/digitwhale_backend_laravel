@@ -75,3 +75,9 @@ Route::get('/clear-cache', function () {
     Artisan::call('route:clear');
     return 'Cache cleared and config cached.';
 });
+
+// Cache Clearing Endpoint (For Debugging/Development)
+Route::get('/migrate', function () {
+    Artisan::call('migrate');
+    return 'Migration Handled';
+});

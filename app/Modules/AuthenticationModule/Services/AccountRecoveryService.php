@@ -3,6 +3,7 @@
 namespace App\Modules\AuthenticationModules\Services;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -43,7 +44,7 @@ class AccountRecoveryService
 
             $recoveryToken = rand(100000, 999999);
 
-            PasswordRecoveryToken::updateOrCreate(
+            DB::table('personal_access_tokens')->updateOrCreate(
                 ["user_id" => $user->id],
                 [
                     "token" => $recoveryToken,
@@ -108,7 +109,7 @@ class AccountRecoveryService
                 );
             }
 
-            $passwordRecoveryToken = PasswordRecoveryToken::where(
+            $passwordRecoveryToken =DB::table('personal_access_tokens')->where(
                 "user_id",
                 $user->id
             )
