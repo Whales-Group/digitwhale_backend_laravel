@@ -3,6 +3,7 @@
 use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Http\Middleware\HandleCors;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
@@ -25,21 +26,28 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function ($exceptions) {
         // Define custom exception handlers
-        // $exceptions->render(function (RouteNotFoundException $exception, $request) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: 'The requested route was not found.',
-        //     );
-        // });
+        $exceptions->render(function (RouteNotFoundException $exception, $request) {
+            return ResponseHelper::unprocessableEntity(
+                message: 'The requested route was not found.',
+            );
+        });
 
-        // $exceptions->render(function (InvalidParameterException $exception, $request) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: 'Invalid parameters provided.',
-        //     );
-        // });
+        $exceptions->render(function (InvalidParameterException $exception, $request) {
+            return ResponseHelper::unprocessableEntity(
+                message: 'Invalid parameters provided.',
+            );
+        });
 
         $exceptions->render(function (AppException $exception, $request) {
             return ResponseHelper::error(
                 message: $exception->getMessage(),
+            );
+        });
+
+        $exceptions->render(function (AuthenticationException $exception, $request) {
+            return ResponseHelper::error(
+                message: 'Please provide a valid bearer token.',
+                error: 'Unauthorized',
             );
         });
 
