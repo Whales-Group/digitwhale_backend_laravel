@@ -26,9 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function ($exceptions) {
         // Define custom exception handlers
-        $exceptions->render(function (RouteNotFoundException $exception, $request) {
-            return ResponseHelper::unprocessableEntity(
-                message: 'The requested route was not found.',
+        $exceptions->render(function (AuthenticationException $exception, $request) {
+            return ResponseHelper::error(
+                message: 'Please provide a valid bearer token.',
+                error: 'Unauthorized',
             );
         });
 
@@ -44,12 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (AuthenticationException $exception, $request) {
-            return ResponseHelper::error(
-                message: 'Please provide a valid bearer token.',
-                error: 'Unauthorized',
-            );
-        });
+       
 
         // Fallback for all other exceptions
         $exceptions->render(function (\Throwable $exception, $request) {
