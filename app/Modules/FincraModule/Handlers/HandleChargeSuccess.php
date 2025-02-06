@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\PaystackWebhookModule\Services;
+namespace App\Modules\FincraModule\Handlers;
 
 use App\Common\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;

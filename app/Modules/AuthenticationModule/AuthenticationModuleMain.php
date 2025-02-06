@@ -3,7 +3,7 @@
 namespace App\Modules\AuthenticationModule;
 
 use App\Modules\AuthenticationModule\Services\SignInService;
-use App\Modules\AuthenticationModule\Services\AccountCreationService;
+use App\Modules\AuthenticationModule\Services\RegistrationService;
 use App\Modules\AuthenticationModule\Services\ChangePasswordService;
 // use App\Modules\AuthenticationModule\Services\AccountRecoveryService;
 use Illuminate\Http\Request;
@@ -17,7 +17,7 @@ class AuthenticationModuleMain
 
     public function __construct(
         SignInService $signInService,
-        AccountCreationService $accountCreationService,
+        RegistrationService $accountCreationService,
         ChangePasswordService $changePasswordService,
         // AccountRecoveryService $accountRecoveryService
     ) {
@@ -32,9 +32,15 @@ class AuthenticationModuleMain
         return $this->signInService->login($request);
     }
 
-    public function register(Request $request)
+    
+    public function initializeRegistration(Request $request)
     {
-        return $this->accountCreationService->register($request);
+        return $this->accountCreationService->initializeRegistration($request);
+    }
+    
+    public function completeProfile(Request $request)
+    {
+        return $this->accountCreationService->updateProfile($request);
     }
 
     public function sendOtp(Request $request)

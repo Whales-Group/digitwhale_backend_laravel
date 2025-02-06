@@ -18,7 +18,7 @@ class HandleCors
     {
         $response = $next($request);
         // Log::debug($request);
-        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        $response->headers->set('Access-Control-Allow-Origin', '*');
         $response->headers->set('Access-Control-Allow-Methods', '*');
         $response->headers->set('Access-Control-Allow-Headers', '*');
 

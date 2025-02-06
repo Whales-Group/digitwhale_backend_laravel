@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Modules\AuthenticationModule\Services;
+namespace App\Modules\AdminAuthenticationModule\Services;
 
 use App\Common\Enums\TokenAbility;
+use App\Common\Helpers\ResponseHelper;
+use App\Models\AdminUser;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Models\User;
-use Exception;
-use App\Common\Helpers\ResponseHelper;
 
 class SignInService
 {
@@ -38,8 +38,8 @@ class SignInService
             // Determine if the identifier is an email or tag
             $identifier = $request->identifier;
             $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
-                ? User::where("email", $identifier)->first()
-                : User::where("tag", $identifier)->first();
+                ? AdminUser::where("email", $identifier)->first()
+                : AdminUser::where("tag", $identifier)->first();
 
             if (!$user) {
                 return ResponseHelper::error(
@@ -60,7 +60,7 @@ class SignInService
             }
 
             // Create and return token
-            $token = $user->createToken(TokenAbility::ACCESS_API->value)->plainTextToken;
+            $token = $user->createToken(TokenAbility::ADMIN_ACCESS_API->value)->plainTextToken;
 
             return ResponseHelper::success(
                 data: ["token" => $token, "user" => $user],
@@ -86,7 +86,7 @@ class SignInService
             $user = $request->user();
 
             if (!$user) {
-                return ResponseHelper::error("User not authenticated.", 401);
+                return ResponseHelper::error("AdminUser not authenticated.", 401);
             }
 
             // Revoke all tokens for the user

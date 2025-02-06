@@ -2,28 +2,31 @@
 
 namespace App\Modules\AccountModule;
 
-use App\Common\Helpers\ResponseHelper;
 use App\Modules\AccountModule\Services\AccountCreationService;
-use App\Modules\AccountModule\Services\AccountSettingsService;
-use App\Modules\AccountModule\Services\GetAccountService;
+use App\Modules\AccountModule\Services\AccountSettingsCreationService;
+use App\Modules\AccountModule\Services\GetAndUpdateAccountService;
 use Illuminate\Http\Request;
 
 class AccountModuleMain
 {
-    public GetAccountService $getAccountService;
-    public AccountSettingsService $accountSettingsService;
+    public GetAndUpdateAccountService $getAccountService;
+
+    public AccountCreationService  $accountCreationService;
+    public AccountSettingsCreationService $accountSettingsService;
 
     public function __construct(
-        GetAccountService $getAccountService, 
-        AccountSettingsService $accountSettingsService
+        GetAndUpdateAccountService $getAccountService, 
+        AccountCreationService $accountCreationService,
+        AccountSettingsCreationService $accountSettingsService
         )
     {
         $this->getAccountService = $getAccountService;
+        $this->accountCreationService = $accountCreationService;
         $this->accountSettingsService = $accountSettingsService;
     }
 
     public function createAccount(Request $request){
-        return $this->getAccountService->createAccount($request);
+        return $this->accountCreationService->createAccount($request);
     }
     
     public function getAccounts(){
@@ -40,5 +43,9 @@ class AccountModuleMain
 
     public function getOrCreateAccountSettings(Request $request){
         return $this->accountSettingsService->getOrCreateAccountSettings($request);
+    }
+
+    public function updateIn(Request $request){
+        return $this->getAccountService->updateIn($request);
     }
 }

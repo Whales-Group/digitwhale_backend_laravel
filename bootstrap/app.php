@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        // web: __DIR__ . '/../routes/web.php',
+        web: __DIR__ . '/../routes/web.php',
         api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up'
@@ -26,12 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function ($exceptions) {
         // Define custom exception handlers
-        $exceptions->render(function (RouteNotFoundException $exception, $request) {
-            return ResponseHelper::unprocessableEntity(
-                message: 'The requested route was not found.',
-            );
-        });
-
+        // $exceptions->render(function (RouteNotFoundException $exception, $request) {
+        //     return ResponseHelper::unprocessableEntity(
+        //         message: 'The requested route was not found.',
+        //     );
+        // });
+    
         $exceptions->render(function (InvalidParameterException $exception, $request) {
             return ResponseHelper::unprocessableEntity(
                 message: 'Invalid parameters provided.',
@@ -53,6 +53,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Fallback for all other exceptions
         $exceptions->render(function (\Throwable $exception, $request) {
+
+            // for auth exceptions
+            if ($exception->getMessage() == "Route [login] not defined.") {
+                return ResponseHelper::internalServerError(
+                    message: 'Unautorized.',
+                    error: "Invalid token, Token not found or expired token."
+                );
+            }
+
             return ResponseHelper::internalServerError(
                 message: 'An unexpected error occurred.',
                 error: config('app.debug') ? $exception->getMessage() : null

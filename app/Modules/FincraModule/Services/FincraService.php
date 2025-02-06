@@ -2,10 +2,11 @@
 
 namespace App\Modules\FincraModule\Services;
 
+use App\Exceptions\AppException;
 use Exception;
 use GuzzleHttp\Client;
 
-class PaystackService
+class FincraService
 {
     private static $instance;
     private static $secretKey;
@@ -19,13 +20,13 @@ class PaystackService
     }
 
     // Singleton instance getter
-    public static function getInstance(): PaystackService
+    public static function getInstance(): FincraService
     {
-       
+
         self::$secretKey = "sk_test_bb3fc97c4a0729e6742033225e4cdef97e231f3f";
 
         if (!self::$instance) {
-            self::$instance = new PaystackService();
+            self::$instance = new FincraService();
         }
         return self::$instance;
     }
@@ -34,7 +35,7 @@ class PaystackService
     public function updateSecretKey(string $secretKey): void
     {
         if (empty($secretKey)) {
-            throw new Exception("Paystack secret key cannot be empty.");
+            throw new AppException("Paystack secret key cannot be empty.");
         }
         $this->secretKey = $secretKey;
     }
@@ -43,7 +44,7 @@ class PaystackService
     public function getSecretKey(): string
     {
         if (empty($this->secretKey)) {
-            throw new Exception("PaystackService is not initialized. Call `initialize()` first.");
+            throw new AppException("PaystackService is not initialized. Call `initialize()` first.");
         }
         return $this->secretKey;
     }
@@ -65,7 +66,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to fetch banks: " . $e->getMessage());
+            throw new AppException("Failed to fetch banks: " . $e->getMessage());
         }
     }
 
@@ -81,7 +82,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to resolve account: " . $e->getMessage());
+            throw new AppException("Failed to resolve account: " . $e->getMessage());
         }
     }
 
@@ -96,7 +97,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to create recipient: " . $e->getMessage());
+            throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
@@ -111,7 +112,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to run transfer: " . $e->getMessage());
+            throw new AppException("Failed to run transfer: " . $e->getMessage());
         }
     }
 
@@ -132,7 +133,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to create DVA: " . $e->getMessage());
+            throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
@@ -154,7 +155,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to create customer: " . $e->getMessage());
+            throw new AppException("Failed to create customer: " . $e->getMessage());
         }
     }
 
@@ -168,7 +169,7 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
             return $data;
         } catch (Exception $e) {
-            throw new Exception("Failed to verify transfer: " . $e->getMessage());
+            throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
     }
 }

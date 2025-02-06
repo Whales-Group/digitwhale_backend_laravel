@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Modules\AuthenticationModules\Services;
+namespace App\Modules\AdminAuthenticationModule\Services;
 
+use App\Models\AdminUser;
+use App\Models\PasswordRecoveryToken;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use App\Models\User;
-use App\Models\PasswordRecoveryToken;
-use Exception;
 
 class AccountRecoveryService
 {
@@ -30,13 +30,13 @@ class AccountRecoveryService
                 );
             }
 
-            $user = User::where("email", $request->email)->first();
+            $user = AdminUser::where("email", $request->email)->first();
 
             if (!$user) {
                 return response()->json(
                     [
                         "status" => "error",
-                        "message" => "User not found.",
+                        "message" => "AdminUser not found.",
                     ],
                     404
                 );
@@ -55,6 +55,7 @@ class AccountRecoveryService
             Mail::to($request->email)->send(
                 new \App\Mail\OtpMail(['otp' => $recoveryToken, 'name' => $user->first_name ?? $user->email])
             );
+
 
             return response()->json(
                 [
@@ -97,19 +98,19 @@ class AccountRecoveryService
                 );
             }
 
-            $user = User::where("email", $request->email)->first();
+            $user = AdminUser::where("email", $request->email)->first();
 
             if (!$user) {
                 return response()->json(
                     [
                         "status" => "error",
-                        "message" => "User not found.",
+                        "message" => "AdminUser not found.",
                     ],
                     404
                 );
             }
 
-            $passwordRecoveryToken = DB::table('personal_access_tokens')->where(
+            $passwordRecoveryToken =DB::table('personal_access_tokens')->where(
                 "user_id",
                 $user->id
             )

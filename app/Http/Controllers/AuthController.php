@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Modules\AuthenticationModule\AuthenticationModuleMain;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -28,14 +28,28 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle initialize registration.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function initializeRegistration(Request $request): JsonResponse
+    {
+        return $this->authenticationModuleMain->accountCreationService->initializeRegistration(
+            $request
+        );
+    }
+
+
+       /**
      * Handle user registration.
      *
      * @param Request $request
      * @return JsonResponse
      */
-    public function register(Request $request): JsonResponse
+    public function completeProfile(Request $request): JsonResponse
     {
-        return $this->authenticationModuleMain->accountCreationService->register(
+        return $this->authenticationModuleMain->accountCreationService->updateProfile(
             $request
         );
     }
@@ -85,11 +99,11 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function initiatePasswordRecovery(Request $request)
+    public function initiatePasswordRecovery(Request $request): void
     {
-        return $this->authenticationModuleMain->initiatePasswordRecovery(
-            $request
-        );
+        // return $this->authenticationModuleMain->initiatePasswordRecovery(
+        //     $request
+        // );
     }
 
     /**
@@ -98,11 +112,11 @@ class AuthController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function completePasswordRecovery(Request $request)
+    public function completePasswordRecovery(Request $request): void
     {
-        return $this->authenticationModuleMain->completePasswordRecovery(
-            $request
-        );
+        // return $this->authenticationModuleMain->completePasswordRecovery(
+        //     $request
+        // );
     }
 
     /**

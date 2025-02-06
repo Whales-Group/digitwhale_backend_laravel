@@ -13,7 +13,7 @@ use App\Models\VerificationRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AccountSettingsService
+class AccountSettingsCreationService
 {
 
     public function getOrCreateAccountSettings(Request $request)
@@ -36,7 +36,10 @@ class AccountSettingsService
 
                 DB::commit();
 
-                return ResponseHelper::success($newAccountSettings->with('verifications')->with('personalDetails')->firstOrFail());
+                return ResponseHelper::success($newAccountSettings
+                ->with('verifications')
+                ->with('personalDetails')
+                ->firstOrFail());
             } catch (\Exception $e) {
                 DB::rollBack();
 
@@ -47,7 +50,10 @@ class AccountSettingsService
             }
         }
 
-        return ResponseHelper::success($accountSettings->with('verifications')->with('personalDetails')->firstOrFail());
+        return ResponseHelper::success($accountSettings
+        ->with('verifications')
+        ->with('personalDetails')
+        ->firstOrFail());
 
     }
 

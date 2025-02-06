@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Models\Account; // Import the Account model
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-class User extends Authenticatable
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Models\Account; // Import the Account model
+
+class AdminUser extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
@@ -31,7 +32,6 @@ class User extends Authenticatable
         "other_url",
         "phone_number",
         "profile_type"
-
     ];
 
     /**
@@ -87,19 +87,33 @@ class User extends Authenticatable
 
         });
     }
-
-    public function profileIsCompleted(): bool
-    {
-        $profileFields = [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'middle_name' => $this->middle_name,
-            'dob' => $this->dob,
-            'profile_url' => $this->profile_url,
-            'other_url' => $this->other_url,
-            'phone_number' => $this->phone_number,
-        ];
-    
-        return array_reduce($profileFields, fn ($carry, $item) => $carry && !is_null($item), true);
-    }
 }
+
+// Assigning Roles and Permissions
+// When creating or updating an admin user, you can assign roles and permissions as follows:
+
+// Create a new admin user
+// $adminUser = \App\Models\AdminUser::create([
+//     "email" => "admin@example.com",
+//     "password" => Hash::make("password"),
+//     "role" => "super_admin",
+//     "permissions" => json_encode(["view_dashboard" => true, "edit_settings" => true]),
+// ]);
+
+// // Assign roles to the admin user
+// $adminRole = \App\Models\AdminRole::where("name", "super_admin")->first();
+// $adminUser->roles()->attach($adminRole->id);
+
+
+// Querying Roles and Permissions
+// You can query the roles and permissions of an admin user as follows:
+
+// $adminUser = \App\Models\AdminUser::find(1);
+
+// // Get all roles assigned to the admin user
+// $roles = $adminUser->roles;
+
+// // Check if the admin user has a specific permission
+// if ($adminUser->permissions && isset($adminUser->permissions["view_dashboard"]) && $adminUser->permissions["view_dashboard"]) {
+//     echo "Admin has view_dashboard permission.";
+// }
