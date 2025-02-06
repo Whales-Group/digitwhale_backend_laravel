@@ -155,6 +155,6 @@ Route::get('/clear-cache', function () {
 
 // Cache Clearing Endpoint (For Debugging/Development)
 Route::get('/migrate', function () {
-    Artisan::call('migrate');
+    Artisan::call('migrate --force');
     return 'Migration Handled';
 });
