@@ -56,8 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // for auth exceptions
             if ($exception->getMessage() == "Route [login] not defined.") {
-                return ResponseHelper::internalServerError(
-                    message: 'Unautorized.',
+                return ResponseHelper::unauthenticated(
+                    message: 'Unauthenticated.',
                     error: "Invalid token, Token not found or expired token."
                 );
             }
