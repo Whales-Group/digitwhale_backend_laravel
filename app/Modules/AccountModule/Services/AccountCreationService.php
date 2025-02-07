@@ -130,7 +130,7 @@ class AccountCreationService
         $fincra = FincraService::getInstance();
 
         if (!$user->bvn) {
-            throw new AppException("BVN not verified.");
+            throw new AppException("BVN not found. Update bvn and try again.");
         }
 
         $currencyValue = "";

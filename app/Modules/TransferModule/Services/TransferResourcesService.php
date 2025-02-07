@@ -27,10 +27,10 @@ class TransferResourcesService
             $user = auth()->user();
             $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
 
-            if(!$account){
+            if (!$account) {
                 throw new AppException("Invalid account id or account not found.");
             }
-            
+
             try {
                 $accountType = ServiceProvider::tryFrom($account->service_provider);
             } catch (AppException $e) {
@@ -65,7 +65,7 @@ class TransferResourcesService
                 throw new AppException("accountNumber length must be 10 characters long");
             }
 
-            if(!$account){
+            if (!$account) {
                 throw new AppException("Invalid account id or account not found.");
             }
 
@@ -95,8 +95,8 @@ class TransferResourcesService
             }
 
         } catch (AppException $e) {
-            
-            return ResponseHelper::unprocessableEntity("Failed to resolve Account" . $e->getMessage());
+
+            return ResponseHelper::unprocessableEntity($e->getMessage());
         }
     }
 

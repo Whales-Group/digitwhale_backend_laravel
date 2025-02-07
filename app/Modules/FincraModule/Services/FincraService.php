@@ -7,6 +7,7 @@ use App\Common\Enums\Currency;
 use App\Common\Enums\TransferType;
 use App\Common\Helpers\CodeHelper;
 use App\Exceptions\AppException;
+use Error;
 use GuzzleHttp\Client;
 use Log;
 
@@ -14,8 +15,8 @@ class FincraService
 {
     private static $instance;
     private static $secretKey;
-    private $baseUrl = "https://sandboxapi.fincra.com/";
-    // private $baseUrl = "https://api.fincra.com/";
+    // private $baseUrl = "https://sandboxapi.fincra.com/";
+    private $baseUrl = "https://api.fincra.com/";
 
     private $httpClient;
 
@@ -30,6 +31,7 @@ class FincraService
     {
 
         self::$secretKey = "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY";
+//         self::$secretKey = "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY";
 
         if (!self::$instance) {
             self::$instance = new FincraService();
@@ -123,7 +125,10 @@ class FincraService
         try {
             switch ($transferType) {
                 case TransferType::BANK_ACCOUNT_TRANSFER:
-                    return $this->performNGNTransfer($payload);
+                    if (request()->beneficiary_type != 'individual') {
+                        return $this->performNGNTransferToCorporateAccount($payload);
+                    }
+                    return $this->performNGNTransferToPersonalAccount($payload);
                 default:
                     throw new AppException("Transfer Not avaliable for Specified Currency");
             }
@@ -132,38 +137,70 @@ class FincraService
         }
     }
 
-
-    private function performNGNTransfer(array $payload): mixed
+    private function performNGNTransferToPersonalAccount(array $payload): mixed
     {
-        $body = [
+        $requiredPayload = [
             "amount" => $payload['amount'],
             "beneficiary" => [
-                "accountHolderName" => $payload['accountHolderName'],
-                "accountNumber" => $payload['accountHolderName'],
-                "bankCode" => $payload['bankCode'],
-                // "country" => "NG", 
-                // for chosing which country the sender lives in, 
-                // in ISO regilated format
-                "firstName" => $payload['firstName'],
-                "lastName" => $payload['lastName'],
-                "type" => $payload['type'],
+                "accountHolderName" => $payload['beneficiary']['accountHolderName'],
+                "accountNumber" => $payload['beneficiary']['accountNumber'],
+                "bankCode" => $payload['beneficiary']['bankCode'],
+                "firstName" => $payload['beneficiary']['firstName'],
+                "lastName" => $payload['beneficiary']['lastName'],
+                "type" => $payload['beneficiary']['type'],
             ],
-            "business" => Cred::BUSINESS_ID,
-            "customerReference" => CodeHelper::generateSecureReference(),
+            "business" => $payload['business'],
+            "customerReference" => $payload['customerReference'],
             "description" => $payload['description'],
-            "destinationCurrency" => "NGN",
-            "paymentDestination" => "bank_account",
-            "sourceCurrency" => "NGN",
+            "destinationCurrency" => $payload['destinationCurrency'],
+            "paymentDestination" => $payload['paymentDestination'],
+            "sourceCurrency" => $payload['sourceCurrency'],
             "sender" => [
-                "name" => $payload['sender_name'],
-                "email" => $payload['sender_email'],
+                "name" => $payload['sender']['name'],
+                "email" => $payload['sender']['email'],
             ]
         ];
 
         try {
             $response = $this->httpClient->post('/disbursements/payouts', [
                 'headers' => $this->buildAuthHeader(),
-                'json' => $body,
+                'json' => $requiredPayload,
+            ]);
+            $data = json_decode($response->getBody(), true);
+            return $data;
+        } catch (AppException $e) {
+            throw new AppException("Failed to create DVA: " . $e->getMessage());
+        }
+    }
+
+    private function performNGNTransferToCorporateAccount(array $payload): mixed
+    {
+        $requiredPayload = [
+            "business" => $payload['business'],
+            "sourceCurrency" => $payload['sourceCurrency'],
+            "destinationCurrency" => $payload['destinationCurrency'],
+            "amount" => $payload['amount'],
+            "description" => $payload['description'],
+            "paymentDestination" => $payload['paymentDestination'],
+            "customerReference" => $payload['customerReference'],
+            "quoteReference" => $payload['quoteReference'],
+            "beneficiary" => [
+                "firstName" => $payload['beneficiary']['firstName'],
+                "lastName" => $payload['beneficiary']['lastName'],
+                "accountHolderName" => $payload['beneficiary']['accountHolderName'],
+                "country" => $payload['beneficiary']['country'],
+                "phone" => $payload['beneficiary']['phone'],
+                "accountNumber" => $payload['beneficiary']['accountNumber'],
+                "type" => $payload['beneficiary']['type'],
+                "email" => $payload['beneficiary']['email'],
+                "bankCode" => $payload['beneficiary']['bankCode'],
+            ]
+        ];
+
+        try {
+            $response = $this->httpClient->post('/disbursements/payouts', [
+                'headers' => $this->buildAuthHeader(),
+                'json' => $requiredPayload,
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
@@ -210,16 +247,37 @@ class FincraService
     }
 
     // Verify a transfer using Fincra's API
-    public function verifyTransfer(string $reference): array
+    /**
+     * Summary of verifyTransfer
+     * @param string $reference
+     * @throws \App\Exceptions\AppException
+     * @return mixed
+     */
+    public function verifyTransfer(string $reference): mixed
     {
         try {
-            $response = $this->httpClient->get("transfer/verify/$reference", [
+            $response = $this->httpClient->get("/disbursements/payouts/customer-reference/$reference", [
                 'headers' => $this->buildAuthHeader(),
             ]);
+
+            $statusCode = $response->getStatusCode();
             $data = json_decode($response->getBody(), true);
-            return $data;
+
+            switch ($statusCode) {
+                case 200:
+                    return $data;
+                case 201:
+                    return ['message' => 'Transfer created successfully', 'data' => $data];
+                case 404:
+                    throw new AppException("Transfer not found", 404);
+                default:
+                    throw new AppException("Failed to verify transfer: " . $response->getReasonPhrase(), $statusCode);
+            }
+        } catch (Error $e) {
         } catch (AppException $e) {
-            throw new AppException("Failed to verify transfer: " . $e->getMessage());
+            throw new AppException("Failed to verify transfer: " . $e->getMessage(), $e->getCode());
         }
+        return null;
+
     }
 }

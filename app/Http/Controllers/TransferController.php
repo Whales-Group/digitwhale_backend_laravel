@@ -22,6 +22,11 @@ class TransferController extends Controller
         return $this->moduleMain->transfer($request, $account_id);
     }
 
+    public function verifyTransferStatusBy(): ?JsonResponse
+    {
+        return $this->moduleMain->verifyTransferStatusBy();
+    }
+
     public function getBanks(Request $request, string $account_id): ?JsonResponse
     {
         return $this->moduleMain->getBanks($request, $account_id);
