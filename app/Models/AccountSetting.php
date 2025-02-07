@@ -54,13 +54,6 @@ class AccountSetting extends Model
         return $this->hasOne(NextOfKin::class);
     }
 
-    /**
-     * Get the personal details for the account setting.
-     */
-    public function personalDetails()
-    {
-        return $this->hasOne(PersonalDetails::class);
-    }
 
     /**
      * Get the security questions for the account setting.

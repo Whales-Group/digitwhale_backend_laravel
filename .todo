@@ -1,0 +1,4 @@
+- Remove dublicate colums acrss tables
+    dob - user, account, 
+    phone - user, persinal details
+    

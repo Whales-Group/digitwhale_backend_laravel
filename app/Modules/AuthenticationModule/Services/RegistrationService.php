@@ -52,16 +52,16 @@ class RegistrationService
                 "email_verified_at" => null,
             ]);
 
+            DB::commit();
+
             // Send OTP for verification
             if (!$this->sendOtpToUser($user)) {
-                DB::rollBack();
                 return ResponseHelper::success(
                     message: "User registered successfully",
                     error: "Failed to send OTP Mail."
                 );
             }
 
-            DB::commit();
             return ResponseHelper::success([], "User registered successfully");
 
         } catch (\Exception $e) {
@@ -87,10 +87,16 @@ class RegistrationService
                 "first_name" => "required|string",
                 "last_name" => "required|string",
                 "middle_name" => "nullable|string",
-                "dob" => "required|string",
+                "date_of_birth" => "required|date",
                 "profile_url" => "nullable|string",
                 "other_url" => "nullable|string",
                 "phone_number" => "required|string|max:10",
+                "gender" => "required|string",
+                "nin" => "required|string",
+                "bvn" => "required|string",
+                "marital_status" => "required|string",
+                "employment_status" => "required|string",
+                "annual_income" => "required|string",
             ]);
 
             if ($validator->fails()) {
@@ -113,10 +119,16 @@ class RegistrationService
                 "first_name" => $request->first_name,
                 "middle_name" => $request->middle_name,
                 "last_name" => $request->last_name,
-                "dob" => $request->dob,
+                "dob" => $request->date_of_birth,
                 "profile_url" => $request->profile_url,
                 "other_url" => $request->other_url,
                 "phone_number" => $request->phone_number,
+                "gender" => $request->gender,
+                "nin" => $request->nin,
+                "bvn" => $request->bvn,
+                "marital_status" => $request->marital_status,
+                "employment_status" => $request->employment_status,
+                "annual_income" => $request->annual_income,
             ]);
 
             DB::commit();

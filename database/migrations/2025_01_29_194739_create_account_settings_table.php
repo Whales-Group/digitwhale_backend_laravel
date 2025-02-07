@@ -43,25 +43,6 @@ class CreateAccountSettingsTable extends Migration
             $table->timestamps();
         });
 
-        Schema::create('personal_details', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('account_setting_id')->constrained()->onDelete('cascade');
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('middle_name')->nullable();
-            $table->string('tag')->nullable();
-            $table->date('date_of_birth')->nullable();
-            $table->string('gender')->nullable();
-            $table->string('phone_number')->nullable();
-            $table->string('email');
-            $table->string('nin')->nullable();
-            $table->string('bvn')->nullable();
-            $table->string('marital_status')->nullable();
-            $table->string('employment_status')->nullable();
-            $table->string('annual_income')->nullable();
-            $table->timestamps();
-        });
-
         Schema::create('verification_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('account_setting_id')->constrained()->onDelete('cascade');
