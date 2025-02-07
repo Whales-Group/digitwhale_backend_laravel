@@ -1,21 +1,16 @@
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+# To prevent access to .env and other files
+<Files .*>
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+Order deny,allow
+Deny from all
+</IfModule>
+# Apache 2.4
+<IfModule mod_authz_core.c>
+Require all denied
+</IfModule>
+</Files>
 
-    RewriteEngine On
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+<IfModule mod_alias.c>
+RedirectMatch 301 ^/$ https://test.whales.com.ng/public
 </IfModule>
