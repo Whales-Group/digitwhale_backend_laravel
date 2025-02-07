@@ -2,7 +2,8 @@
 
 namespace App\Modules\PaystackModule\Services;
 
-use Exception;
+use App\Common\Helpers\CodeHelper;
+use App\Exceptions\AppException;
 use GuzzleHttp\Client;
 
 class PaystackService
@@ -37,7 +38,7 @@ class PaystackService
     public function updateSecretKey(string $secretKey): void
     {
         if (empty($secretKey)) {
-            throw new Exception("Paystack secret key cannot be empty.");
+            throw new AppException("Paystack secret key cannot be empty.");
         }
         self::$secretKey = $secretKey;
     }
@@ -46,7 +47,7 @@ class PaystackService
     public function getSecretKey(): string
     {
         if (empty(self::$secretKey)) {
-            throw new Exception("PaystackService is not initialized. Call `getInstance()` first.");
+            throw new AppException("PaystackService is not initialized. Call `getInstance()` first.");
         }
         return self::$secretKey;
     }
@@ -68,12 +69,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to fetch banks: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to fetch banks: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to fetch banks: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch banks: " . $e->getMessage());
         }
     }
 
@@ -89,12 +90,13 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to resolve account: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException($data['message'] ?? 'Unknown error');
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to resolve account: " . $e->getMessage());
+        } catch (AppException $e) {
+            $errorMessage = CodeHelper::extractErrorMessage($e);
+            throw new AppException($errorMessage);
         }
     }
 
@@ -109,12 +111,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to create recipient: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to create recipient: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to create recipient: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
@@ -129,12 +131,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to run transfer: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to run transfer: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to run transfer: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to run transfer: " . $e->getMessage());
         }
     }
 
@@ -155,12 +157,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to create DVA: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to create DVA: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to create DVA: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
@@ -182,12 +184,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to create customer: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to create customer: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to create customer: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to create customer: " . $e->getMessage());
         }
     }
 
@@ -201,12 +203,12 @@ class PaystackService
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
-                throw new Exception("Failed to verify transfer: " . ($data['message'] ?? 'Unknown error'));
+                throw new AppException("Failed to verify transfer: " . ($data['message'] ?? 'Unknown error'));
             }
 
             return $data;
-        } catch (Exception $e) {
-            throw new Exception("Failed to verify transfer: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
     }
 }

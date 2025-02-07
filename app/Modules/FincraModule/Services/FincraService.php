@@ -2,9 +2,13 @@
 
 namespace App\Modules\FincraModule\Services;
 
+use App\Common\Enums\Cred;
+use App\Common\Enums\Currency;
+use App\Common\Enums\TransferType;
+use App\Common\Helpers\CodeHelper;
 use App\Exceptions\AppException;
-use Exception;
 use GuzzleHttp\Client;
+use Log;
 
 class FincraService
 {
@@ -64,10 +68,10 @@ class FincraService
     public function getBanks(): array
     {
         try {
-            $response = $this->httpClient->get('bank', ['headers' => $this->buildAuthHeader()]);
+            $response = $this->httpClient->get('/core/banks?currency=NGN&country=NG', ['headers' => $this->buildAuthHeader()]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to fetch banks: " . $e->getMessage());
         }
     }
@@ -76,15 +80,25 @@ class FincraService
     public function resolveAccount(string $accountNumber, string $bankCode): array
     {
         try {
-            $query = http_build_query([
-                'account_number' => $accountNumber,
-                'bank_code' => $bankCode,
-            ]);
-            $response = $this->httpClient->get("bank/resolve?$query", ['headers' => $this->buildAuthHeader()]);
+            $payload = [
+                'accountNumber' => $accountNumber,
+                'bankCode' => $bankCode,
+                "type" => "nuban"
+            ];
+
+            $response = $this->httpClient->post(
+                "/core/accounts/resolve",
+                [
+                    'headers' => $this->buildAuthHeader(),
+                    'json' => $payload,
+                ]
+            );
+
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
-            throw new AppException("Failed to resolve account: " . $e->getMessage());
+        } catch (AppException $e) {
+            $errorMessage = CodeHelper::extractErrorMessage($e);
+            throw new AppException($errorMessage);
         }
     }
 
@@ -98,23 +112,63 @@ class FincraService
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
     // Run a transfer using Fincra's API
-    public function runTransfer(array $payload): array
+    public function runTransfer(TransferType $transferType, array $payload): array
     {
         try {
-            $response = $this->httpClient->post('transfer', [
+            switch ($transferType) {
+                case TransferType::BANK_ACCOUNT_TRANSFER:
+                    return $this->performNGNTransfer($payload);
+                default:
+                    throw new AppException("Transfer Not avaliable for Specified Currency");
+            }
+        } catch (AppException $e) {
+            throw new AppException("Failed to run transfer: " . $e->getMessage());
+        }
+    }
+
+
+    private function performNGNTransfer(array $payload): mixed
+    {
+        $body = [
+            "amount" => $payload['amount'],
+            "beneficiary" => [
+                "accountHolderName" => $payload['accountHolderName'],
+                "accountNumber" => $payload['accountHolderName'],
+                "bankCode" => $payload['bankCode'],
+                // "country" => "NG", 
+                // for chosing which country the sender lives in, 
+                // in ISO regilated format
+                "firstName" => $payload['firstName'],
+                "lastName" => $payload['lastName'],
+                "type" => $payload['type'],
+            ],
+            "business" => Cred::BUSINESS_ID,
+            "customerReference" => CodeHelper::generateSecureReference(),
+            "description" => $payload['description'],
+            "destinationCurrency" => "NGN",
+            "paymentDestination" => "bank_account",
+            "sourceCurrency" => "NGN",
+            "sender" => [
+                "name" => $payload['sender_name'],
+                "email" => $payload['sender_email'],
+            ]
+        ];
+
+        try {
+            $response = $this->httpClient->post('/disbursements/payouts', [
                 'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
+                'json' => $body,
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
-            throw new AppException("Failed to run transfer: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
@@ -150,7 +204,7 @@ class FincraService
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
@@ -164,7 +218,7 @@ class FincraService
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
     }

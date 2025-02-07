@@ -2,6 +2,8 @@
 
 namespace App\Common\Helpers;
 
+use App\Common\Enums\Cred;
+
 class CodeHelper
 {
     /**
@@ -29,5 +31,34 @@ class CodeHelper
         }
 
         return $otp;
+    }
+
+    public static function generateSecureReference(): string
+    {
+        $prefix = Cred::ALT_COMPANY_NAME . "-";
+        $timestamp = microtime(true);
+        $randomNumber = rand(0, 1000000);
+        $userId = auth()->id();
+        $hash = hash('sha256', $timestamp . $randomNumber . $userId);
+        $secureReference = substr($hash, 0, 14);
+
+        return $prefix . $secureReference;
+    }
+
+    public static function extractErrorMessage($error)
+    {
+        if (is_string($error)) {
+            return $error;
+        }
+
+        if (is_array($error)) {
+            return $error['message'] ?? 'An unknown error occurred.';
+        }
+
+        if (is_object($error)) {
+            return $error->message ?? $error->getMessage() ?? 'An unknown error occurred.';
+        }
+
+        return 'An unknown error occurred.';
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MiscellaneousController;
+use App\Http\Controllers\TransferController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -40,7 +41,7 @@ Route::middleware($protectedMiddleware)->group(function () {
     Route::post("/complete-profile", [AuthController::class, 'completeProfile']);
 
     Route::prefix("/accounts")->group(function () {
-        
+
         Route::post("/", [AccountController::class, "createAccount"]);
         Route::get("/", [AccountController::class, "getAccounts"]);
         Route::get("/detail", [AccountController::class, 'getAccountDetails']);
@@ -62,6 +63,14 @@ Route::middleware($protectedMiddleware)->group(function () {
             Route::put("biometics", [AccountSettingController::class, "toggleBiometrics"]);
             Route::put("air-transfer", [AccountSettingController::class, "toggleAirTransfer"]);
             Route::put("balance-visibility", [AccountSettingController::class, "toggleBalanceVisibility"]);
+
+        });
+
+        Route::prefix("/transfers")->group(function () {
+
+            Route::get("/transfer/{account_id}", [TransferController::class, "transfer"]);
+            Route::post("/resolve-account/{account_id}", [TransferController::class, "resolveAccount"]);
+            Route::get("/get-banks/{account_id}", [TransferController::class, "getBanks"]);
 
         });
 

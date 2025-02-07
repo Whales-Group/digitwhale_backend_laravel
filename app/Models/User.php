@@ -69,19 +69,12 @@ class User extends Authenticatable
         $profileFields = [
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'middle_name' => $this->middle_name,
             'date_of_birth' => $this->date_of_birth,
-            'profile_url' => $this->profile_url,
-            'other_url' => $this->other_url,
             'phone_number' => $this->phone_number,
             'gender' => $this->gender,
-            'nin' => $this->nin,
             'bvn' => $this->bvn,
-            'marital_status' => $this->marital_status,
-            'employment_status' => $this->employment_status,
-            'annual_income' => $this->annual_income,
         ];
 
-        return array_reduce($profileFields, fn ($carry, $item) => $carry && !is_null($item), true);
+        return array_reduce($profileFields, fn($carry, $item) => $carry && !is_null($item), true);
     }
 }
