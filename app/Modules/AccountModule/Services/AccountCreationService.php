@@ -144,7 +144,7 @@ class AccountCreationService
         }
 
         $fincra_dva = $fincra->createDVA(
-            dateOfBirth: DateHelper::format($user->dob, "m-d-Y"),
+            dateOfBirth: DateHelper::format($user->date_of_birth, "m-d-Y"),
             firstName: $user->first_name,
             lastName: $user->last_name,
             bvn: $user->bvn,

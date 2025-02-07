@@ -14,8 +14,7 @@ use Log;
 class FincraService
 {
     private static $instance;
-    private static $secretKey;
-    // private $baseUrl = "https://sandboxapi.fincra.com/";
+    private $secretKey = 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc';
     private $baseUrl;
 
     private $httpClient;
@@ -26,16 +25,15 @@ class FincraService
         $this->baseUrl = env('APP_ENV') == 'development'
             ? "https://sandboxapi.fincra.com/"
             : "https://api.fincra.com/";
+        $this->secretKey = env('APP_ENV') == 'development'
+            ? env('FINCRA_TEST_SK')
+            : env('FINCRA_PROD_SK');
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
 
     // Singleton instance getter
     public static function getInstance(): FincraService
     {
-
-        self::$secretKey = env('APP_ENV') == 'development'
-            ? env('FINCRA_TEST_SK')
-            : env('FINCRA_PROD_SK');
 
         if (!self::$instance) {
             self::$instance = new FincraService();
@@ -65,9 +63,7 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => env('APP_ENV') == 'development'
-                ? env('FINCRA_TEST_SK')
-                : env('FINCRA_PROD_SK'),
+            'api-key' => "S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc",
             'Content-Type' => 'application/json',
         ];
     }
@@ -107,21 +103,6 @@ class FincraService
         } catch (AppException $e) {
             $errorMessage = CodeHelper::extractErrorMessage($e);
             throw new AppException($errorMessage);
-        }
-    }
-
-    // Create a transfer recipient using Fincra's API
-    public function createTransferRecipient(array $payload): array
-    {
-        try {
-            $response = $this->httpClient->post('transferrecipient', [
-                'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
-            ]);
-            $data = json_decode($response->getBody(), true);
-            return $data;
-        } catch (AppException $e) {
-            throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
@@ -241,11 +222,14 @@ class FincraService
         ];
 
         try {
-            $response = $this->httpClient->post('/profile/virtual-accounts/requests', [
-                'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
-            ]);
-            $data = json_decode($response->getBody(), true);
+
+            $response =
+                $this->httpClient->post('/profile/virtual-accounts/requests', [
+                    'headers' => $this->buildAuthHeader(),
+                    'json' => $payload,
+                ]);
+            $data =
+                json_decode($response->getBody(), true);
             return $data;
         } catch (AppException $e) {
             throw new AppException("Failed to create DVA: " . $e->getMessage());
