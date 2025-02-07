@@ -16,15 +16,16 @@ class FincraService
     private static $instance;
     private static $secretKey;
     // private $baseUrl = "https://sandboxapi.fincra.com/";
-    private $baseUrl = env('APP_ENV') == 'development'
-        ? "https://sandboxapi.fincra.com/" 
-        : "https://api.fincra.com/";
+    private $baseUrl;
 
     private $httpClient;
 
     // Private constructor for singleton pattern
     private function __construct()
     {
+        $this->baseUrl = env('APP_ENV') == 'development'
+            ? "https://sandboxapi.fincra.com/"
+            : "https://api.fincra.com/";
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
 

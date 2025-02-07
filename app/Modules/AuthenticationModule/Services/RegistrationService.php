@@ -27,7 +27,7 @@ class RegistrationService
             // Validate input for initialization
             $validator = Validator::make($request->all(), [
                 "profile_type" => "required|string",
-                "business_name" => "sometimes|string|required_if:profile_type,corporate",
+                "business_name" => "nullable|string",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string|min:6",
             ]);
