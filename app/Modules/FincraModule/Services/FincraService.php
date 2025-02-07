@@ -65,7 +65,9 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY",
+            'api-key' => env('APP_ENV') == 'development'
+                ? env('FINCRA_TEST_SK')
+                : env('FINCRA_PROD_SK'),
             'Content-Type' => 'application/json',
         ];
     }
