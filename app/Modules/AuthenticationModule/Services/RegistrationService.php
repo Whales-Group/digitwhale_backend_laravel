@@ -4,6 +4,7 @@ namespace App\Modules\AuthenticationModule\Services;
 
 use App\Common\Helpers\CodeHelper;
 use App\Common\Helpers\ResponseHelper;
+use App\Exceptions\AppException;
 use App\Models\User;
 use App\Modules\MailModule\MailModuleMain;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,7 @@ class RegistrationService
             // Validate input for initialization
             $validator = Validator::make($request->all(), [
                 "profile_type" => "required|string",
+                "business_name" => "sometimes|string|required_if:profile_type,corporate",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string|min:6",
             ]);
@@ -34,6 +36,12 @@ class RegistrationService
                 return ResponseHelper::error(
                     message: "Validation failed",
                     error: $validator->errors()->toArray()
+                );
+            }
+
+            if ($request->profile_type == 'corporate' && !$request->business_name) {
+                return ResponseHelper::error(
+                    message: "Business name is required for corporate accounts",
                 );
             }
 
@@ -48,6 +56,7 @@ class RegistrationService
                 "profile_type" => $request->profile_type,
                 "email" => $request->email,
                 "tag" => $tag,
+                'business_name'=> $request->business_name,
                 "password" => $hashedPassword,
                 "email_verified_at" => null,
             ]);
@@ -119,7 +128,7 @@ class RegistrationService
                 "first_name" => $request->first_name,
                 "middle_name" => $request->middle_name,
                 "last_name" => $request->last_name,
-                "dob" => $request->date_of_birth,
+                "date_of_birth" => $request->date_of_birth,
                 "profile_url" => $request->profile_url,
                 "other_url" => $request->other_url,
                 "phone_number" => $request->phone_number,

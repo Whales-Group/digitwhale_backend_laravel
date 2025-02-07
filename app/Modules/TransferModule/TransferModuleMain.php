@@ -25,6 +25,11 @@ class TransferModuleMain
         return $this->transferService->transfer($request, $account_id);
     }
 
+    public function verifyTransferStatusBy(): ?JsonResponse
+    {
+        return $this->transferService->verifyTransferStatusBy();
+    }
+
     public function getBanks(Request $request, string $account_id)
     {
         return $this->transferReourcesService->getBanks($request, $account_id);

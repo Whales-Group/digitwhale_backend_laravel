@@ -26,6 +26,8 @@ class CreateAccountsTable extends Migration
             $table->string('daily_transaction_limit')->default('500,000.00');
             $table->string('daily_transaction_count')->default('5');
             $table->boolean('pnd')->default(false);
+            $table->boolean('pnc')->default(false);
+            $table->string('blacklist_text')->nullable();
             $table->string('dedicated_account_id');
             $table->string('account_number');
             $table->string('customer_id');

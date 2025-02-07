@@ -26,6 +26,8 @@ class Account extends Model
         'daily_transaction_limit',
         'daily_transaction_count',
         'pnd',
+        'pnc',
+        'blacklist_text',
         'dedicated_account_id',
         'account_number',
         'customer_id',

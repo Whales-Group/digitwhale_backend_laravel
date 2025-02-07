@@ -24,7 +24,8 @@ $adminAccessMiddleWare = array_merge($publicMiddleware, [
 
 // Public Routes (No Authentication Required)
 Route::middleware($publicMiddleware)->group(function () {
-    Route::post("/paystack-whale-webhook", [MiscellaneousController::class, "handleCallbacks"]);
+    Route::post("/paystack-whale-webhook", [MiscellaneousController::class, "handlePaystackWebhook"]);
+    Route::post("/fincra-whale-webhook", [MiscellaneousController::class, "handleFincraWebhook"]);
     Route::post("/sign-in", [AuthController::class, "signIn"]);
     Route::post("/initiate-registry", [AuthController::class, 'initializeRegistration']);
     Route::post("/send-otp", [AuthController::class, "sendOtp"]);
@@ -66,13 +67,19 @@ Route::middleware($protectedMiddleware)->group(function () {
 
         });
 
-        Route::prefix("/transfers")->group(function () {
+        Route::prefix("/transfer")->group(function () {
 
-            Route::get("/transfer/{account_id}", [TransferController::class, "transfer"]);
-            Route::post("/resolve-account/{account_id}", [TransferController::class, "resolveAccount"]);
-            Route::get("/get-banks/{account_id}", [TransferController::class, "getBanks"]);
+            Route::get("/{account_id}", [TransferController::class, "transfer"]);
+            Route::put("/", [TransferController::class, "verifyTransferStatusBy"]);
 
         });
+
+    });
+
+    Route::prefix("/core")->group(function () {
+
+        Route::post("/resolve-account/{account_id}", [TransferController::class, "resolveAccount"]);
+        Route::get("/get-banks/{account_id}", [TransferController::class, "getBanks"]);
 
     });
 

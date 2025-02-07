@@ -35,7 +35,7 @@ class CodeHelper
 
     public static function generateSecureReference(): string
     {
-        $prefix = Cred::ALT_COMPANY_NAME . "-";
+        $prefix = Cred::ALT_COMPANY_NAME->value . "-";
         $timestamp = microtime(true);
         $randomNumber = rand(0, 1000000);
         $userId = auth()->id();
