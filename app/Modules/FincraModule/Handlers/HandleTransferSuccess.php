@@ -21,8 +21,8 @@ class HandleTransferSuccess
         }
 
         // credit user 
-        $account = Account::where("dedicated_account_id", $transactionData['_id'])->first();
-        $newBalance = $account->balance - $transactionData['amountReceived'];
+        $account = Account::where("dedicated_account_id", $transactionData['virtualAccount'])->first();
+        $newBalance = $account->balance + $transactionData['amountReceived'];
         $account->update([
             'balance' => $newBalance,
         ]);
@@ -32,7 +32,7 @@ class HandleTransferSuccess
             'transaction_reference' => $transactionData['reference'],
             'from_user_name' => $transactionData['customerName'],
             'from_account' => $transactionData['senderAccountNumber'] ?? 'Unknown',
-            'to_sys_account_id' => $transactionData['virtualAccount'],
+            'to_sys_account_id' => null,
             'currency' => $transactionData['sourceCurrency'],
             'amount' => $transactionData['amountReceived'],
             'status' => 'successful',
