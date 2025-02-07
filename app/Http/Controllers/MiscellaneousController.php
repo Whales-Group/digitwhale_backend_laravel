@@ -11,7 +11,7 @@ class MiscellaneousController extends Controller
 {
 
     public PaystackModuleMain $moduleMain;
-    public PaystackModuleMain $fincraModuleMain;
+    public FincraModuleMain $fincraModule;
 
     public function __construct(
         PaystackModuleMain $moduleMain,
@@ -28,6 +28,6 @@ class MiscellaneousController extends Controller
 
     public function handleFincraWebhook(Request $request): ?JsonResponse
     {
-        return $this->fincraModuleMain->handleWebhook($request);
+        return $this->fincraModule->handleWebhook($request);
     }
 }

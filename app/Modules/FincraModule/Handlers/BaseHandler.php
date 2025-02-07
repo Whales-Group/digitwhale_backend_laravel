@@ -13,7 +13,11 @@ class BaseHandler
 {
     public function handle(Request $request): ?JsonResponse
     {
+        $data = $request->all();
+
         $event = $request->input("event");
+        $transactionData = $data['data'];
+
 
         try {
             $eventEnum = FincraWebhookEvent::from($event);
@@ -26,8 +30,8 @@ class BaseHandler
         }
 
         return match ($eventEnum) {
-            FincraWebhookEvent::TRANSFER_SUCCESS => \App\Modules\FincraModule\Handlers\HandleTransferSuccess::handle(),
-            FincraWebhookEvent::TRANSFER_FAILED => \App\Modules\FincraModule\Handlers\HandleTransferFailed::handle(),
+            FincraWebhookEvent::TRANSFER_SUCCESS => \App\Modules\FincraModule\Handlers\HandleTransferSuccess::handle($transactionData),
+            FincraWebhookEvent::TRANSFER_FAILED => \App\Modules\FincraModule\Handlers\HandleTransferFailed::handle($transactionData),
             default => ResponseHelper::unprocessableEntity(
                 message: "Unhandled webhook event",
                 error: ["event" => $event]

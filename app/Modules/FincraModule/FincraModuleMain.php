@@ -3,7 +3,7 @@
 namespace App\Modules\FincraModule;
 
 use App\Modules\FincraModule\Handlers\BaseHandler;
-use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Request;
 
 class FincraModuleMain
 {
