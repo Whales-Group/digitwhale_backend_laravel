@@ -2,6 +2,7 @@
 
 namespace App\Modules\TransferModule\Services;
 
+use App\Common\Enums\TransferType;
 use App\Common\Helpers\DateHelper;
 use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
@@ -23,7 +24,7 @@ class TransactionService
     }
 
 
-    public function registerTransaction(array $data)
+    public function registerTransaction(array $data, TransferType $transferType)
     {
         $user = auth()->user();
         $account = Account::where("user_id", $user->id)->where('currency', $data['currency'])->first();
@@ -56,7 +57,14 @@ class TransactionService
             'amount' => $data['amount'],
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
-            'entry_type' => $data['entry_type'],
+            'entry_type' => $data['entry_type'] ?? 'debit',
+            'charge' => $transferType == TransferType::WHALE_TO_WHALE ? "0" : '0.5',
+            'source_amount' => $data['amount'],
+            'amount_received' => $transferType == TransferType::WHALE_TO_WHALE ? $data['amount'] : (float)$data['amount'] - 0.5,
+            'from_bank' => $account->service_bank,
+            'source_currency' => $account->currency,
+            'destination_currency' => 'NGN',
+
         ];
 
         $transaction = TransactionEntry::create($registry);

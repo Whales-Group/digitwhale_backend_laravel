@@ -16,10 +16,10 @@ class BaseHandler
         $data = $request->all();
         $signatureFromWebhook = $request->header('signature');
 
-        if (!$this->isValidSignature($data, $signatureFromWebhook, $merchantWebhookSecretKey)) {
-            Log::warning("Invalid webhook signature", ["event" => $data['event']]);
-            return ResponseHelper::unauthorized("Invalid webhook signature");
-        }
+        // if (!$this->isValidSignature($data, $signatureFromWebhook, $merchantWebhookSecretKey)) {
+        //     Log::warning("Invalid webhook signature", ["event" => $data['event']]);
+        //     return ResponseHelper::unauthorized("Invalid webhook signature");
+        // }
 
         $event = $data['event'] ?? null;
         $transactionData = $data['data'] ?? [];

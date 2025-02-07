@@ -26,7 +26,7 @@ class HandleTransferSuccess
         $account->update([
             'balance' => $newBalance,
         ]);
-        
+
         // Store the successful transaction
         $transaction = TransactionEntry::create([
             'transaction_reference' => $transactionData['reference'],
@@ -34,12 +34,18 @@ class HandleTransferSuccess
             'from_account' => $transactionData['senderAccountNumber'] ?? 'Unknown',
             'to_sys_account_id' => null,
             'currency' => $transactionData['sourceCurrency'],
-            'amount' => $transactionData['amountReceived'],
+            'amount' => $transactionData['destinationAmount'],
             'status' => 'successful',
             'type' => 'deposit',
             'description' => $transactionData['description'] ?? 'Fund received',
             'timestamp' => now(),
             'entry_type' => 'credit',
+            'charge' => $transactionData['fee'],
+            'source_amount' => $transactionData['sourceAmount'],
+            'amount_received' => $transactionData['amountReceived'],
+            'from_bank' => $transactionData['senderBankName'],
+            'source_currency' => $transactionData['sourceCurrency'],
+            'destination_currency' => $transactionData['destinationCurrency'],
         ]);
 
         return ResponseHelper::success([
