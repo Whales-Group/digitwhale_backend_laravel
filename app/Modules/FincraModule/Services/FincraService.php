@@ -2,15 +2,21 @@
 
 namespace App\Modules\FincraModule\Services;
 
+use App\Common\Enums\Cred;
+use App\Common\Enums\Currency;
+use App\Common\Enums\TransferType;
+use App\Common\Helpers\CodeHelper;
 use App\Exceptions\AppException;
-use Exception;
 use GuzzleHttp\Client;
+use Log;
 
 class FincraService
 {
     private static $instance;
     private static $secretKey;
-    private $baseUrl = "https://api.paystack.co/";
+    private $baseUrl = "https://sandboxapi.fincra.com/";
+    // private $baseUrl = "https://api.fincra.com/";
+
     private $httpClient;
 
     // Private constructor for singleton pattern
@@ -23,7 +29,7 @@ class FincraService
     public static function getInstance(): FincraService
     {
 
-        self::$secretKey = "sk_test_bb3fc97c4a0729e6742033225e4cdef97e231f3f";
+        self::$secretKey = "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY";
 
         if (!self::$instance) {
             self::$instance = new FincraService();
@@ -35,7 +41,7 @@ class FincraService
     public function updateSecretKey(string $secretKey): void
     {
         if (empty($secretKey)) {
-            throw new AppException("Paystack secret key cannot be empty.");
+            throw new AppException("Fincra secret key cannot be empty.");
         }
         $this->secretKey = $secretKey;
     }
@@ -44,7 +50,7 @@ class FincraService
     public function getSecretKey(): string
     {
         if (empty($this->secretKey)) {
-            throw new AppException("PaystackService is not initialized. Call `initialize()` first.");
+            throw new AppException("FincraService is not initialized. Call `initialize()` first.");
         }
         return $this->secretKey;
     }
@@ -53,40 +59,50 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->getSecretKey(),
+            'api-key' => "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY",
             'Content-Type' => 'application/json',
         ];
     }
 
-    // Fetch a list of banks from Paystack's API
+    // Fetch a list of banks from Fincra's API
     public function getBanks(): array
     {
         try {
-            $response = $this->httpClient->get('bank', ['headers' => $this->buildAuthHeader()]);
+            $response = $this->httpClient->get('/core/banks?currency=NGN&country=NG', ['headers' => $this->buildAuthHeader()]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to fetch banks: " . $e->getMessage());
         }
     }
 
-    // Resolve an account using Paystack's API
+    // Resolve an account using Fincra's API
     public function resolveAccount(string $accountNumber, string $bankCode): array
     {
         try {
-            $query = http_build_query([
-                'account_number' => $accountNumber,
-                'bank_code' => $bankCode,
-            ]);
-            $response = $this->httpClient->get("bank/resolve?$query", ['headers' => $this->buildAuthHeader()]);
+            $payload = [
+                'accountNumber' => $accountNumber,
+                'bankCode' => $bankCode,
+                "type" => "nuban"
+            ];
+
+            $response = $this->httpClient->post(
+                "/core/accounts/resolve",
+                [
+                    'headers' => $this->buildAuthHeader(),
+                    'json' => $payload,
+                ]
+            );
+
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
-            throw new AppException("Failed to resolve account: " . $e->getMessage());
+        } catch (AppException $e) {
+            $errorMessage = CodeHelper::extractErrorMessage($e);
+            throw new AppException($errorMessage);
         }
     }
 
-    // Create a transfer recipient using Paystack's API
+    // Create a transfer recipient using Fincra's API
     public function createTransferRecipient(array $payload): array
     {
         try {
@@ -96,70 +112,104 @@ class FincraService
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
-    // Run a transfer using Paystack's API
-    public function runTransfer(array $payload): array
+    // Run a transfer using Fincra's API
+    public function runTransfer(TransferType $transferType, array $payload): array
     {
         try {
-            $response = $this->httpClient->post('transfer', [
-                'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
-            ]);
-            $data = json_decode($response->getBody(), true);
-            return $data;
-        } catch (Exception $e) {
+            switch ($transferType) {
+                case TransferType::BANK_ACCOUNT_TRANSFER:
+                    return $this->performNGNTransfer($payload);
+                default:
+                    throw new AppException("Transfer Not avaliable for Specified Currency");
+            }
+        } catch (AppException $e) {
             throw new AppException("Failed to run transfer: " . $e->getMessage());
         }
     }
 
-    // Create a Dedicated Virtual Account (DVA) using Paystack's API
-    public function createDVA(string $customer, string $phone, string $provider = 'wema-bank'): array
+
+    private function performNGNTransfer(array $payload): mixed
     {
-        $payload = [
-            'customer' => $customer,
-            'preferred_bank' => $provider,
-            'phone' => $phone,
+        $body = [
+            "amount" => $payload['amount'],
+            "beneficiary" => [
+                "accountHolderName" => $payload['accountHolderName'],
+                "accountNumber" => $payload['accountHolderName'],
+                "bankCode" => $payload['bankCode'],
+                // "country" => "NG", 
+                // for chosing which country the sender lives in, 
+                // in ISO regilated format
+                "firstName" => $payload['firstName'],
+                "lastName" => $payload['lastName'],
+                "type" => $payload['type'],
+            ],
+            "business" => Cred::BUSINESS_ID,
+            "customerReference" => CodeHelper::generateSecureReference(),
+            "description" => $payload['description'],
+            "destinationCurrency" => "NGN",
+            "paymentDestination" => "bank_account",
+            "sourceCurrency" => "NGN",
+            "sender" => [
+                "name" => $payload['sender_name'],
+                "email" => $payload['sender_email'],
+            ]
         ];
 
         try {
-            $response = $this->httpClient->post('dedicated_account', [
+            $response = $this->httpClient->post('/disbursements/payouts', [
                 'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
+                'json' => $body,
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
-    // Create a customer using Paystack's API
-    public function createCustomer(array $customer): array
-    {
+    // Create a Dedicated Virtual Account (DVA) using Fincra's API
+    // wema, providus, globus
+    public function createDVA(
+        string $dateOfBirth,
+        string $firstName,
+        string $lastName,
+        string $bvn,
+        string $bank = 'wema',
+        string $currency,
+        string $email
+
+    ): array {
         $payload = [
-            'email' => $customer['email'],
-            'first_name' => $customer['first_name'] ?? null,
-            'last_name' => $customer['last_name'] ?? null,
-            'phone' => $customer['phone'] ?? null,
+            "dateOfBirth" => $dateOfBirth /*"10-12-1993"*/ ,
+            "accountType" => "individual",
+            "currency" => $currency ?? "NGN",
+            "KYCInformation" => [
+                "firstName" => $firstName,
+                "lastName" => $lastName,
+                "email" => $email,
+                "bvn" => $bvn
+            ],
+            "channel" => $bank
         ];
 
         try {
-            $response = $this->httpClient->post('customer', [
+            $response = $this->httpClient->post('/profile/virtual-accounts/requests', [
                 'headers' => $this->buildAuthHeader(),
                 'json' => $payload,
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
-            throw new AppException("Failed to create customer: " . $e->getMessage());
+        } catch (AppException $e) {
+            throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
-    // Verify a transfer using Paystack's API
+    // Verify a transfer using Fincra's API
     public function verifyTransfer(string $reference): array
     {
         try {
@@ -168,7 +218,7 @@ class FincraService
             ]);
             $data = json_decode($response->getBody(), true);
             return $data;
-        } catch (Exception $e) {
+        } catch (AppException $e) {
             throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
     }

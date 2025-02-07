@@ -12,16 +12,23 @@ return new class extends Migration {
     {
         Schema::create("users", function (Blueprint $table) {
             $table->id();
-            $table->string("profile_type");
+            $table->enum("profile_type", ['personal','corporate']);
+            $table->string("business_name")->default("None");
             $table->string("first_name")->nullable();
             $table->string("last_name")->nullable();
             $table->string("middle_name")->nullable();
-            $table->string("email", 100)->unique()->nullable();
             $table->string("tag", 20)->unique()->nullable();
-            $table->string("dob")->nullable();
+            $table->string("email", 100)->unique()->nullable();
+            $table->date("date_of_birth")->nullable();
+            $table->string("gender")->nullable();
+            $table->string("phone_number")->nullable();
+            $table->string("nin")->nullable();
+            $table->string("bvn")->nullable();
+            $table->string("marital_status")->nullable();
+            $table->string("employment_status")->nullable();
+            $table->string("annual_income")->nullable();
             $table->string("profile_url")->nullable();
             $table->string("other_url")->nullable();
-            $table->string("phone_number")->nullable();
             $table->timestamp("email_verified_at")->nullable();
             $table->string("password");
             $table->rememberToken();

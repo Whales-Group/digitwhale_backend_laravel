@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Modules\AccountModule\Services;
+namespace App\Modules\AccountSettingModule\Services;
 
 use App\Common\Enums\Status;
 use App\Common\Enums\VerificationType;
 use App\Common\Helpers\ResponseHelper;
 use App\Models\AccountSetting;
 use App\Models\NextOfKin;
-use App\Models\PersonalDetails;
 use App\Models\SecurityQuestion;
 use App\Models\VerificationRecord;
 use Illuminate\Http\Request;
@@ -31,8 +30,6 @@ class AccountSettingsCreationService
                 $newAccountSettings->save();
 
                 $this->createVerificationRecords($newAccountSettings);
-
-                $this->createPersonalDetails($newAccountSettings, $request->user());
 
                 DB::commit();
 
@@ -88,25 +85,5 @@ class AccountSettingsCreationService
                 'url' => '',
             ]);
         }
-    }
-
-    private function createPersonalDetails(AccountSetting $accountSettings, $user)
-    {
-        PersonalDetails::create([
-            'account_setting_id' => $accountSettings->id,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'middle_name' => $user->middle_name,
-            'tag' => $user->tag,
-            'date_of_birth' => $user->date_of_birth,
-            'gender' => null,
-            'phone_number' => $user->phone_number ?? null,
-            'email' => $user->email,
-            'nin' => null,
-            'bvn' => null,
-            'marital_status' => null,
-            'employment_status' => null,
-            'annual_income' => null,
-        ]);
     }
 }
