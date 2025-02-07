@@ -29,6 +29,12 @@ class TransactionEntry extends Model
         'timestamp',
         'description',
         'entry_type',
+        'charge',
+        'source_amount',
+        'amount_received',
+        'from_bank',
+        'source_currency',
+        'destination_currency',
     ];
 
     protected $casts = [
