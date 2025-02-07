@@ -16,7 +16,9 @@ class FincraService
     private static $instance;
     private static $secretKey;
     // private $baseUrl = "https://sandboxapi.fincra.com/";
-    private $baseUrl = "https://api.fincra.com/";
+    private $baseUrl = env('APP_ENV') == 'development'
+        ? "https://sandboxapi.fincra.com/" 
+        : "https://api.fincra.com/";
 
     private $httpClient;
 
@@ -30,8 +32,9 @@ class FincraService
     public static function getInstance(): FincraService
     {
 
-        self::$secretKey = "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY";
-//         self::$secretKey = "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY";
+        self::$secretKey = env('APP_ENV') == 'development'
+            ? env('FINCRA_TEST_SK')
+            : env('FINCRA_PROD_SK');
 
         if (!self::$instance) {
             self::$instance = new FincraService();
