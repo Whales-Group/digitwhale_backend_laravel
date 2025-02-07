@@ -27,6 +27,10 @@ class TransferResourcesService
             $user = auth()->user();
             $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
 
+            if(!$account){
+                throw new AppException("Invalid account id or account not found.");
+            }
+            
             try {
                 $accountType = ServiceProvider::tryFrom($account->service_provider);
             } catch (AppException $e) {
@@ -59,6 +63,10 @@ class TransferResourcesService
 
             if (strlen($account_number) > 10) {
                 throw new AppException("accountNumber length must be 10 characters long");
+            }
+
+            if(!$account){
+                throw new AppException("Invalid account id or account not found.");
             }
 
             try {
