@@ -5,3 +5,5 @@
 - add params to enable user get account statements
 - imple coporate transfer 
 - give paparm for network charge on entry [done]
+- remove undefined relationship on account settins to personalDetails
+- add all account settings endpoints

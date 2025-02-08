@@ -99,7 +99,7 @@ class TransferService
         }
     }
 
-    private function handleFincraTransfer(Request $request, string $account_id)
+    private function handleFincraTransfer(Request $request, string $account_id): array
     {
         $recieving_account_id = $request->get("recieving_account_id");
         $amount = $request->get("amount");
