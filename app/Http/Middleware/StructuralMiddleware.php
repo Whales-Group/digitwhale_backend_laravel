@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\AppLog;
 
 class StructuralMiddleware
 {
@@ -17,13 +18,13 @@ class StructuralMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Log the incoming request
-        // Log::debug("Request data: ", $request->all());
+        AppLog::debug("Request data: ", $request->all());
 
         // Pass the request to the next middleware and get the response
         $response = $next($request);
 
         // Log the response data (if needed)
-        // Log::debug("Response status: ", [
+        AppLog::debug("Response status: ", [
         //     "status" => $response->getStatusCode(),
         // ]);
 
