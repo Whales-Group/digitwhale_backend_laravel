@@ -7,3 +7,5 @@
 - give paparm for network charge on entry [done]
 - remove undefined relationship on account settins to personalDetails
 - add all account settings endpoints
+- remove webhooks from api key middleware coverage 
+
