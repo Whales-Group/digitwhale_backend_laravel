@@ -35,6 +35,7 @@ class HandleTransferSuccess
 
         // Update user balance
         try {
+            $prevBalance = $account->balance;
             $newBalance = $account->balance + $transactionData['amountReceived'];
             $account->update(['balance' => $newBalance]);
 
@@ -76,7 +77,7 @@ class HandleTransferSuccess
                 'from_bank' => $transactionData['senderBankName'],
                 'source_currency' => $transactionData['sourceCurrency'],
                 'destination_currency' => $transactionData['destinationCurrency'],
-                'previous_balance' => $account->balance,
+                'previous_balance' => $prevBalance,
                 'new_balance' => $newBalance,
             ]);
 

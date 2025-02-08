@@ -4,13 +4,11 @@ namespace App\Modules\TransferModule\Services;
 
 use App\Common\Enums\TransferType;
 use App\Common\Helpers\DateHelper;
-use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
-use Illuminate\Http\Request;
 
 class TransactionService
 {
@@ -32,12 +30,15 @@ class TransactionService
             throw new AppException("Account not found.");
         }
 
-        // CALCULATE NEW BALANCE
+        // Calculate fee and final amount
+        $feeData = $this->calculateTransactionFee($data['amount'], $transferType);
+        $fee = $feeData['fee'];
+        $finalAmount = $feeData['final_amount'];
+
+        // Calculate new balance
         if (($data['entry_type'] ?? 'debit') === 'debit') {
-            $newBalance = $account->balance - (($transferType == TransferType::WHALE_TO_WHALE) 
-                ? (float) $data['amount'] 
-                : (float) $data['amount'] + 0.5);
-        } else {
+            $newBalance = $account->balance - $finalAmount;
+        } else if (($data['entry_type'] ?? 'debit') === 'credit') {
             $newBalance = $account->balance + (float) $data['amount'];
         }
 
@@ -62,11 +63,9 @@ class TransactionService
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
-            'charge' => $transferType == TransferType::WHALE_TO_WHALE ? "0" : '0.5',
+            'charge' => $fee,
             'source_amount' => $data['amount'],
-            'amount_received' => $transferType == TransferType::WHALE_TO_WHALE 
-                ? (float) $data['amount'] 
-                : (float) $data['amount'] - 0.5,
+            'amount_received' => $finalAmount,
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NGN',
@@ -77,5 +76,18 @@ class TransactionService
         $transaction = TransactionEntry::create($registry);
 
         return $transaction;
+    }
+
+    public function calculateTransactionFee(float $amount, TransferType $transferType): array
+    {
+        $feePercentage = 1.0; // 1% fee
+        $fee = ($transferType == TransferType::WHALE_TO_WHALE) ? 0 : ($amount * ($feePercentage / 100));
+        $finalAmount = $amount - $fee;
+
+        return [
+            'initial_amount' => $amount,
+            'fee' => $fee,
+            'final_amount' => $finalAmount,
+        ];
     }
 }
