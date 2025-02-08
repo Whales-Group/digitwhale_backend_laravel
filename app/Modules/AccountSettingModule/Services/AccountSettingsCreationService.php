@@ -35,7 +35,6 @@ class AccountSettingsCreationService
 
                 return ResponseHelper::success($newAccountSettings
                 ->with('verifications')
-                ->with('personalDetails')
                 ->firstOrFail());
             } catch (\Exception $e) {
                 DB::rollBack();
