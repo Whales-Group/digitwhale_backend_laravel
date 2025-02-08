@@ -25,8 +25,8 @@ class StructuralMiddleware
 
         // Log the response data (if needed)
         AppLog::debug("Response status: ", [
-        //     "status" => $response->getStatusCode(),
-        // ]);
+            "status" => $response->getStatusCode(),
+        ]);
 
         // Modify the response headers
         $response->headers->set("Accept", "application/json");
