@@ -76,6 +76,8 @@ class HandleTransferSuccess
                 'from_bank' => $transactionData['senderBankName'],
                 'source_currency' => $transactionData['sourceCurrency'],
                 'destination_currency' => $transactionData['destinationCurrency'],
+                'previous_balance' => $account->balance,
+                'new_balance' => $newBalance,
             ]);
 
             AppLog::info("Transaction recorded successfully", [
