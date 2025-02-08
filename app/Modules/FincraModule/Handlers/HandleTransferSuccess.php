@@ -33,17 +33,14 @@ class HandleTransferSuccess
         // Log account information
         AppLog::debug("Account found", ['account_id' => $account->id, 'user_id' => $account->user_id]);
 
-        // Calculate transaction fee (1% capped at 300 NGN)
-        $fee = 0;
-        if ($transactionData['sourceCurrency'] === 'NGN') {
-            $calculatedFee = $transactionData['amountReceived'] * 0.01;
-            $fee = min($calculatedFee, 300);
-        }
+        // Transaction fee (1% capped at 300 NGN)
+        $fee = $transactionData['fee'];
+       
 
         // Update user balance
         try {
             $prevBalance = $account->balance;
-            $newBalance = $account->balance + ($transactionData['amountReceived'] - $fee);
+            $newBalance = $account->balance + ($transactionData['amountReceived']);
             $account->update(['balance' => $newBalance]);
 
             AppLog::info("Account credited successfully", [
@@ -81,7 +78,7 @@ class HandleTransferSuccess
                 'entry_type' => 'credit',
                 'charge' => $fee,
                 'source_amount' => $transactionData['sourceAmount'],
-                'amount_received' => $transactionData['amountReceived'] - $fee,
+                'amount_received' => $transactionData['amountReceived'],
                 'from_bank' => $transactionData['senderBankName'],
                 'source_currency' => $transactionData['sourceCurrency'],
                 'destination_currency' => $transactionData['destinationCurrency'],
