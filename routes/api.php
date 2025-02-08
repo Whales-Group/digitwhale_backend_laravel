@@ -22,10 +22,13 @@ $adminAccessMiddleWare = array_merge($publicMiddleware, [
     "ability:" . TokenAbility::ADMIN_ACCESS_API->value,
 ]);
 
+// WEBHOOKS
+Route::post("/paystack-whale-webhook", [MiscellaneousController::class, "handlePaystackWebhook"]);
+Route::post("/fincra-whale-webhook", [MiscellaneousController::class, "handleFincraWebhook"]);
+
+
 // Public Routes (No Authentication Required)
 Route::middleware($publicMiddleware)->group(function () {
-    Route::post("/paystack-whale-webhook", [MiscellaneousController::class, "handlePaystackWebhook"]);
-    Route::post("/fincra-whale-webhook", [MiscellaneousController::class, "handleFincraWebhook"]);
     Route::post("/sign-in", [AuthController::class, "signIn"]);
     Route::post("/initiate-registry", [AuthController::class, 'initializeRegistration']);
     Route::post("/send-otp", [AuthController::class, "sendOtp"]);
