@@ -72,7 +72,7 @@ Route::middleware($protectedMiddleware)->group(function () {
 
         Route::prefix("/transfer")->group(function () {
 
-            Route::get("/{account_id}", [TransferController::class, "transfer"]);
+            Route::post("/{account_id}", [TransferController::class, "transfer"]);
             Route::put("/", [TransferController::class, "verifyTransferStatusBy"]);
 
         });
