@@ -36,7 +36,7 @@ class HandleTransferFailed
         // Update user balance
         try {
 
-            AppLog::info("Account credited successfully", [
+            AppLog::info("Account credited failed", [
                 'account_id' => $account->id,
                 'previous_balance' => $account->balance,
                 'amount_received' => $transactionData['amountReceived']
@@ -77,13 +77,13 @@ class HandleTransferFailed
                 'new_balance' => $account->balance,
             ]);
 
-            AppLog::info("Transaction recorded successfully", [
+            AppLog::info("Transaction recorded failed", [
                 'transaction_reference' => $transactionData['reference'],
                 'amount' => $transactionData['destinationAmount']
             ]);
 
             return ResponseHelper::success([
-                'message' => 'Transaction recorded successfully',
+                'message' => 'Transaction recorded failed',
                 'data' => $transaction,
             ]);
         } catch (\Exception $e) {
