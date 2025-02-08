@@ -141,7 +141,6 @@ class TransferService
 
         $fincra_res = $this->fincraService->runTransfer(TransferType::BANK_ACCOUNT_TRANSFER, $payload);
 
-        var_dump(json_encode($fincra_res));
 
         $response = [
             'currency' => $sender->currency,
