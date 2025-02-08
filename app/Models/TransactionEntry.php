@@ -35,6 +35,8 @@ class TransactionEntry extends Model
         'from_bank',
         'source_currency',
         'destination_currency',
+        'previous_balance',
+        'new_balance',
     ];
 
     protected $casts = [

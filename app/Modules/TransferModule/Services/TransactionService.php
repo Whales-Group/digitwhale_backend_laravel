@@ -23,7 +23,6 @@ class TransactionService
         $this->paystackService = PaystackService::getInstance();
     }
 
-
     public function registerTransaction(array $data, TransferType $transferType)
     {
         $user = auth()->user();
@@ -33,16 +32,21 @@ class TransactionService
             throw new AppException("Account not found.");
         }
 
+        // CALCULATE NEW BALANCE
+        if (($data['entry_type'] ?? 'debit') === 'debit') {
+            $newBalance = $account->balance - (($transferType == TransferType::WHALE_TO_WHALE) 
+                ? (float) $data['amount'] 
+                : (float) $data['amount'] + 0.5);
+        } else {
+            $newBalance = $account->balance + (float) $data['amount'];
+        }
+
         $registry = [
             'from_sys_account_id' => $account->id,
             'from_account' => $account->account_number,
-            'from_user_name' => $user->profile_type != 'personal'
+            'from_user_name' => $user->profile_type !== 'personal'
                 ? $user->business_name
-                : $user->first_name
-                . " "
-                . $user->middle_name
-                . " "
-                . $user->last_name,
+                : trim("{$user->first_name} {$user->middle_name} {$user->last_name}"),
             'from_user_email' => $user->email,
             'currency' => $data['currency'],
             'to_sys_account_id' => $data['to_sys_account_id'],
@@ -60,86 +64,18 @@ class TransactionService
             'entry_type' => $data['entry_type'] ?? 'debit',
             'charge' => $transferType == TransferType::WHALE_TO_WHALE ? "0" : '0.5',
             'source_amount' => $data['amount'],
-            'amount_received' => $transferType == TransferType::WHALE_TO_WHALE ? $data['amount'] : (float)$data['amount'] - 0.5,
+            'amount_received' => $transferType == TransferType::WHALE_TO_WHALE 
+                ? (float) $data['amount'] 
+                : (float) $data['amount'] - 0.5,
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NGN',
-
+            'previous_balance' => $account->balance,
+            'new_balance' => $newBalance,
         ];
 
         $transaction = TransactionEntry::create($registry);
 
         return $transaction;
     }
-
-    public function getAllTransactions(Request $request)
-    {
-        $limit = $request->get('limit', 10); // Default pagination limit is 10
-        $page = $request->get('page', 1); // Default page number is 1
-
-        $query = TransactionEntry::query();
-
-        // Filtering by type
-        if ($request->has('type')) {
-            $query->where('type', $request->type);
-        }
-
-        // Filtering by amount range
-        if ($request->has('from_amount')) {
-            $query->where('amount', '>=', $request->from_amount);
-        }
-        if ($request->has('to_amount')) {
-            $query->where('amount', '<=', $request->to_amount);
-        }
-
-        // Filtering by date range
-        if ($request->has('from_date')) {
-            $query->whereDate('timestamp', '>=', $request->from_date);
-        }
-        if ($request->has('to_date')) {
-            $query->whereDate('timestamp', '<=', $request->to_date);
-        }
-
-        // Searching by query_string (applies to user names, emails, or account numbers)
-        if ($request->has('query_string')) {
-            $searchTerm = $request->query_string;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('from_user_name', 'LIKE', "%$searchTerm%")
-                    ->orWhere('to_user_name', 'LIKE', "%$searchTerm%")
-                    ->orWhere('from_user_email', 'LIKE', "%$searchTerm%")
-                    ->orWhere('to_user_email', 'LIKE', "%$searchTerm%")
-                    ->orWhere('from_account', 'LIKE', "%$searchTerm%")
-                    ->orWhere('to_account_number', 'LIKE', "%$searchTerm%");
-            });
-        }
-
-        // Paginate results
-        $transactions = $query->orderBy('timestamp', 'desc')->paginate($limit, ['*'], 'page', $page);
-
-        return response()->json($transactions);
-    }
-
-    public function getTransactionDetails(Request $request)
-    {
-        $request->validate([
-            'transaction_reference' => 'required|string|exists:transaction_entries,transaction_reference',
-        ]);
-
-        // Retrieve transaction using the reference
-        $transaction = TransactionEntry::where('transaction_reference', $request->transaction_reference)->first();
-
-        if (!$transaction) {
-            return ResponseHelper::notFound(
-                message: 'Transaction not found'
-            );
-        }
-
-        return ResponseHelper::success(
-            message: 'Transaction details retrieved successfully',
-            data: $transaction
-        );
-    }
-
-
-
 }
