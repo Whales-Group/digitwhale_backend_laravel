@@ -48,7 +48,6 @@ class AccountSettingsCreationService
 
         return ResponseHelper::success($accountSettings
         ->with('verifications')
-        ->with('personalDetails')
         ->firstOrFail());
 
     }
