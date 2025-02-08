@@ -4,11 +4,13 @@ namespace App\Modules\TransferModule\Services;
 
 use App\Common\Enums\TransferType;
 use App\Common\Helpers\DateHelper;
+use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
+use Illuminate\Http\Request;
 
 class TransactionService
 {
@@ -30,16 +32,14 @@ class TransactionService
             throw new AppException("Account not found.");
         }
 
-        // Calculate fee and final amount
-        $feeData = $this->calculateTransactionFee($data['amount'], $transferType);
-        $fee = $feeData['fee'];
-        $finalAmount = $feeData['final_amount'];
+        // Calculate the transaction fee
+        $fee = $this->calculateTransactionFee($data['amount'], $data['currency']);
 
         // Calculate new balance
         if (($data['entry_type'] ?? 'debit') === 'debit') {
-            $newBalance = $account->balance - $finalAmount;
-        } else if (($data['entry_type'] ?? 'debit') === 'credit') {
-            $newBalance = $account->balance + (float) $data['amount'];
+            $newBalance = $account->balance - ($data['amount'] + $fee);
+        } else {
+            $newBalance = $account->balance + $data['amount'];
         }
 
         $registry = [
@@ -65,7 +65,7 @@ class TransactionService
             'entry_type' => $data['entry_type'] ?? 'debit',
             'charge' => $fee,
             'source_amount' => $data['amount'],
-            'amount_received' => $finalAmount,
+            'amount_received' => $data['amount'] - $fee,
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NGN',
@@ -78,16 +78,13 @@ class TransactionService
         return $transaction;
     }
 
-    public function calculateTransactionFee(float $amount, TransferType $transferType): array
+    public function calculateTransactionFee(float $amount, string $currency): float
     {
-        $feePercentage = 1.0; // 1% fee
-        $fee = ($transferType == TransferType::WHALE_TO_WHALE) ? 0 : ($amount * ($feePercentage / 100));
-        $finalAmount = $amount - $fee;
+        if ($currency !== 'NGN') {
+            return 0.0;
+        }
 
-        return [
-            'initial_amount' => $amount,
-            'fee' => $fee,
-            'final_amount' => $finalAmount,
-        ];
+        $fee = $amount * 0.01; // 1% fee
+        return 50.0; // Cap at 50 NGN
     }
 }
