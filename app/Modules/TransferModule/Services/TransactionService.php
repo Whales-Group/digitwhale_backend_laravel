@@ -32,13 +32,14 @@ class TransactionService
             throw new AppException("Account not found.");
         }
 
-        // CALCULATE NEW BALANCE
+        // Calculate the transaction fee
+        $fee = $this->calculateTransactionFee($data['amount'], $data['currency']);
+
+        // Calculate new balance
         if (($data['entry_type'] ?? 'debit') === 'debit') {
-            $newBalance = $account->balance - (($transferType == TransferType::WHALE_TO_WHALE) 
-                ? (float) $data['amount'] 
-                : (float) $data['amount'] + 0.5);
+            $newBalance = $account->balance - ($data['amount'] + $fee);
         } else {
-            $newBalance = $account->balance + (float) $data['amount'];
+            $newBalance = $account->balance + $data['amount'];
         }
 
         $registry = [
@@ -62,11 +63,9 @@ class TransactionService
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
-            'charge' => $transferType == TransferType::WHALE_TO_WHALE ? "0" : '0.5',
+            'charge' => $fee,
             'source_amount' => $data['amount'],
-            'amount_received' => $transferType == TransferType::WHALE_TO_WHALE 
-                ? (float) $data['amount'] 
-                : (float) $data['amount'] - 0.5,
+            'amount_received' => $data['amount'] - $fee,
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NGN',
@@ -77,5 +76,15 @@ class TransactionService
         $transaction = TransactionEntry::create($registry);
 
         return $transaction;
+    }
+
+    public function calculateTransactionFee(float $amount, string $currency): float
+    {
+        if ($currency !== 'NGN') {
+            return 0.0;
+        }
+
+        $fee = $amount * 0.01; // 1% fee
+        return 50.0; // Cap at 50 NGN
     }
 }

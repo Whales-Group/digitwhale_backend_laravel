@@ -86,7 +86,7 @@ class TransferService
                 throw new AppException('Too many requests, please try again.');
             }
 
-            $transaction = $this->transactionService->registerTransaction($response);
+            $transaction = $this->transactionService->registerTransaction($response,$transferType);
 
             return ResponseHelper::success(message: "Transfer Successful", data: $transaction);
 
@@ -157,7 +157,6 @@ class TransferService
             'amount' => $amount,
             'note' => "NIP/Transfer Digitwhale Innovations Limited - " . $note,
             'entry_type' => 'debit',
-
         ];
 
 

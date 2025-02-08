@@ -33,16 +33,25 @@ class HandleTransferSuccess
         // Log account information
         AppLog::debug("Account found", ['account_id' => $account->id, 'user_id' => $account->user_id]);
 
+        // Calculate transaction fee (1% capped at 300 NGN)
+        $fee = 0;
+        if ($transactionData['sourceCurrency'] === 'NGN') {
+            $calculatedFee = $transactionData['amountReceived'] * 0.01;
+            $fee = min($calculatedFee, 300);
+        }
+
         // Update user balance
         try {
-            $newBalance = $account->balance + $transactionData['amountReceived'];
+            $prevBalance = $account->balance;
+            $newBalance = $account->balance + ($transactionData['amountReceived'] - $fee);
             $account->update(['balance' => $newBalance]);
 
             AppLog::info("Account credited successfully", [
                 'account_id' => $account->id,
                 'previous_balance' => $account->balance,
                 'new_balance' => $newBalance,
-                'amount_received' => $transactionData['amountReceived']
+                'amount_received' => $transactionData['amountReceived'],
+                'fee' => $fee
             ]);
         } catch (\Exception $e) {
             AppLog::error("Failed to update account balance", ['error' => $e->getMessage()]);
@@ -70,19 +79,20 @@ class HandleTransferSuccess
                 'description' => $transactionData['description'] ?? 'Fund received',
                 'timestamp' => now(),
                 'entry_type' => 'credit',
-                'charge' => $transactionData['fee'],
+                'charge' => $fee,
                 'source_amount' => $transactionData['sourceAmount'],
-                'amount_received' => $transactionData['amountReceived'],
+                'amount_received' => $transactionData['amountReceived'] - $fee,
                 'from_bank' => $transactionData['senderBankName'],
                 'source_currency' => $transactionData['sourceCurrency'],
                 'destination_currency' => $transactionData['destinationCurrency'],
-                'previous_balance' => $account->balance,
+                'previous_balance' => $prevBalance,
                 'new_balance' => $newBalance,
             ]);
 
             AppLog::info("Transaction recorded successfully", [
                 'transaction_reference' => $transactionData['reference'],
-                'amount' => $transactionData['destinationAmount']
+                'amount' => $transactionData['destinationAmount'],
+                'fee' => $fee
             ]);
 
             return ResponseHelper::success([
