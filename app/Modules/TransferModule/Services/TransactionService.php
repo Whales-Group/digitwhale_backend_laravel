@@ -35,12 +35,9 @@ class TransactionService
         // Calculate the transaction fee
         $fee = $this->calculateTransactionFee($data['amount'], $data['currency']);
 
-        // Calculate new balance
-        if (($data['entry_type'] ?? 'debit') === 'debit') {
-            $newBalance = $account->balance - ($data['amount'] + $fee);
-        } else {
-            $newBalance = $account->balance + $data['amount'];
-        }
+
+        $newBalance = $account->balance - ($data['amount'] + $fee);
+
 
         $registry = [
             'from_sys_account_id' => $account->id,

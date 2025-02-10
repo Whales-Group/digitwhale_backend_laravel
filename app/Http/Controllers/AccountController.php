@@ -32,11 +32,6 @@ class AccountController extends Controller
         return $this->accountModuleMain->toggleEnabled($request);
     }
 
-    public function updateIn(Request $request)
-    {
-        return $this->accountModuleMain->updateIn($request);
-    }
-
 
     public function createAccount(Request $request)
     {
