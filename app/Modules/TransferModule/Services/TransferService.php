@@ -121,9 +121,7 @@ class TransferService
                 'phone' => $request->get("beneficiary_phone"),
                 'email' => $request->get("beneficiary_email"),
             ],
-            'business' => FincraService::$state == 'development'
-                ? Cred::TEST_BUSINESS_ID->value 
-                : Cred::PROD_BUSINESS_ID->value,
+            'business' => Cred::TEST_BUSINESS_ID->value,
             'customerReference' => $reference,
             'description' => $request->get("note"),
             'destinationCurrency' => "NGN",
