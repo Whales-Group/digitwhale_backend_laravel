@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Account extends Model
 {
     use HasFactory;
-  
+
     protected $fillable = [
         'user_id',
         'email',
@@ -40,6 +40,7 @@ class Account extends Model
         'blacklisted' => 'boolean',
         'enabled' => 'boolean',
         'pnd' => 'boolean',
+        'pnc' => 'boolean',
         'intrest_rate' => 'integer',
         'dedicated_account_id' => 'integer',
     ];
@@ -60,7 +61,7 @@ class Account extends Model
         return $this->hasMany(TransactionEntry::class);
     }
 
-     /**
+    /**
      * Update the account details.
      *
      * @param array $data The data to update.

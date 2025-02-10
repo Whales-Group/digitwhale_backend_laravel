@@ -14,7 +14,10 @@ use Log;
 class FincraService
 {
     private static $instance;
-    private $secretKey = 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc';
+    // private $secretKey = 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc';
+    private $secretKey = '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY';
+
+
     private $baseUrl;
 
     private $httpClient;
