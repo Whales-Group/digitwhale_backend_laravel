@@ -66,7 +66,8 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => "S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc",
+            // 'api-key' => "S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc",
+            'api-key' => "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY",
             'Content-Type' => 'application/json',
         ];
     }
