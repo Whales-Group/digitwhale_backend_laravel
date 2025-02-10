@@ -13,6 +13,7 @@ use Log;
 
 class FincraService
 {
+    public static $state ='development';
     private static $instance;
 
     private $baseUrl;
@@ -22,7 +23,7 @@ class FincraService
     // Private constructor for singleton pattern
     private function __construct()
     {
-        $this->baseUrl = env('APP_ENV') == 'development'
+        $this->baseUrl = self::$state == 'development'
             ? "https://sandboxapi.fincra.com/"
             : "https://api.fincra.com/";
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
@@ -42,7 +43,7 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => env('APP_ENV') == 'development'
+            'api-key' => self::$state == 'development'
                 ? '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY'
                 : 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
             'Content-Type' => 'application/json',
