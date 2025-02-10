@@ -121,7 +121,6 @@ class TransferService
                 'phone' => $request->get("beneficiary_phone"),
                 'email' => $request->get("beneficiary_email"),
             ],
-            'business' => Cred::TEST_BUSINESS_ID->value,
             'customerReference' => $reference,
             'description' => $request->get("note"),
             'destinationCurrency' => "NGN",
