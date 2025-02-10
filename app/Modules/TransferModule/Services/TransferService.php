@@ -182,7 +182,13 @@ class TransferService
                 throw new AppException("Invalid Currency Exchange");
             }
 
+            $newSenderBalance = (int) $sender->balance - (int) $amount;
             $newRecieverBalance = (int) $recieving_account->balance + (int) $amount;
+
+            // debit sender
+            $sender->update([
+                'balance' => $newSenderBalance,
+            ]);
 
             // credit reciever
             $recieving_account->update([

@@ -69,7 +69,7 @@ class HandleTransferSuccess
                 'to_bank_name' => $account->service_bank,
                 'to_bank_code' => $account->service_bank,
                 'to_account_number' => $account->account_number,
-                'currency' => 'NAIRA',
+                'currency' => $transactionData['sourceCurrency'],
                 'amount' => $transactionData['destinationAmount'],
                 'status' => 'successful',
                 'type' => 'deposit',
