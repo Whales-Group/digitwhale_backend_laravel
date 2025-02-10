@@ -86,7 +86,7 @@ class TransferService
                 throw new AppException('Too many requests, please try again.');
             }
 
-            $transaction = $this->transactionService->registerTransaction($response,$transferType);
+            $transaction = $this->transactionService->registerTransaction($response, $transferType);
 
             return ResponseHelper::success(message: "Transfer Successful", data: $transaction);
 
@@ -121,7 +121,9 @@ class TransferService
                 'phone' => $request->get("beneficiary_phone"),
                 'email' => $request->get("beneficiary_email"),
             ],
-            'business' => Cred::PROD_BUSINESS_ID->value,
+            'business' => env('APP_ENV') == 'development'
+                ? Cred::TEST_BUSINESS_ID->value 
+                : Cred::PROD_BUSINESS_ID->value,
             'customerReference' => $reference,
             'description' => $request->get("note"),
             'destinationCurrency' => "NGN",
@@ -203,7 +205,7 @@ class TransferService
                 'status' => 'successful',
                 'type' => $type,
                 'amount' => $amount,
-                'note' => "NIP/Transfer Digitwhale Innovations Limited - " .$note,
+                'note' => "NIP/Transfer Digitwhale Innovations Limited - " . $note,
                 'entry_type' => 'debit',
             ];
 

@@ -37,14 +37,14 @@ class FincraService
         }
         return self::$instance;
     }
-    
+
     // Build authorization headers using the secret key
     private function buildAuthHeader(): array
     {
         return [
             'api-key' => env('APP_ENV') == 'development'
-                ? env('FINCRA_TEST_SK')
-                : env('FINCRA_PROD_SK'),
+                ? '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY'
+                : 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
             'Content-Type' => 'application/json',
         ];
     }
