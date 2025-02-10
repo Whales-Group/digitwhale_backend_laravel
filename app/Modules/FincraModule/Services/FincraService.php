@@ -14,9 +14,6 @@ use Log;
 class FincraService
 {
     private static $instance;
-    // private $secretKey = 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc';
-    private $secretKey = '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY';
-
 
     private $baseUrl;
 
@@ -25,14 +22,9 @@ class FincraService
     // Private constructor for singleton pattern
     private function __construct()
     {
-        // $this->baseUrl = env('APP_ENV') == 'development'
-        //     ? "https://sandboxapi.fincra.com/"
-        //     : "https://api.fincra.com/";
-        $this->baseUrl = "https://sandboxapi.fincra.com/"
-        ;
-        $this->secretKey = env('APP_ENV') == 'development'
-            ? env('FINCRA_TEST_SK')
-            : env('FINCRA_PROD_SK');
+        $this->baseUrl = env('APP_ENV') == 'development'
+            ? "https://sandboxapi.fincra.com/"
+            : "https://api.fincra.com/";
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
 
@@ -45,31 +37,14 @@ class FincraService
         }
         return self::$instance;
     }
-
-    // Update the secret key
-    public function updateSecretKey(string $secretKey): void
-    {
-        if (empty($secretKey)) {
-            throw new AppException("Fincra secret key cannot be empty.");
-        }
-        $this->secretKey = $secretKey;
-    }
-
-    // Get the secret key or throw an exception if not initialized
-    public function getSecretKey(): string
-    {
-        if (empty($this->secretKey)) {
-            throw new AppException("FincraService is not initialized. Call `initialize()` first.");
-        }
-        return $this->secretKey;
-    }
-
+    
     // Build authorization headers using the secret key
     private function buildAuthHeader(): array
     {
         return [
-            // 'api-key' => "S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc",
-            'api-key' => "1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY",
+            'api-key' => env('APP_ENV') == 'development'
+                ? env('FINCRA_TEST_SK')
+                : env('FINCRA_PROD_SK'),
             'Content-Type' => 'application/json',
         ];
     }
@@ -142,7 +117,7 @@ class FincraService
                 "lastName" => $payload['beneficiary']['lastName'],
                 "type" => $payload['beneficiary']['type'],
             ],
-            "business" => Cred::BUSINESS_ID,
+            "business" => Cred::PROD_BUSINESS_ID,
             "customerReference" => $payload['customerReference'],
             "description" => $payload['description'],
             "destinationCurrency" => $payload['destinationCurrency'],
