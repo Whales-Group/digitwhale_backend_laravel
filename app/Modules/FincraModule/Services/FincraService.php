@@ -142,7 +142,7 @@ class FincraService
                 "lastName" => $payload['beneficiary']['lastName'],
                 "type" => $payload['beneficiary']['type'],
             ],
-            "business" => $payload['business'],
+            "business" => Cred::BUSINESS_ID,
             "customerReference" => $payload['customerReference'],
             "description" => $payload['description'],
             "destinationCurrency" => $payload['destinationCurrency'],
