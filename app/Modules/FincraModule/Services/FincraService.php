@@ -25,9 +25,11 @@ class FincraService
     // Private constructor for singleton pattern
     private function __construct()
     {
-        $this->baseUrl = env('APP_ENV') == 'development'
-            ? "https://sandboxapi.fincra.com/"
-            : "https://api.fincra.com/";
+        // $this->baseUrl = env('APP_ENV') == 'development'
+        //     ? "https://sandboxapi.fincra.com/"
+        //     : "https://api.fincra.com/";
+        $this->baseUrl = "https://sandboxapi.fincra.com/"
+        ;
         $this->secretKey = env('APP_ENV') == 'development'
             ? env('FINCRA_TEST_SK')
             : env('FINCRA_PROD_SK');
