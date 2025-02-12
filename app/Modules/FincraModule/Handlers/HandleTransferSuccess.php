@@ -35,7 +35,7 @@ class HandleTransferSuccess
 
         // Transaction fee (1% capped at 300 NGN)
         $fee = $transactionData['fee'];
-       
+
 
         // Update user balance
         try {
@@ -93,8 +93,8 @@ class HandleTransferSuccess
             ]);
 
             return ResponseHelper::success([
-                'message' => 'Transaction recorded successfully',
-                'data' => $transaction,
+                'message' => $transaction['message'] ?? 'Transaction recorded successfully',
+                'data' => $transaction['data'],
             ]);
         } catch (\Exception $e) {
             AppLog::error("Failed to record transaction", ['error' => $e->getMessage()]);
