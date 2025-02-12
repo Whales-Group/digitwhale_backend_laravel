@@ -83,6 +83,8 @@ Route::middleware($protectedMiddleware)->group(function () {
 
         Route::post("/resolve-account/{account_id}", [TransferController::class, "resolveAccount"]);
         Route::get("/get-banks/{account_id}", [TransferController::class, "getBanks"]);
+        Route::post("/resolve-internal-account", [TransferController::class, "resolveAccountByIdentity"]);
+
 
     });
 

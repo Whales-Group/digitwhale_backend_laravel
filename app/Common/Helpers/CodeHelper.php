@@ -3,6 +3,7 @@
 namespace App\Common\Helpers;
 
 use App\Common\Enums\Cred;
+use App\Common\Enums\IdentifierType;
 
 class CodeHelper
 {
@@ -60,5 +61,20 @@ class CodeHelper
         }
 
         return 'An unknown error occurred.';
+    }
+
+    public static function getIdentifyType(string $input): IdentifierType
+    {
+        if (preg_match('/^@[a-zA-Z0-9]+_\d{3,9}$/', $input)) {
+            return IdentifierType::Tag;
+        } elseif (preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $input)) {
+            return IdentifierType::Email;
+        } elseif (preg_match('/^\+?\d{11}$/', $input)) {
+            return IdentifierType::Phone;
+        } elseif (preg_match('/^\d{10}$/', $input)) {
+            return IdentifierType::AccountNumber;
+        } else {
+            return IdentifierType::Unknown;
+        }
     }
 }

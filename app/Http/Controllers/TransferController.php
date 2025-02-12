@@ -36,4 +36,9 @@ class TransferController extends Controller
     {
         return $this->moduleMain->resolveAccountNumber($request, $account_id);
     }
+
+     public function resolveAccountByIdentity(Request $request): ?JsonResponse
+    {
+        return $this->moduleMain->resolveAccountByIdentity($request);
+    }
 }

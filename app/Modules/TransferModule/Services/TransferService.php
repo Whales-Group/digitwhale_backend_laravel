@@ -287,17 +287,39 @@ class TransferService
     public function verifyTransferStatusBy()
     {
         try {
+
+            $user = auth()->user();
+            $account_id = request()->query('account_id');
             $reference = request()->input('reference');
-            $response = $this->fincraService->verifyTransfer($reference);
+            $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
+
+            if (!$account) {
+                throw new AppException("Invalid account id or account not found.");
+            }
+
+            try {
+                $accountType = ServiceProvider::tryFrom($account->service_provider);
+            } catch (AppException $e) {
+                throw new AppException("Invalid Account Type");
+            }
+
             $transaction_entry = TransactionEntry::where('transaction_reference', $reference)->first();
+
+            switch ($accountType) {
+                case ServiceProvider::FINCRA:
+                    $response = $this->fincraService->verifyTransfer($reference);
+                    break;
+                case ServiceProvider::PAYSTACK:
+                    $response = $this->paystackService->verifyTransfer($reference);
+                default:
+                    return ResponseHelper::unprocessableEntity("Invalid account service provider.");
+            }
 
             $transaction_entry->update([
                 'status' => $response['data']['status'],
             ]);
 
-            $transaction_entry = TransactionEntry::where('transaction_reference', $reference)->first();
-
-            return ResponseHelper::success($transaction_entry);
+            return ResponseHelper::success($transaction_entry, "Transaction status verification successful.");
         } catch (Exception $e) {
             return ResponseHelper::error(error: $e->getMessage());
         }

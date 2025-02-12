@@ -2,12 +2,17 @@
 
 namespace App\Modules\TransferModule\Services;
 
+use App\Common\Enums\IdentifierType;
 use App\Common\Enums\ServiceProvider;
+use App\Common\Helpers\CodeHelper;
 use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
+use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TransferResourcesService
@@ -99,5 +104,42 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity($e->getMessage());
         }
     }
+
+    public function resolveAccountByIdentity(Request $request): JsonResponse
+    {
+        try {
+            $identity = $request->get("identity");
+            $identityType = CodeHelper::getIdentifyType($identity);
+
+            $account = match ($identityType) {
+                IdentifierType::Email => Account::firstWhere('email', $identity),
+                IdentifierType::Tag => Account::firstWhere('tag', $identity),
+                IdentifierType::Phone => Account::firstWhere('phone_number', $identity),
+                IdentifierType::AccountNumber => Account::firstWhere('account_number', $identity),
+                default => throw new AppException("Invalid resolve identity."),
+            };
+
+            if (!$account) {
+                throw new AppException("Account Not Found");
+            }
+
+            $response = [
+                'accountName' => $account->validated_name,
+                'accountNumber' => $account->account_number,
+                'accountId' => $account->account_id,
+                'identified_by' => $identityType
+            ];
+
+            return ResponseHelper::success($response);
+        } catch (AppException $e) {
+            return ResponseHelper::error($e->getMessage(), data: [
+                'identified_by' => $identityType
+            ]);
+        } catch (Exception $e) {
+            return ResponseHelper::unprocessableEntity("Unable to resolve account.");
+        }
+    }
+
+
 
 }

@@ -39,4 +39,10 @@ class TransferModuleMain
     {
         return $this->transferReourcesService->resolveAccountNumber($request, $account_id);
     }
+
+    
+    public function resolveAccountByIdentity(Request $request)
+    {
+        return $this->transferReourcesService->resolveAccountByIdentity($request);
+    }
 }
