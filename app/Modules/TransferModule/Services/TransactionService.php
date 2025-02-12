@@ -116,9 +116,7 @@ class TransactionService
 
         $query->where(function ($query) use ($user) {
             $query->where('from_sys_account_id', 'like', '%' . $user->id . '%')
-                ->orWhere('from_user_email', 'like', '%' . $user->email . '%')
-                ->orWhere('to_sys_account_id', 'like', '%' . $user->id . '%')
-                ->orWhere('to_user_email', 'like', '%' . $user->email . '%');
+                ->orWhere('to_sys_account_id', 'like', '%' . $user->id . '%');
         });
 
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
@@ -152,11 +150,8 @@ class TransactionService
 
         if ($queryParams['query_string']) {
             $query->where('from_user_email', 'like', '%' . $queryParams['query_string'] . '%')
-                ->orWhere('to_user_email', 'like', '%' . $queryParams['query_string'] . '%');
-        }
-
-        if ($queryParams['query_string']) {
-            $query->where('transaction_reference', 'like', '%' . $queryParams['query_string'] . '%');
+                ->orWhere('to_user_email', 'like', '%' . $queryParams['query_string'] . '%')
+                ->orWhere('transaction_reference', 'like', '%' . $queryParams['query_string'] . '%');
         }
 
         // Paginate results

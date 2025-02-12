@@ -16,6 +16,7 @@ $publicMiddleware = ["VerifyApiKey", "SetStructure"];
 $protectedMiddleware = array_merge($publicMiddleware, [
     "auth:sanctum",
     "ability:" . TokenAbility::ACCESS_API->value,
+    // "Bt"
 ]);
 $adminAccessMiddleWare = array_merge($publicMiddleware, [
     "auth:sanctum",

@@ -35,7 +35,6 @@ class SignInService
                 );
             }
 
-            // Determine if the identifier is an email or tag
             $identifier = $request->identifier;
             $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
                 ? User::where("email", $identifier)->first()
@@ -59,7 +58,8 @@ class SignInService
                 return ResponseHelper::error("Email not verified.", 401);
             }
 
-            // Create and return token
+            $user->tokens()->delete();
+
             $token = $user->createToken(TokenAbility::ACCESS_API->value)->plainTextToken;
 
             return ResponseHelper::success(

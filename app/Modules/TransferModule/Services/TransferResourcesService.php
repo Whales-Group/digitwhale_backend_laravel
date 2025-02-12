@@ -9,7 +9,6 @@ use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
-use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
 use Exception;
@@ -153,14 +152,19 @@ class TransferResourcesService
                 throw new AppException("Account Id and Reference are required");
             }
 
-            $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->firstOrFail();
+            $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
+
+            if (!$account) {
+                return ResponseHelper::notFound("Tranaction not found. Access is Invalid");
+            }
+
             $accountType = ServiceProvider::tryFrom($account->service_provider) ?? throw new AppException("Invalid Account Type");
 
             $transaction_entry = TransactionEntry::where('transaction_reference', $reference)->first();
             $status = $transaction_entry->status ?? 'pending';
 
             if ($transaction_entry->to_sys_account_id && $transaction_entry->from_sys_account_id) {
-                $status = 'successfull';
+                $status = $transaction_entry->status ?? $status;
             } else {
                 $status = match ($accountType) {
                     ServiceProvider::FINCRA => $this->fincraService->verifyTransfer($reference)['data']['status'],
