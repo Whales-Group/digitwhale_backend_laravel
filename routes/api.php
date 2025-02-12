@@ -71,21 +71,19 @@ Route::middleware($protectedMiddleware)->group(function () {
         });
 
         Route::prefix("/transfer")->group(function () {
-
             Route::post("/{account_id}", [TransferController::class, "transfer"]);
-            Route::put("/", [TransferController::class, "verifyTransferStatusBy"]);
-
+            Route::put("/{account_id}", [TransferController::class, "verifyTransferStatusBy"]);
         });
+
+        Route::get("/transaction", [TransferController::class, "getTransactions"]);
+
 
     });
 
     Route::prefix("/core")->group(function () {
-
         Route::post("/resolve-account/{account_id}", [TransferController::class, "resolveAccount"]);
         Route::get("/get-banks/{account_id}", [TransferController::class, "getBanks"]);
         Route::post("/resolve-internal-account", [TransferController::class, "resolveAccountByIdentity"]);
-
-
     });
 
 });

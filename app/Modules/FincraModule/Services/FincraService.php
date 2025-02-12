@@ -13,7 +13,7 @@ use Log;
 
 class FincraService
 {
-    public static $state ='development';
+    public static $state = 'development';
     private static $instance;
 
     private $baseUrl;
@@ -244,11 +244,8 @@ class FincraService
                 default:
                     throw new AppException("Failed to verify transfer: " . $response->getReasonPhrase(), $statusCode);
             }
-        } catch (Error $e) {
         } catch (AppException $e) {
-            throw new AppException("Failed to verify transfer: " . $e->getMessage(), $e->getCode());
+            throw new AppException($e->getMessage());
         }
-        return null;
-
     }
 }

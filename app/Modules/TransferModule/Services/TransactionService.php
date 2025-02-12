@@ -10,7 +10,9 @@ use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class TransactionService
 {
@@ -86,5 +88,83 @@ class TransactionService
 
         $fee = $amount * 0.01; // 1% fee
         return 50.0; // Cap at 50 NGN
+    }
+
+    /**
+     * Get transactions based on query parameters or return all paginated.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|array
+     */
+    public function getTransactions(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+
+        $queryParams = [
+            'expand' => $request->input('expand'),
+            'from_date' => $request->input('from_date'),
+            'to_date' => $request->input('to_date'),
+            'type' => $request->input('type'),
+            'amount1' => $request->input('amount1'),
+            'amount2' => $request->input('amount2'),
+            'query_string' => $request->input('query_string'),
+        ];
+
+        $allowedExpandValues = ['RECENT', 'CREDIT', 'DEBIT'];
+
+        $query = TransactionEntry::query();
+
+        $query->where(function ($query) use ($user) {
+            $query->where('from_sys_account_id', 'like', '%' . $user->id . '%')
+                ->orWhere('from_user_email', 'like', '%' . $user->email . '%')
+                ->orWhere('to_sys_account_id', 'like', '%' . $user->id . '%')
+                ->orWhere('to_user_email', 'like', '%' . $user->email . '%');
+        });
+
+        if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
+            switch (strtoupper($queryParams['expand'])) {
+                case 'RECENT':
+                    return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(5)->get() ?? '');
+                case 'CREDIT':
+                    $query->where('entry_type', 'credit');
+                    break;
+                case 'DEBIT':
+                    $query->where('entry_type', 'debit');
+                    break;
+            }
+        }
+
+        if ($queryParams['from_date'] && $queryParams['to_date']) {
+            $fromDate = DateHelper::parse($queryParams['from_date']);
+            $toDate = DateHelper::parse($queryParams['to_date']);
+            $query->whereBetween('timestamp', [$fromDate, $toDate]);
+        }
+
+        if ($queryParams['type']) {
+            $query->where('type', $queryParams['type']);
+        }
+
+        if ($queryParams['amount1'] && $queryParams['amount2']) {
+            $amount1 = (float) $queryParams['amount1'];
+            $amount2 = (float) $queryParams['amount2'];
+            $query->whereBetween('amount', [$amount1, $amount2]);
+        }
+
+        if ($queryParams['query_string']) {
+            $query->where('from_user_email', 'like', '%' . $queryParams['query_string'] . '%')
+                ->orWhere('to_user_email', 'like', '%' . $queryParams['query_string'] . '%');
+        }
+
+        if ($queryParams['query_string']) {
+            $query->where('transaction_reference', 'like', '%' . $queryParams['query_string'] . '%');
+        }
+
+        // Paginate results
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+
+        $perPage = max(1, min(100, $perPage));
+
+        return ResponseHelper::success($query->paginate($perPage, ['*'], 'page', $page));
     }
 }

@@ -22,9 +22,9 @@ class TransferController extends Controller
         return $this->moduleMain->transfer($request, $account_id);
     }
 
-    public function verifyTransferStatusBy(): ?JsonResponse
+    public function verifyTransferStatusBy(string $account_id): ?JsonResponse
     {
-        return $this->moduleMain->verifyTransferStatusBy();
+        return $this->moduleMain->verifyTransferStatusBy($account_id);
     }
 
     public function getBanks(Request $request, string $account_id): ?JsonResponse
@@ -40,5 +40,10 @@ class TransferController extends Controller
      public function resolveAccountByIdentity(Request $request): ?JsonResponse
     {
         return $this->moduleMain->resolveAccountByIdentity($request);
+    }
+
+    public function getTransactions(Request $request): ?JsonResponse
+    {
+        return $this->moduleMain->getTransactions($request);
     }
 }

@@ -8,6 +8,7 @@ use App\Common\Helpers\CodeHelper;
 use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
+use App\Models\TransactionEntry;
 use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
@@ -141,5 +142,39 @@ class TransferResourcesService
     }
 
 
+
+    public function verifyTransferStatusBy($account_id)
+    {
+        try {
+            $user = auth()->user();
+            $reference = request()->input('reference');
+
+            if (!$account_id || !$reference) {
+                throw new AppException("Account Id and Reference are required");
+            }
+
+            $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->firstOrFail();
+            $accountType = ServiceProvider::tryFrom($account->service_provider) ?? throw new AppException("Invalid Account Type");
+
+            $transaction_entry = TransactionEntry::where('transaction_reference', $reference)->first();
+            $status = $transaction_entry->status ?? 'pending';
+
+            if ($transaction_entry->to_sys_account_id && $transaction_entry->from_sys_account_id) {
+                $status = 'successfull';
+            } else {
+                $status = match ($accountType) {
+                    ServiceProvider::FINCRA => $this->fincraService->verifyTransfer($reference)['data']['status'],
+                    ServiceProvider::PAYSTACK => $this->paystackService->verifyTransfer($reference)['data']['status'],
+                    default => throw new AppException("Invalid account service provider."),
+                };
+            }
+
+            $transaction_entry->update(['status' => $status]);
+
+            return ResponseHelper::success($transaction_entry, "Transaction status verification successful.");
+        } catch (Exception $e) {
+            return ResponseHelper::error($e->getMessage());
+        }
+    }
 
 }
