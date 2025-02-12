@@ -117,7 +117,7 @@ class FincraService
                 "lastName" => $payload['beneficiary']['lastName'],
                 "type" => $payload['beneficiary']['type'],
             ],
-            'business' => Cred::TEST_BUSINESS_ID->value,
+            'business' => Cred::PROD_BUSINESS_ID->value,
             "customerReference" => $payload['customerReference'],
             "description" => $payload['description'],
             "destinationCurrency" => $payload['destinationCurrency'],
@@ -144,7 +144,7 @@ class FincraService
     private function performNGNTransferToCorporateAccount(array $payload): mixed
     {
         $requiredPayload = [
-            'business' => Cred::TEST_BUSINESS_ID->value,
+            'business' => Cred::PROD_BUSINESS_ID->value,
             "sourceCurrency" => $payload['sourceCurrency'],
             "destinationCurrency" => $payload['destinationCurrency'],
             "amount" => $payload['amount'],
