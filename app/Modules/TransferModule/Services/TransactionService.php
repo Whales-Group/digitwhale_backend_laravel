@@ -122,7 +122,7 @@ class TransactionService
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
             switch (strtoupper($queryParams['expand'])) {
                 case 'RECENT':
-                    return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(5)->get() ?? '');
+                    return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(5)->get() ?? []);
                 case 'CREDIT':
                     $query->where('entry_type', 'credit');
                     break;

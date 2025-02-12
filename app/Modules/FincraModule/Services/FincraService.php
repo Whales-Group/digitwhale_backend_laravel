@@ -23,8 +23,8 @@ class FincraService
     // Private constructor for singleton pattern
     private function __construct()
     {
-        $this->baseUrl = "https://sandboxapi.fincra.com/";
-        // $this->baseUrl = "https://api.fincra.com/";
+        // $this->baseUrl = "https://sandboxapi.fincra.com/";
+        $this->baseUrl = "https://api.fincra.com/";
 
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
@@ -43,7 +43,7 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY',
+            'api-key' => 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
             // 'api-key' => 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
             'Content-Type' => 'application/json',
         ];
