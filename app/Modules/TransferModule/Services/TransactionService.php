@@ -44,6 +44,10 @@ class TransactionService
             $newBalance = $account->balance + $data['amount'];
         }
 
+        $account->update([
+            'balance' => $newBalance
+        ]);
+
         $registry = [
             'from_sys_account_id' => $account->id,
             'from_account' => $account->account_number,
