@@ -202,7 +202,7 @@ class TransferService
                 'status' => 'successful',
                 'type' => $type,
                 'amount' => $amount,
-                'note' => "NIP/Transfer Digitwhale Innovations Limited - " . $note,
+                'note' => "Internal/Transfer Digitwhale Innovations Limited - " . $note,
                 'entry_type' => 'debit',
             ];
 

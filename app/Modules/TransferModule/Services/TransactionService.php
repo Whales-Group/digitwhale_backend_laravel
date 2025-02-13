@@ -38,7 +38,7 @@ class TransactionService
         $fee = $this->calculateTransactionFee($data['amount'], $data['currency']);
 
         // Calculate new balance
-        if (($data['entry_type'] ?? 'debit') === 'debit') {
+        if (($data['entry_type'] ?? 'debit') == 'debit') {
             $newBalance = $account->balance - ($data['amount'] + $fee);
         } else {
             $newBalance = $account->balance + $data['amount'];
@@ -70,7 +70,7 @@ class TransactionService
             'amount_received' => $data['amount'] - $fee,
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
-            'destination_currency' => 'NGN',
+            'destination_currency' => 'NAIRA',
             'previous_balance' => $account->balance,
             'new_balance' => $newBalance,
         ];
