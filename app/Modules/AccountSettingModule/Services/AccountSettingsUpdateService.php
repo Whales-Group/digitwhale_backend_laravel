@@ -3,116 +3,67 @@
 namespace App\Modules\AccountSettingModule\Services;
 
 use App\Common\Helpers\ResponseHelper;
-use App\Models\Account;
+use App\Models\AccountSetting;
+use App\Models\NextOfKin;
+use App\Models\SecurityQuestion;
+use App\Models\VerificationRecord;
 use Exception;
-use Illuminate\Http\Request;
 
 class AccountSettingsUpdateService
 {
-    public function updateAccountSettings(Request $request)
+    public function updateAccountSettings()
     {
         try {
-            $user = $request->auth()->user();
+            $user = auth()->user();
 
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
+            $accountSettings = AccountSetting::where('user_id', $user->id)->first();
 
-    public function addSecurityQuestion(Request $request)
-    {
-        try {
-            $user = $request->auth()->user();
-
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
-
-    public function addOrUpdateNextofKin(Request $request)
-    {
-        try {
-            $user = $request->auth()->user();
-
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
-
-
-    public function updateTag(Request $request)
-    {
-        try {
-            $tag = $request->input("tag");
-            $user = $request->auth()->user();
-
-            // upadate on users table
-            $user->tag = $tag;
-            $user->save();
-
-            // update on account table
-            $existingAza = Account::where("user_id", $user->id)
-                ->exists();
-
-            if ($existingAza) {
-                Account::where("user_id", $user->id)
-                    ->update(["tag" => $tag]);
+            if (!$accountSettings) {
+                $accountSettings = $this->createAccountSettings($user->id);
             }
 
-            return ResponseHelper::success(message: "Tag updated successfully");
+            $accountSettings = $this->updateAccountSetting($accountSettings);
+
+            return ResponseHelper::success(data: $accountSettings, message: 'Account settings updated successfully');
         } catch (Exception $e) {
             return ResponseHelper::unprocessableEntity(error: $e->getMessage());
         }
     }
 
-    public function changePassword(Request $request)
+    private function updateAccountSetting($accountSetting)
     {
-        try {
-            $user = $request->auth()->user();
+        $accountSetting->update([
+            'hide_balance' => request()->input('hide_balance'),
+            'enable_biometrics' => request()->input('enable_biometrics'),
+            'enable_air_transfer' => request()->input('enable_air_transfer'),
+            'enable_notifications' => request()->input('enable_notifications'),
+            'transaction_pin' => request()->input('transaction_pin'),
+            'enabled_2fa' => request()->input('enabled_2fa'),
+        ]);
 
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
+        return $accountSetting;
     }
 
-
-    public function createOrUpdateTransactionPin(Request $request)
+    /**
+     * Create new account settings for the user.
+     *
+     * @param int $userId
+     * @return AccountSetting
+     */
+    private function createAccountSettings(int $userId): AccountSetting
     {
-        try {
-            $user = $request->auth()->user();
+        $accountSettings = new AccountSetting([
+            'user_id' => $userId,
+            'hide_balance' => false,
+            'enable_biometrics' => false,
+            'enable_air_transfer' => false,
+            'enable_notifications' => true,
+            'transaction_pin' => null,
+            'enabled_2fa' => false,
+        ]);
 
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
+        $accountSettings->save();
 
-    public function toggleBalanceVisibility(Request $request)
-    {
-        try {
-            $user = $request->auth()->user();
-
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
-
-    public function toggleBiometrics(Request $request)
-    {
-        try {
-            $user = $request->auth()->user();
-
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
-    }
-
-    public function toggleAirTransfer(Request $request)
-    {
-        try {
-            $user = $request->auth()->user();
-
-        } catch (Exception $e) {
-            return ResponseHelper::unprocessableEntity(error: $e->getMessage());
-        }
+        return $accountSettings;
     }
 }

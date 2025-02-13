@@ -35,7 +35,7 @@ class TransactionService
         }
 
         // Calculate the transaction fee
-        $fee = $this->calculateTransactionFee($data['amount'], $data['currency']);
+        $fee = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $this->calculateTransactionFee($data['amount'], $data['currency']);
 
         // Calculate new balance
         if (($data['entry_type'] ?? 'debit') == 'debit') {
@@ -126,7 +126,7 @@ class TransactionService
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
             switch (strtoupper($queryParams['expand'])) {
                 case 'RECENT':
-                    return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(5)->get() ?? []);
+                    return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(4)->get() ?? []);
                 case 'CREDIT':
                     $query->where('entry_type', 'credit');
                     break;

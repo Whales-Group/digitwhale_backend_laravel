@@ -76,4 +76,10 @@ class User extends Authenticatable
 
         return array_reduce($profileFields, fn($carry, $item) => $carry && !is_null($item), true);
     }
+
+    public function documents() {
+        return $this->hasMany(UserDocument::class);
+    }
+    
+   
 }

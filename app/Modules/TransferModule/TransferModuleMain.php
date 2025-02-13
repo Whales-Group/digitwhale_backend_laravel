@@ -2,7 +2,6 @@
 
 namespace App\Modules\TransferModule;
 
-use App\Common\Enums\TransactionStatus;
 use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\TransferModule\Services\TransferResourcesService;
 use App\Modules\TransferModule\Services\TransferService;

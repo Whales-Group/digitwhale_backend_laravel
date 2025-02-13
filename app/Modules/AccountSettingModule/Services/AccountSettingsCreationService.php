@@ -2,86 +2,48 @@
 
 namespace App\Modules\AccountSettingModule\Services;
 
-use App\Common\Enums\Status;
-use App\Common\Enums\VerificationType;
 use App\Common\Helpers\ResponseHelper;
 use App\Models\AccountSetting;
-use App\Models\NextOfKin;
-use App\Models\SecurityQuestion;
-use App\Models\VerificationRecord;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AccountSettingsCreationService
 {
-
-    public function getOrCreateAccountSettings(Request $request)
+    /**
+     * Get or create account settings for the authenticated user.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getOrCreateAccountSettings()
     {
-        $userId = $request->user()->id;
+        $userId = request()->user()->id;
 
         $accountSettings = AccountSetting::where('user_id', $userId)->first();
 
         if (!$accountSettings) {
-            try {
-                DB::beginTransaction();
-
-                $newAccountSettings = $this->buildAccountSettings($request);
-
-                $newAccountSettings->save();
-
-                $this->createVerificationRecords($newAccountSettings);
-
-                DB::commit();
-
-                return ResponseHelper::success($newAccountSettings
-                ->with('verifications')
-                ->firstOrFail());
-            } catch (\Exception $e) {
-                DB::rollBack();
-
-                return ResponseHelper::error(
-                    message: "An error occurred during account settings creation",
-                    error: $e->getMessage()
-                );
-            }
+            $accountSettings = $this->createAccountSettings($userId);
         }
-
-        return ResponseHelper::success($accountSettings
-        ->with('verifications')
-        ->firstOrFail());
-
+        return ResponseHelper::success($accountSettings, 'Account settings retrieved successfully.');
     }
 
-    private function buildAccountSettings(Request $request)
+    /**
+     * Create new account settings for the user.
+     *
+     * @param int $userId
+     * @return AccountSetting
+     */
+    private function createAccountSettings(int $userId): AccountSetting
     {
-        $user = $request->user();
-
-        $newAccountSettings = new AccountSetting([
-            'user_id' => $user->id,
+        $accountSettings = new AccountSetting([
+            'user_id' => $userId,
             'hide_balance' => false,
             'enable_biometrics' => false,
             'enable_air_transfer' => false,
             'enable_notifications' => true,
-            'address' => null,
             'transaction_pin' => null,
             'enabled_2fa' => false,
-            'fcm_tokens' => [],
         ]);
 
-        return $newAccountSettings;
-    }
-    private function createVerificationRecords(AccountSetting $accountSettings)
-    {
-        $records = VerificationType::cases();
+        $accountSettings->save();
 
-        foreach ($records as $record) {
-            VerificationRecord::create([
-                'account_setting_id' => $accountSettings->id,
-                'type' => $record->value,
-                'status' => Status::NONE,
-                'value' => '',
-                'url' => '',
-            ]);
-        }
+        return $accountSettings;
     }
 }

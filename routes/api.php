@@ -58,16 +58,7 @@ Route::middleware($protectedMiddleware)->group(function () {
 
             Route::get("/toggle-enabled", [AccountSettingController::class, "toggleEnabled"]);
             Route::get("/", [AccountSettingController::class, "getOrCreateAccountSettings"]);
-            Route::post("/security-question", [AccountSettingController::class, "addSecurityQuestion"]);
-            Route::post("/next-of-kin", [AccountSettingController::class, "addOrUpdateNextofKin"]);
             Route::put("/", [AccountSettingController::class, "updateAccountSettings"]);
-            Route::put("/toggle-enabled", [AccountSettingController::class, "toggleEnabled"]);
-            Route::put("update-tag", [AccountSettingController::class, "updateTag"]);
-            Route::put("change-password", [AccountSettingController::class, "changePassword"]);
-            Route::put("transaction-pin", [AccountSettingController::class, "createOrUpdateTransactionPin"]);
-            Route::put("biometics", [AccountSettingController::class, "toggleBiometrics"]);
-            Route::put("air-transfer", [AccountSettingController::class, "toggleAirTransfer"]);
-            Route::put("balance-visibility", [AccountSettingController::class, "toggleBalanceVisibility"]);
 
         });
 
