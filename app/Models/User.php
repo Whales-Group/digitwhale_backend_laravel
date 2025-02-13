@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Account;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Modules\AccountSettingModule\Services\AccountSettingsCreationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -59,7 +59,6 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::created(function () {
-            // 
         });
     }
 
@@ -77,9 +76,10 @@ class User extends Authenticatable
         return array_reduce($profileFields, fn($carry, $item) => $carry && !is_null($item), true);
     }
 
-    public function documents() {
+    public function documents()
+    {
         return $this->hasMany(UserDocument::class);
     }
-    
-   
+
+
 }
