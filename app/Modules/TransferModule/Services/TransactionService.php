@@ -119,8 +119,6 @@ class TransactionService
                 ->orWhere('to_sys_account_id', $user->id);
         });
 
-        return ResponseHelper::success(message: "Test oh", data: ["user" => $user, "data" => $query->get()]);
-
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
             switch (strtoupper($queryParams['expand'])) {
                 case 'RECENT':
