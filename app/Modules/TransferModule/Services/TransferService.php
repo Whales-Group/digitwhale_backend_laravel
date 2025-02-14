@@ -109,7 +109,7 @@ class TransferService
         $user = auth()->user();
         $reference = CodeHelper::generateSecureReference();
         $payload = [
-            'amount' => (int) $amount,
+            'amount' => (int) $amount - 50,
             'beneficiary' => [
                 'accountHolderName' => $request->get("beneficiary_account_holder_name"),
                 'accountNumber' => $request->get("beneficiary_account_number"),
