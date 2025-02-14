@@ -23,8 +23,8 @@ class FincraService
     // Private constructor for singleton pattern
     private function __construct()
     {
-        $this->baseUrl = "https://sandboxapi.fincra.com/";
-        // $this->baseUrl = "https://api.fincra.com/";
+        // $this->baseUrl = "https://sandboxapi.fincra.com/";
+        $this->baseUrl = "https://api.fincra.com/";
 
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
@@ -43,7 +43,7 @@ class FincraService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => '1lWm8PZgyRaDJ3lXUqM5UJc1ZguvarNY',
+            'api-key' => 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
             'Content-Type' => 'application/json',
         ];
     }
@@ -116,7 +116,7 @@ class FincraService
                 "lastName" => $payload['beneficiary']['lastName'],
                 "type" => $payload['beneficiary']['type'],
             ],
-            'business' => Cred::TEST_BUSINESS_ID->value,
+            'business' => Cred::PROD_BUSINESS_ID->value,
             "customerReference" => $payload['customerReference'],
             "description" => $payload['description'],
             "destinationCurrency" => $payload['destinationCurrency'],
@@ -143,7 +143,7 @@ class FincraService
     private function performNGNTransferToCorporateAccount(array $payload): mixed
     {
         $requiredPayload = [
-            'business' => Cred::TEST_BUSINESS_ID->value,
+            'business' => Cred::PROD_BUSINESS_ID->value,
             "sourceCurrency" => $payload['sourceCurrency'],
             "destinationCurrency" => $payload['destinationCurrency'],
             "amount" => $payload['amount'],
