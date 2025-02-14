@@ -45,7 +45,7 @@ class TransactionService
         ]);
 
         $registry = [
-            'from_sys_account_id' => $account->id,
+            'from_sys_account_id' => $account->user_id,
             'from_account' => $account->account_number,
             'from_user_name' => $user->profile_type !== 'personal'
                 ? $user->business_name
@@ -118,6 +118,8 @@ class TransactionService
             $query->where('from_sys_account_id', $user->id)
                 ->orWhere('to_sys_account_id', $user->id);
         });
+
+        return ResponseHelper::success(message: "Test oh", data: ["user" => $user, "data" => $query->get()]);
 
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
             switch (strtoupper($queryParams['expand'])) {

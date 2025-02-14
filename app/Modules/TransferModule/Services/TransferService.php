@@ -192,7 +192,7 @@ class TransferService
 
             $response = [
                 'currency' => $sender->currency,
-                'to_sys_account_id' => $recieving_account->id,
+                'to_sys_account_id' => $recieving_account->user_id,
                 'to_user_name' => $recieveing_user->profile_type != 'personal' ? $recieveing_user->business_name : $recieveing_user->first_name . "" . $recieveing_user->middle_name . " " . $recieveing_user->last_name,
                 'to_user_email' => $recieveing_user->email,
                 'to_bank_name' => $recieving_account->service_bank,
@@ -225,7 +225,7 @@ class TransferService
             ->first();
 
         if (!$account) {
-            throw new AppException("Invalid account id or account not found.");
+            throw new AppException("Invalid account id or account not found [SE].");
         }
 
         if ($account->pnd) {
@@ -238,14 +238,15 @@ class TransferService
         }
 
         if ($account->blacklisted) {
-            throw new AppException('[Sender Account Blacklisted] - Account cannot transacts at the moment. Contact customer support.');
+            throw new AppException('[Sender Account Blacklisted] - Account cannot transacts at the moment. Contact customer support. MESSAGE: ' . $account->blacklist_text);
         }
 
-        if ($reciever_account_id == $account->id) {
-            $account->update([
-                'blacklisted' => true,
-                'blacklist_text' => 'Self transfer perfomed [Threat Level 4/5].'
-            ]);
+        if ($reciever_account_id == $account->account_id) {
+            // $account->update([
+            //     'blacklisted' => true,
+            //     'blacklist_text' => 'Self transfer perfomed [Threat Level 4/5].'
+            // ]);
+            // DB::commit();
             throw new AppException('Self transfer is not allowed.');
         }
 
@@ -273,7 +274,7 @@ class TransferService
         }
 
         if (!$recieving_account) {
-            throw new AppException("Invalid account id or account not found.");
+            throw new AppException("Invalid account id or account not found [RE].");
         }
 
         if ($recieving_account->pnc) {
