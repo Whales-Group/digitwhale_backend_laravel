@@ -79,7 +79,7 @@ class HandleTransferSuccess
                 'charge' => $fee,
                 'source_amount' => $transactionData['sourceAmount'],
                 'amount_received' => $transactionData['amountReceived'],
-                'from_bank' => "NAIRA",
+                'from_bank' => $transactionData['senderBankName'],
                 'source_currency' => "NAIRA",
                 'destination_currency' => "NAIRA",
                 'previous_balance' => $prevBalance,
