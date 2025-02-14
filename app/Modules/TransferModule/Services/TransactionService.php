@@ -38,7 +38,7 @@ class TransactionService
         $fee = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $this->calculateTransactionFee($data['amount'], $data['currency']);
 
         // Calculate new balance
-        $newBalance = $account->balance - $data['amount'];
+        $newBalance = $transferType == TransferType::WHALE_TO_WHALE ? $account->balance - $data['amount'] : $account->balance - ($data['amount'] - $fee);
 
         $account->update([
             'balance' => $newBalance
