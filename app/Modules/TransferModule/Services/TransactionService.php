@@ -45,7 +45,7 @@ class TransactionService
         ]);
 
         $registry = [
-            'from_sys_account_id' => $account->user_id,
+            'from_sys_account_id' => $account->id,
             'from_account' => $account->account_number,
             'from_user_name' => $user->profile_type !== 'personal'
                 ? $user->business_name
@@ -115,8 +115,9 @@ class TransactionService
         $query = TransactionEntry::query();
 
         $query->where(function ($query) use ($user) {
-            $query->where('from_sys_account_id', $user->id)
-                ->orWhere('to_sys_account_id', $user->id);
+            $accountIds = $user->accounts->pluck('id')->toArray();
+            $query->whereIn('from_sys_account_id', $accountIds)
+                ->orWhereIn('to_sys_account_id', $accountIds);
         });
 
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
@@ -124,10 +125,17 @@ class TransactionService
                 case 'RECENT':
                     return ResponseHelper::success($query->orderBy('timestamp', 'desc')->take(4)->get() ?? []);
                 case 'CREDIT':
-                    $query->where('entry_type', 'credit');
+                    $query->where(function ($query) use ($user) {
+                        $accountIds = $user->accounts->pluck('id')->toArray();
+                        $query->whereIn('to_sys_account_id', $accountIds);
+                    });
                     break;
                 case 'DEBIT':
-                    $query->where('entry_type', 'debit');
+                    $query->where(function ($query) use ($user) {
+                        $accountIds = $user->accounts->pluck('id')->toArray();
+                        $query->whereIn('from_sys_account_id', $accountIds)
+                            ->where('entry_type', 'debit');
+                    });
                     break;
             }
         }

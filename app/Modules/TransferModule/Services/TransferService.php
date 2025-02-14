@@ -192,7 +192,7 @@ class TransferService
 
             $response = [
                 'currency' => $sender->currency,
-                'to_sys_account_id' => $recieving_account->user_id,
+                'to_sys_account_id' => $recieving_account->id,
                 'to_user_name' => $recieveing_user->profile_type != 'personal' ? $recieveing_user->business_name : $recieveing_user->first_name . "" . $recieveing_user->middle_name . " " . $recieveing_user->last_name,
                 'to_user_email' => $recieveing_user->email,
                 'to_bank_name' => $recieving_account->service_bank,
