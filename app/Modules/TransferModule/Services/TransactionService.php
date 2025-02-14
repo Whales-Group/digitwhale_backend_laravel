@@ -115,8 +115,8 @@ class TransactionService
         $query = TransactionEntry::query();
 
         $query->where(function ($query) use ($user) {
-            $query->where('from_sys_account_id', 'like', '%' . $user->id . '%')
-                ->orWhere('to_sys_account_id', 'like', '%' . $user->id . '%');
+            $query->where('from_sys_account_id', $user->id)
+                ->orWhere('to_sys_account_id', $user->id);
         });
 
         if ($queryParams['expand'] && in_array(strtoupper($queryParams['expand']), $allowedExpandValues)) {
