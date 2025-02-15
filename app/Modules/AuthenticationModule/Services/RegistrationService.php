@@ -93,19 +93,19 @@ class RegistrationService
         try {
             // Validate input for profile completion
             $validator = Validator::make($request->all(), [
-                "first_name" => "sometimes|string",
-                "last_name" => "sometimes|string",
-                "middle_name" => "sometimes|string",
-                "date_of_birth" => "sometimes|date",
-                "profile_url" => "sometimes|string",
-                "other_url" => "sometimes|string",
-                "phone_number" => "sometimes|string|max:10",
-                "gender" => "sometimes|string",
-                "nin" => "sometimes|string",
-                "bvn" => "sometimes|string",
-                "marital_status" => "sometimes|string",
-                "employment_status" => "sometimes|string",
-                "annual_income" => "sometimes|string",
+                "first_name" => "sometimes",
+                "last_name" => "sometimes",
+                "middle_name" => "sometimes",
+                "date_of_birth" => "sometimes",
+                "profile_url" => "sometimes",
+                "other_url" => "sometimes",
+                "phone_number" => "sometimes",
+                "gender" => "sometimes",
+                "nin" => "sometimes",
+                "bvn" => "sometimes",
+                "marital_status" => "sometimes",
+                "employment_status" => "sometimes",
+                "annual_income" => "sometimes",
             ]);
 
             if ($validator->fails()) {
