@@ -106,6 +106,11 @@ class RegistrationService
                 "marital_status" => "sometimes",
                 "employment_status" => "sometimes",
                 "annual_income" => "sometimes",
+                "country_iso" => "sometimes",
+                "state_province" => "sometimes",
+                "city" => "sometimes",
+                "street_address" => "sometimes",
+                "street_number" => "sometimes",
             ]);
 
             if ($validator->fails()) {
@@ -138,6 +143,11 @@ class RegistrationService
                 "marital_status" => $request->marital_status,
                 "employment_status" => $request->employment_status,
                 "annual_income" => $request->annual_income,
+                "country_iso" => $request->country_iso,
+                "state_province" => $request->state_province,
+                "city" => $request->city,
+                "street_address" => $request->street_address,
+                "street_number" => $request->street_number,
             ]);
 
             DB::commit();

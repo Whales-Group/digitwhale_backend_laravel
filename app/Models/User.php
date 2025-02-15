@@ -34,6 +34,11 @@ class User extends Authenticatable
         "marital_status",
         "employment_status",
         "annual_income",
+        "country_iso",
+        "state_province",
+        "city",
+        "street_address",
+        "street_number",
     ];
 
     protected $hidden = [
