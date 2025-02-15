@@ -11,14 +11,12 @@ use App\Common\Helpers\DateHelper;
 use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
-use App\Models\AccountSetting;
 use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
 use Exception;
-use Illuminate\Http\Request;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Exceptions;
 use ValueError;
 
 

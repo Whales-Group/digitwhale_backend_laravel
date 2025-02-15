@@ -7,7 +7,7 @@ use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Client\Request;
 
 class GetAndUpdateAccountService
 {

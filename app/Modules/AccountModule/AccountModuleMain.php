@@ -4,7 +4,7 @@ namespace App\Modules\AccountModule;
 
 use App\Modules\AccountModule\Services\AccountCreationService;
 use App\Modules\AccountModule\Services\GetAndUpdateAccountService;
-use Illuminate\Http\Request;
+use Illuminate\Http\Client\Request;
 
 class AccountModuleMain
 {
