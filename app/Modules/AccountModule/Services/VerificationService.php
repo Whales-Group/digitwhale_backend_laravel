@@ -29,7 +29,30 @@ class VerificationService
     'document_url' => 'required|url',
    ]);
 
-   $userId = auth()->user()->id;
+   $user = auth()->user();
+   $userId = $user->id;
+
+   // Fetch all supported document types
+   $supportedDocumentTypes = DocumentType::where('country_code', $user->country_iso)->get();
+
+   foreach ($supportedDocumentTypes as $documentType) {
+    // Check if a document of this type already exists for the user
+    $existingDocument = UserDocument::where('user_id', $userId)
+     ->where('document_type_id', $documentType->id)
+     ->first();
+
+    if (!$existingDocument) {
+     // Create an empty entry for the user if it doesn't exist
+     UserDocument::create([
+      'user_id' => $userId,
+      'document_type_id' => $documentType->id,
+      'value' => '',
+      'document_url' => '',
+      'status' => 'None',
+      'comment' => '',
+     ]);
+    }
+   }
 
    // Check if a document of the same type already exists for the user
    $existingDocument = UserDocument::where('user_id', $userId)
@@ -49,8 +72,8 @@ class VerificationService
    } else {
     // Create a new document
     $validatedData['user_id'] = $userId;
-    $validatedData['status'] = 'Pending';
-    $validatedData['comment'] = 'Under review...';
+    $validatedData['status'] = 'None';
+    $validatedData['comment'] = '';
 
     $userDocument = UserDocument::create($validatedData);
 
@@ -73,10 +96,40 @@ class VerificationService
   * @return JsonResponse
   * @throws AppException
   */
+ /**
+  * Get all documents for a user.
+  *
+  * @param int $userId
+  * @return JsonResponse
+  * @throws AppException
+  */
  public function getUserDocuments(): JsonResponse
  {
   try {
-   $userId = auth()->user()->id;
+   $user = auth()->user();
+   $userId = $user->id;
+
+   // Fetch all supported document types
+   $supportedDocumentTypes = DocumentType::where('country_code', $user->country_iso)->get();
+
+   foreach ($supportedDocumentTypes as $documentType) {
+    // Check if a document of this type already exists for the user
+    $existingDocument = UserDocument::where('user_id', $userId)
+     ->where('document_type_id', $documentType->id)
+     ->first();
+
+    if (!$existingDocument) {
+     // Create an empty entry for the user if it doesn't exist
+     UserDocument::create([
+      'user_id' => $userId,
+      'document_type_id' => $documentType->id,
+      'value' => '',
+      'document_url' => '',
+      'status' => 'None',
+      'comment' => '',
+     ]);
+    }
+   }
 
    // Fetch all documents for the user
    $documents = UserDocument::where('user_id', $userId)
