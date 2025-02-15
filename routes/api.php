@@ -44,6 +44,7 @@ Route::middleware($protectedMiddleware)->group(function () {
 
     Route::get("/logout", [AuthController::class, "logout"]);
     Route::post("/complete-profile", [AuthController::class, 'completeProfile']);
+    Route::get("/user", [AuthController::class, 'getAuthenticatedUser']);
 
     Route::prefix("/accounts")->group(function () {
 

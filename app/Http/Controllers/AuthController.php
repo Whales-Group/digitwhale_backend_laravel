@@ -41,7 +41,7 @@ class AuthController extends Controller
     }
 
 
-       /**
+    /**
      * Handle user registration.
      *
      * @param Request $request
@@ -128,4 +128,17 @@ class AuthController extends Controller
     {
         return $this->authenticationModuleMain->signInService->logout($request);
     }
+
+    /**
+     * Handle user logout.
+     *
+     * @return JsonResponse
+     */
+    public function getAuthenticatedUser(): JsonResponse
+    {
+        return $this->authenticationModuleMain->getAuthenticatedUser();
+    }
+
+
 }
+

@@ -56,7 +56,7 @@ class RegistrationService
                 "profile_type" => $request->profile_type,
                 "email" => $request->email,
                 "tag" => $tag,
-                'business_name'=> $request->business_name,
+                'business_name' => $request->business_name,
                 "password" => $hashedPassword,
                 "email_verified_at" => null,
             ]);
@@ -282,5 +282,28 @@ class RegistrationService
     {
         $localPart = explode('@', $email)[0];
         return '@' . $localPart . '_' . rand(100000, 999999);
+    }
+
+    /**
+     * Get the authenticated user's details.
+     *
+     * @return JsonResponse
+     */
+    public function getAuthenticatedUser(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return ResponseHelper::notFound("User not found");
+            }
+
+            return ResponseHelper::success($user, "User details retrieved successfully");
+
+        } catch (\Exception $e) {
+            return ResponseHelper::error(
+                message: "An error occurred while retrieving user details",
+                error: $e->getMessage()
+            );
+        }
     }
 }
