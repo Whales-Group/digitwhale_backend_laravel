@@ -19,7 +19,7 @@ class VerificationService
   * @return JsonResponse
   * @throws AppException
   */
- public function addDocument(): JsonResponse
+ public function addOrUpdateDocument(): JsonResponse
  {
   try {
    // Validate the request data
@@ -37,24 +37,33 @@ class VerificationService
     ->first();
 
    if ($existingDocument) {
-    throw new AppException('A document of this type already exists for the user.');
+    // Update the existing document
+    $existingDocument->update([
+     'value' => $validatedData['value'],
+     'document_url' => $validatedData['document_url'],
+     'status' => 'Pending',
+     'comment' => 'Under review...',
+    ]);
+
+    return ResponseHelper::success(message: 'Document updated successfully.', data: $existingDocument);
+   } else {
+    // Create a new document
+    $validatedData['user_id'] = $userId;
+    $validatedData['status'] = 'Pending';
+    $validatedData['comment'] = 'Under review...';
+
+    $userDocument = UserDocument::create($validatedData);
+
+    return ResponseHelper::success(message: 'Document added successfully.', data: $userDocument);
    }
-   $validatedData['user_id'] = $userId;
-   $validatedData['status'] = 'Pending';
-   $validatedData['comment'] = 'Under review...';
-
-   // Create the user document
-   $userDocument = UserDocument::create($validatedData);
-
-   return ResponseHelper::success(message: 'Document added successfully.', data: $userDocument);
   } catch (QueryException $e) {
    // Handle database-level uniqueness violation
    if ($e->getCode() === '23000') { // SQLSTATE[23000]: Integrity constraint violation
     throw new AppException('A document of this type already exists for the user.');
    }
-   throw new AppException('Failed to add document: ' . $e->getMessage());
+   throw new AppException('Failed to add or update document: ' . $e->getMessage());
   } catch (\Exception $e) {
-   throw new AppException('Failed to add document: ' . $e->getMessage());
+   throw new AppException('Failed to add or update document: ' . $e->getMessage());
   }
  }
  /**

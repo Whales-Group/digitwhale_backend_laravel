@@ -45,9 +45,9 @@ class AccountModuleMain
         return $this->getAccountService->toggleEnabled();
     }
 
-    public function addDocument()
+    public function addOrUpdateDocument()
     {
-        return $this->verificationService->addDocument();
+        return $this->verificationService->addOrUpdateDocument();
     }
 
     public function getUserDocuments()

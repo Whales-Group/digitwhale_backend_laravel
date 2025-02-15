@@ -72,7 +72,7 @@ Route::middleware($protectedMiddleware)->group(function () {
 
 
         Route::prefix("/verification")->group(function () {
-            Route::put("/", [AccountController::class, "addDocument"]);
+            Route::put("/", [AccountController::class, "addOrUpdateDocument"]);
             Route::get("/", [AccountController::class, "getUserDocuments"]);
             Route::get("/required", [AccountController::class, "getRequiredDocumentsByCountry"]);
 

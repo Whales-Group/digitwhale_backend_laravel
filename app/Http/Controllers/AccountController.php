@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Modules\AccountModule\AccountModuleMain;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\JsonResponse;
 
 class AccountController extends Controller
 {
@@ -38,9 +38,9 @@ class AccountController extends Controller
     }
 
 
-    public function addDocument()
+    public function addOrUpdateDocument()
     {
-        return $this->accountModuleMain->addDocument();
+        return $this->accountModuleMain->addOrUpdateDocument();
     }
 
     public function getUserDocuments()
