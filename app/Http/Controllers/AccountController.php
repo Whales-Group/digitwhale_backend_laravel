@@ -38,4 +38,19 @@ class AccountController extends Controller
     }
 
 
+    public function addDocument()
+    {
+        return $this->accountModuleMain->addDocument();
+    }
+
+    public function getUserDocuments()
+    {
+        return $this->accountModuleMain->getUserDocuments();
+    }
+
+    public function getRequiredDocumentsByCountry()
+    {
+        return $this->accountModuleMain->getRequiredDocumentsByCountry();
+    }
+
 }

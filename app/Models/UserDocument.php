@@ -19,6 +19,7 @@ class UserDocument extends Model
         'user_id',
         'document_type_id',
         'value',
+        'document_url',
         'status',
         'comment',
     ];

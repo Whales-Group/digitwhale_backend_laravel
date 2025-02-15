@@ -71,6 +71,13 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::get("/transaction", [TransferController::class, "getTransactions"]);
 
 
+        Route::prefix("/verification")->group(function () {
+            Route::put("/", [AccountController::class, "addDocument"]);
+            Route::get("/", [AccountController::class, "getUserDocuments"]);
+            Route::get("/required", [AccountController::class, "getRequiredDocumentsByCountry"]);
+
+        });
+
     });
 
     Route::prefix("/core")->group(function () {
