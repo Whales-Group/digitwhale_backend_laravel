@@ -93,19 +93,19 @@ class RegistrationService
         try {
             // Validate input for profile completion
             $validator = Validator::make($request->all(), [
-                "first_name" => "required|string",
-                "last_name" => "required|string",
+                "first_name" => "nullable|string",
+                "last_name" => "nullable|string",
                 "middle_name" => "nullable|string",
-                "date_of_birth" => "required|date",
+                "date_of_birth" => "nullable|date",
                 "profile_url" => "nullable|string",
                 "other_url" => "nullable|string",
-                "phone_number" => "required|string|max:10",
-                "gender" => "required|string",
-                "nin" => "required|string",
-                "bvn" => "required|string",
-                "marital_status" => "required|string",
-                "employment_status" => "required|string",
-                "annual_income" => "required|string",
+                "phone_number" => "nullable|string|max:10",
+                "gender" => "nullable|string",
+                "nin" => "nullable|string",
+                "bvn" => "nullable|string",
+                "marital_status" => "nullable|string",
+                "employment_status" => "nullable|string",
+                "annual_income" => "nullable|string",
             ]);
 
             if ($validator->fails()) {
