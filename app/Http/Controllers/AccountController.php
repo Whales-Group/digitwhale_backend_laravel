@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Modules\AccountModule\AccountModuleMain;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\Client\Request;
 
 class AccountController extends Controller
 {
@@ -31,12 +31,6 @@ class AccountController extends Controller
     {
         return $this->accountModuleMain->toggleEnabled($request);
     }
-
-    public function updateIn(Request $request)
-    {
-        return $this->accountModuleMain->updateIn($request);
-    }
-
 
     public function createAccount(Request $request)
     {
