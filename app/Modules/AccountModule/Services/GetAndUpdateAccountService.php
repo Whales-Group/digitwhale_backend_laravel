@@ -25,24 +25,18 @@ class GetAndUpdateAccountService
         return ResponseHelper::success($accounts);
     }
 
-    public static function toggleEnabled(Request $request): mixed
+    public static function toggleEnabled(Request $request): JsonResponse
     {
         $userId = auth()->id();
-
         $accountId = $request->input('account_id');
-
-        $updatableFields = [
-            'enabled',
-        ];
-
-        $updateData = $request->only($updatableFields);
+        $status = $request->input('enabled');
 
         if (empty($accountId)) {
             throw new AppException("Account ID must be provided.");
         }
 
-        if (empty($updateData)) {
-            throw new AppException("No valid fields provided for update.");
+        if (is_null($status)) {
+            throw new AppException("Enabled status must be provided.");
         }
 
         $account = Account::where('user_id', $userId)
@@ -53,7 +47,8 @@ class GetAndUpdateAccountService
             throw new AppException("Account not found for the specified ID.");
         }
 
-        if ($account->toggleEnabled($updateData)) {
+        $account->enabled = $status;
+        if ($account->save()) {
             return ResponseHelper::success($account, "Account updated successfully.");
         }
 

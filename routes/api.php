@@ -56,7 +56,7 @@ Route::middleware($protectedMiddleware)->group(function () {
 
         Route::prefix("/settings")->group(function () {
 
-            Route::get("/toggle-enabled", [AccountSettingController::class, "toggleEnabled"]);
+            Route::put("/toggle-enabled", [AccountSettingController::class, "toggleEnabled"]);
             Route::get("/", [AccountSettingController::class, "getOrCreateAccountSettings"]);
             Route::put("/", [AccountSettingController::class, "updateAccountSettings"]);
 

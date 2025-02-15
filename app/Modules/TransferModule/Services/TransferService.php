@@ -153,7 +153,7 @@ class TransferService
             'status' => $fincra_res['data']['status'],
             'type' => $type,
             'amount' => $amount,
-            'note' => "NIP/Transfer Digitwhale Innovations Limited - " . $note,
+            'note' => "[NIP/Transfer Digitwhale Innovations Limited] | " . $note,
             'entry_type' => 'debit',
         ];
 
@@ -202,7 +202,7 @@ class TransferService
                 'status' => 'successful',
                 'type' => $type,
                 'amount' => $amount,
-                'note' => "Internal/Transfer Digitwhale Innovations Limited - " . $note,
+                'note' => "[Digitwhale/Transfer Digitwhale Innovations Limited] | " . $note,
                 'entry_type' => 'debit',
             ];
 

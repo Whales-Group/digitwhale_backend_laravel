@@ -80,9 +80,27 @@ class AccountCreationService
         } catch (Exception $e) {
 
             DB::rollBack();
-            return ResponseHelper::error(error: $e->getMessage());
-
+            return ResponseHelper::error(
+                message: ResponseHelper::implodeNestedArrays($e->e(), [
+                    "email",
+                ])
+            );
         }
+    }
+
+     /**
+     * Get provider-specific response based on the service provider.
+     *
+     * @param ServiceProvider $provider
+     * @return array
+     */
+    public function getProviderResponse(ServiceProvider $provider, Currency $currency): array
+    {
+        return match ($provider) {
+            ServiceProvider::PAYSTACK => $this->getPaystackResponse($currency),
+            ServiceProvider::FINCRA => $this->getFincraResponse($currency),
+            default => throw new AppException("Invalid Service Provider."),
+        };
     }
 
     /**
@@ -164,21 +182,6 @@ class AccountCreationService
             'dedicated_account_id' => $fincra_dva['data']['_id'],
             "phone" => $user->phone_number
         ];
-    }
-
-    /**
-     * Get provider-specific response based on the service provider.
-     *
-     * @param ServiceProvider $provider
-     * @return array
-     */
-    public function getProviderResponse(ServiceProvider $provider, Currency $currency): array
-    {
-        return match ($provider) {
-            ServiceProvider::PAYSTACK => $this->getPaystackResponse($currency),
-            ServiceProvider::FINCRA => $this->getFincraResponse($currency),
-            default => throw new AppException("Invalid Service Provider."),
-        };
     }
 
     /**
