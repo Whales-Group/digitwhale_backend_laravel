@@ -27,9 +27,9 @@ class AccountController extends Controller
         return $this->accountModuleMain->getAccountDetails($request);
     }
 
-    public function updateAccount(Request $request)
+    public function updateAccount()
     {
-        return $this->accountModuleMain->toggleEnabled($request);
+        return $this->accountModuleMain->toggleEnabled();
     }
 
     public function createAccount(Request $request)

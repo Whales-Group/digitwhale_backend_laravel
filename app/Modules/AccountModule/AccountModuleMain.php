@@ -33,8 +33,8 @@ class AccountModuleMain
         return $this->getAccountService->getAccountDetails($request);
     }
 
-    public function toggleEnabled(Request $request){
-        return $this->getAccountService->toggleEnabled($request);
+    public function toggleEnabled(){
+        return $this->getAccountService->toggleEnabled();
     }
 
    

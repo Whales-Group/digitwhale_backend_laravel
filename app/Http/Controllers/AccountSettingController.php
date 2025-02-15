@@ -21,9 +21,9 @@ class AccountSettingController extends Controller
         return $this->accountModuleMain->getOrCreateAccountSettings();
     }
 
-    public function toggleEnabled(Request $request)
+    public function toggleEnabled()
     {
-        return $this->accountModuleMain->toggleEnabled($request);
+        return $this->accountModuleMain->toggleEnabled();
 
     }
 

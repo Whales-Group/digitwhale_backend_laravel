@@ -32,9 +32,9 @@ class AccountSettingModuleMain
         return $this->accountCreationService->getOrCreateAccountSettings();
     }
 
-    public function toggleEnabled(Request $request)
+    public function toggleEnabled()
     {
-        return $this->getAndUpdateAccountService->toggleEnabled($request);
+        return $this->getAndUpdateAccountService->toggleEnabled();
     }
 
     public function updateAccountSettings()

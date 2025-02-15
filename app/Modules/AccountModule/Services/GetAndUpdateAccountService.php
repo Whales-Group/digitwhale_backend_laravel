@@ -25,11 +25,11 @@ class GetAndUpdateAccountService
         return ResponseHelper::success($accounts);
     }
 
-    public static function toggleEnabled(Request $request): JsonResponse
+    public static function toggleEnabled(): JsonResponse
     {
         $userId = auth()->id();
-        $accountId = $request->input('account_id');
-        $status = $request->input('enabled');
+        $accountId = request()->input('account_id');
+        $status = request()->input('enabled');
 
         if (empty($accountId)) {
             throw new AppException("Account ID must be provided.");
