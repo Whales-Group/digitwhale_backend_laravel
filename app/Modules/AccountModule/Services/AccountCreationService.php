@@ -78,11 +78,8 @@ class AccountCreationService
         } catch (Exception $e) {
 
             DB::rollBack();
-            return ResponseHelper::error(
-                message: ResponseHelper::implodeNestedArrays($e->e(), [
-                    "email",
-                ])
-            );
+            return ResponseHelper::error($e->getMessage());
+
         }
     }
 
