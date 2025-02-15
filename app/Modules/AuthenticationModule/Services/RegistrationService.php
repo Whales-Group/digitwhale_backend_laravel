@@ -141,7 +141,7 @@ class RegistrationService
             ]);
 
             DB::commit();
-            return ResponseHelper::success([], "Profile updated successfully");
+            return ResponseHelper::success($user, "Profile updated successfully");
 
         } catch (\Exception $e) {
             DB::rollBack();
