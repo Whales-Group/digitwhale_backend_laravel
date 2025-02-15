@@ -62,12 +62,12 @@ class GetAndUpdateAccountService
      * @param Request $request
      * @return Account
      */
-    public static function getAccountDetails(Request $request): JsonResponse
+    public static function getAccountDetails(): JsonResponse
     {
         $userId = auth()->id();
 
-        $accountId = $request->query('account_id');
-        $currencyValue = $request->query('currency');
+        $accountId = request()->query('account_id');
+        $currencyValue = request()->query('currency');
 
         if (empty($accountId) && empty($currencyValue)) {
             throw new AppException("At least one of 'account_id' or 'currency' must be provided.");

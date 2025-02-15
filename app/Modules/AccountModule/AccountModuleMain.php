@@ -21,16 +21,16 @@ class AccountModuleMain
         $this->accountCreationService = $accountCreationService;
     }
 
-    public function createAccount(Request $request){
-        return $this->accountCreationService->createAccount($request);
+    public function createAccount(){
+        return $this->accountCreationService->createAccount();
     }
     
     public function getAccounts(){
         return $this->getAccountService->getAccount();
     }
 
-    public function getAccountDetails(Request $request){
-        return $this->getAccountService->getAccountDetails($request);
+    public function getAccountDetails(){
+        return $this->getAccountService->getAccountDetails();
     }
 
     public function toggleEnabled(){

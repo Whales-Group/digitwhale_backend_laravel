@@ -22,9 +22,9 @@ class AccountController extends Controller
         return $this->accountModuleMain->getAccounts();
     }
 
-    public function getAccountDetails(Request $request)
+    public function getAccountDetails()
     {
-        return $this->accountModuleMain->getAccountDetails($request);
+        return $this->accountModuleMain->getAccountDetails();
     }
 
     public function updateAccount()
@@ -32,9 +32,9 @@ class AccountController extends Controller
         return $this->accountModuleMain->toggleEnabled();
     }
 
-    public function createAccount(Request $request)
+    public function createAccount()
     {
-        return $this->accountModuleMain->createAccount($request);
+        return $this->accountModuleMain->createAccount();
     }
 
 

@@ -27,12 +27,12 @@ class AccountCreationService
      *
      * @return mixed
      */
-    public function createAccount(Request $request): mixed
+    public function createAccount(): mixed
     {
         try {
 
             $user = auth()->user();
-            $currencyValue = $request->input('currency');
+            $currencyValue = request()->input('currency');
 
             if (!$user->profileIsCompleted()) {
                 throw new AppException("Profile not completed. Update profile to proceed.");
