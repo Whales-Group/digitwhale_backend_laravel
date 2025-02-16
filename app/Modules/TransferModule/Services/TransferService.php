@@ -101,28 +101,37 @@ class TransferService
 
     private function handleFincraTransfer(Request $request, string $account_id): array
     {
-        $recieving_account_id = $request->get("recieving_account_id");
-        $amount = $request->get("amount");
-        $type = $request->get("type");
-        $note = $request->get("note");
+        $recieving_account_id = trim($request->get("recieving_account_id"));
+        $amount = trim($request->get("amount"));
+        $type = trim($request->get("type"));
+        $note = trim($request->get("note"));
+        $beneficiary_account_holder_name = trim($request->get("beneficiary_account_holder_name"));
+        $beneficiary_account_number = trim($request->get("beneficiary_account_number"));
+        $beneficiary_bank_code = trim($request->get("beneficiary_bank_code"));
+        $beneficiary_first_name = trim($request->get("beneficiary_first_name"));
+        $beneficiary_last_name = trim($request->get("beneficiary_last_name"));
+        $beneficiary_type = trim($request->get("beneficiary_type"));
+        $beneficiary_phone = trim($request->get("beneficiary_phone"));
+        $beneficiary_email = trim($request->get("beneficiary_email"));
+
         $sender = $this->performSecurityCheckOnSender($account_id, $recieving_account_id, $amount);
         $user = auth()->user();
         $reference = CodeHelper::generateSecureReference();
         $payload = [
             'amount' => (int) $amount - 50,
             'beneficiary' => [
-                'accountHolderName' => $request->get("beneficiary_account_holder_name"),
-                'accountNumber' => $request->get("beneficiary_account_number"),
-                'bankCode' => $request->get("beneficiary_bank_code"),
-                'firstName' => $request->get("beneficiary_first_name"),
-                'lastName' => $request->get("beneficiary_last_name"),
-                'type' => $request->get("beneficiary_type"),
+                'accountHolderName' => $beneficiary_account_holder_name,
+                'accountNumber' => $beneficiary_account_number,
+                'bankCode' => $beneficiary_bank_code,
+                'firstName' => $beneficiary_first_name,
+                'lastName' => $beneficiary_last_name,
+                'type' => $beneficiary_type,
                 'country' => "NG",
-                'phone' => $request->get("beneficiary_phone"),
-                'email' => $request->get("beneficiary_email"),
+                'phone' => $beneficiary_phone,
+                'email' => $beneficiary_email,
             ],
             'customerReference' => $reference,
-            'description' => $request->get("note"),
+            'description' => $note,
             'destinationCurrency' => "NGN",
             'paymentDestination' => 'bank_account',
             'sourceCurrency' => "NGN",
@@ -135,11 +144,9 @@ class TransferService
                 'name' => $user->business_name,
                 'email' => $sender->email,
             ],
-            // 'quoteReference' => CodeHelper::generate(20),
         ];
 
         $fincra_res = $this->fincraService->runTransfer(TransferType::BANK_ACCOUNT_TRANSFER, $payload);
-
 
         $response = [
             'currency' => $sender->currency,
@@ -157,10 +164,9 @@ class TransferService
             'entry_type' => 'debit',
         ];
 
-
         return $response;
     }
-
+   
     private function handlePaystackTransfer(Request $request, string $account_id): mixed
     {
         throw new AppException("Service Unavailable. Contact support to switch service provider.");
@@ -228,6 +234,10 @@ class TransferService
             throw new AppException("Invalid account id or account not found [SE].");
         }
 
+        if ($account->enable) {
+            throw new AppException('[Account Disabled] - Account cannot transacts at the moment. Contact customer support');
+        }
+
         if ($account->pnd) {
             throw new AppException('Account cannot transact at the moment. Contact customer support.');
         }
@@ -238,7 +248,7 @@ class TransferService
         }
 
         if ($account->blacklisted) {
-            throw new AppException('[Sender Account Blacklisted] - Account cannot transacts at the moment. Contact customer support. MESSAGE: ' . $account->blacklist_text);
+            throw new AppException('[Account Blacklisted] - Account cannot transacts at the moment. Contact customer support. MESSAGE: ' . $account->blacklist_text);
         }
 
         if ($reciever_account_id == $account->account_id) {

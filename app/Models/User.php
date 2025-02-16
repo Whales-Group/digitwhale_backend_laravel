@@ -90,9 +90,9 @@ class User extends Authenticatable
         $missingFields = array_filter($profileFields, fn($value) => is_null($value));
         $isCompleted = empty($missingFields);
 
-        $message = $isCompleted 
-            ? 'Profile is complete.' 
-            : 'Missing fields: ' . implode(', ', array_map(fn($key) => $fieldNames[$key] . ' not set', array_keys($missingFields)));
+        $message = $isCompleted
+            ? 'Profile is complete.'
+            : implode(', ', array_map(fn($key) => $fieldNames[$key] . ' not set', array_keys($missingFields)));
 
         return [
             "bool" => $isCompleted,

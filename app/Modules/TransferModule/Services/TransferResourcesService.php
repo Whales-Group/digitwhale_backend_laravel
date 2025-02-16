@@ -83,14 +83,14 @@ class TransferResourcesService
             switch ($serviceProvider) {
                 case ServiceProvider::FINCRA:
                     $fincra_res = $this->fincraService->resolveAccount($account_number, $bank_code);
-                    $response['accountName'] = $fincra_res['data']['accountName'];
-                    $response['accountNumber'] = $fincra_res['data']['accountNumber'];
+                    $response['accountName'] = trim($fincra_res['data']['accountName']);
+                    $response['accountNumber'] = trim($fincra_res['data']['accountNumber']);
 
                     return ResponseHelper::success($response);
                 case ServiceProvider::PAYSTACK:
                     $paystack_res = $this->paystackService->resolveAccount($account_number, $bank_code);
-                    $response['accountName'] = $paystack_res['data']['account_name'];
-                    $response['accountNumber'] = $paystack_res['data']['account_number'];
+                    $response['accountName'] = trim($paystack_res['data']['account_name']);
+                    $response['accountNumber'] = trim($paystack_res['data']['account_number']);
 
                     return ResponseHelper::success($response);
                 default:
