@@ -26,7 +26,7 @@ class VerificationService
    $validatedData = request()->validate([
     'document_type_id' => 'required|integer|exists:document_types,id',
     'value' => 'required|string',
-    'document_url' => 'required|url',
+    'document_url' => 'nullable|url',
    ]);
 
    $user = auth()->user();
@@ -67,7 +67,7 @@ class VerificationService
     // Update the existing document
     $existingDocument->update([
      'value' => $validatedData['value'],
-     'document_url' => $validatedData['document_url'],
+     'document_url' => $validatedData['document_url'] ?? '',
      'status' => 'Pending',
      'comment' => 'Under review...',
     ]);
