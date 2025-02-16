@@ -32,7 +32,7 @@ class VerificationService
    $user = auth()->user();
    $userId = $user->id;
 
-   if (auth()->user()->country_iso) {
+   if (!auth()->user()->country_iso) {
     throw new AppException("Country on address not set.");
    }
 
