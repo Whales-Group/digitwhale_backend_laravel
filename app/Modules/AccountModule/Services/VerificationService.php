@@ -32,6 +32,10 @@ class VerificationService
    $user = auth()->user();
    $userId = $user->id;
 
+   if (auth()->user()->country_iso) {
+    throw new AppException("Country on address not set.");
+   }
+
    // Fetch all supported document types
    $supportedDocumentTypes = DocumentType::where('country_code', $user->country_iso)->get();
 
@@ -68,6 +72,14 @@ class VerificationService
      'comment' => 'Under review...',
     ]);
 
+    // Update user table if document type is NIN or BVN
+    $documentType = DocumentType::find($validatedData['document_type_id']);
+    if ($documentType->name === 'NIN' || $documentType->name === 'BVN') {
+     $user->update([
+      strtolower($documentType->name) => $validatedData['value'],
+     ]);
+    }
+
     return ResponseHelper::success(message: 'Document updated successfully.', data: $existingDocument);
    } else {
     // Create a new document
@@ -76,6 +88,14 @@ class VerificationService
     $validatedData['comment'] = '';
 
     $userDocument = UserDocument::create($validatedData);
+
+    // Update user table if document type is NIN or BVN
+    $documentType = DocumentType::find($validatedData['document_type_id']);
+    if ($documentType->name === 'NIN' || $documentType->name === 'BVN') {
+     $user->update([
+      strtolower($documentType->name) => $validatedData['value'],
+     ]);
+    }
 
     return ResponseHelper::success(message: 'Document added successfully.', data: $userDocument);
    }
