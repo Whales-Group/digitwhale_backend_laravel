@@ -35,7 +35,7 @@ class AccountCreationService
             $currencyValue = request()->input('currency');
 
             $completed = $user->profileIsCompleted();
-            if ($completed['bool']) {
+            if (!$completed['bool']) {
                 throw new AppException($completed['message']);
             }
 
