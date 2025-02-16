@@ -78,10 +78,21 @@ class User extends Authenticatable
             'bvn' => $this->bvn,
         ];
 
+        $fieldNames = [
+            'first_name' => 'First name',
+            'last_name' => 'Last name',
+            'date_of_birth' => 'Date of birth',
+            'phone_number' => 'Phone number',
+            'gender' => 'Gender',
+            'bvn' => 'BVN',
+        ];
+
         $missingFields = array_filter($profileFields, fn($value) => is_null($value));
         $isCompleted = empty($missingFields);
 
-        $message = $isCompleted ? 'Profile is complete.' : 'Missing fields: ' . implode(', ', array_keys($missingFields));
+        $message = $isCompleted 
+            ? 'Profile is complete.' 
+            : 'Missing fields: ' . implode(', ', array_map(fn($key) => $fieldNames[$key] . ' not set', array_keys($missingFields)));
 
         return [
             "bool" => $isCompleted,
