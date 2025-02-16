@@ -67,7 +67,7 @@ class User extends Authenticatable
         });
     }
 
-    public function profileIsCompleted(): bool
+    public function profileIsCompleted(): array
     {
         $profileFields = [
             'first_name' => $this->first_name,
@@ -78,7 +78,15 @@ class User extends Authenticatable
             'bvn' => $this->bvn,
         ];
 
-        return array_reduce($profileFields, fn($carry, $item) => $carry && !is_null($item), true);
+        $missingFields = array_filter($profileFields, fn($value) => is_null($value));
+        $isCompleted = empty($missingFields);
+
+        $message = $isCompleted ? 'Profile is complete.' : 'Missing fields: ' . implode(', ', array_keys($missingFields));
+
+        return [
+            "bool" => $isCompleted,
+            "message" => $message,
+        ];
     }
 
     public function documents()

@@ -34,8 +34,9 @@ class AccountCreationService
             $user = auth()->user();
             $currencyValue = request()->input('currency');
 
-            if (!$user->profileIsCompleted()) {
-                throw new AppException("Profile not completed. Update profile to proceed.");
+            $completed = $user->profileIsCompleted();
+            if ($completed['bool']) {
+                throw new AppException($completed['message']);
             }
 
             // Validate the currency
@@ -83,7 +84,7 @@ class AccountCreationService
         }
     }
 
-     /**
+    /**
      * Get provider-specific response based on the service provider.
      *
      * @param ServiceProvider $provider
