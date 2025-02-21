@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Models\Account;
 use App\Modules\AccountSettingModule\Services\AccountSettingsCreationService;
+use App\Modules\WhaleGPTModule\Services\PackageService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -64,6 +66,8 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::created(function () {
+            $packageService = new PackageService();
+            $packageService->subscribe('Basic');
         });
     }
 
@@ -105,5 +109,9 @@ class User extends Authenticatable
         return $this->hasMany(UserDocument::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
 
 }

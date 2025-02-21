@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\DocumentType;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Dom\Document;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,5 +21,7 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $this->call(PackageSeeder::class);
+        $this->call(DocumentTypesSeeder::class);
     }
 }

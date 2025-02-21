@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MiscellaneousController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\WhaleGptController;
 use Illuminate\Support\Facades\Artisan;
@@ -49,6 +50,15 @@ Route::middleware($protectedMiddleware)->group(function () {
 
     Route::prefix("/gpt")->group(function () {
         Route::post("/", [WhaleGptController::class, "generatePaymentLink"]);
+
+        Route::prefix("/packages")->group(function () {
+            
+            Route::get('/', [PackageController::class, 'index']);
+            Route::post('/subscribe/{packageType}', [PackageController::class, 'subscribe']);
+            Route::post('/unsubscribe', [PackageController::class, 'unsubscribe']);
+            Route::post('/upgrade/{newPackageType}', [PackageController::class, 'upgrade']);
+            Route::post('/downgrade/{newPackageType}', [PackageController::class, 'downgrade']);
+        });
     });
 
     Route::prefix("/accounts")->group(function () {
