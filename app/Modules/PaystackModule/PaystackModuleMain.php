@@ -2,6 +2,7 @@
 
 namespace App\Modules\PaystackModule;
 
+use App\Common\Helpers\ResponseHelper;
 use App\Modules\PaystackModule\Handlers\BaseHandler;
 use App\Modules\PaystackModule\Services\PaystackService;
 use GuzzleHttp\Psr7\Request;
@@ -24,13 +25,17 @@ class PaystackModuleMain
 
     public function generatePaymentLink()
     {
-        $email = auth()->user()->email;
-        $amount = request()->get('amount') * 100;
+        try {
+            $email = auth()->user()->email;
+            $amount = request()->get('amount') * 100;
 
-        if (is_null($email) || is_null($amount)) {
-            throw new \InvalidArgumentException('Amount and description are required.');
+            if (is_null($email) || is_null($amount)) {
+                throw new \InvalidArgumentException('Amount and description are required.');
+            }
+
+            return ResponseHelper::success($this->paystackService->generatePaymentLink($email, $amount));
+        } catch (\Exception $e) {
+            return ResponseHelper::error($e->getMessage());
         }
-
-        return $this->paystackService->generatePaymentLink($email, $amount);
     }
 }

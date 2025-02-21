@@ -229,7 +229,7 @@ class PaystackService
                 throw new AppException("Failed to generate link: " . ($data['message'] ?? 'Unknown error'));
             }
 
-            return $data;
+            return $data['data'];
         } catch (AppException $e) {
             throw new AppException("Failed to generate link: " . $e->getMessage());
         }
