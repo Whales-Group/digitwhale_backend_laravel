@@ -28,7 +28,7 @@ class PaystackService
 
         // Set a default secret key if not already set
         if (empty(self::$secretKey)) {
-            self::$secretKey = "sk_live_94ebb16f339b52d63dc7f47b64d08dc897b74e23";
+            self::$secretKey = "sk_test_bb3fc97c4a0729e6742033225e4cdef97e231f3f";
         }
 
         return self::$instance;
