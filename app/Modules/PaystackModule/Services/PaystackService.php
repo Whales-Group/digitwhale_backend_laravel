@@ -211,4 +211,27 @@ class PaystackService
             throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
     }
+
+    public function generatePaymentLink(string $email, string $amount): array
+    {
+        try {
+            $payload = [
+                "email" => $email,
+                "amount" => $amount,
+            ];
+            $response = $this->httpClient->post("transaction/initialize", [
+                'headers' => $this->buildAuthHeader(),
+                'json' => $payload,
+            ]);
+            $data = json_decode($response->getBody(), true);
+
+            if (!$data['status']) {
+                throw new AppException("Failed to generate link: " . ($data['message'] ?? 'Unknown error'));
+            }
+
+            return $data;
+        } catch (AppException $e) {
+            throw new AppException("Failed to generate link: " . $e->getMessage());
+        }
+    }
 }

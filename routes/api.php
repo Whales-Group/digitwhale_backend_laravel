@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\TransferController;
+use App\Http\Controllers\WhaleGptController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,10 @@ Route::middleware($protectedMiddleware)->group(function () {
     Route::get("/logout", [AuthController::class, "logout"]);
     Route::post("/complete-profile", [AuthController::class, 'completeProfile']);
     Route::get("/user", [AuthController::class, 'getAuthenticatedUser']);
+
+    Route::prefix("/gpt")->group(function () {
+        Route::post("/", [WhaleGptController::class, "generatePaymentLink"]);
+    });
 
     Route::prefix("/accounts")->group(function () {
 
