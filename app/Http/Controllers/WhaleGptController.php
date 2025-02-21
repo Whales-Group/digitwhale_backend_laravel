@@ -19,4 +19,9 @@ class WhaleGptController extends Controller
  {   
      return $this->paystackModuleMain->generatePaymentLink();
  }
+
+    public function verifyPayment()
+    {
+        return $this->paystackModuleMain->verifyPayment();
+    }
 }

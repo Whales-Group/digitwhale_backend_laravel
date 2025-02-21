@@ -234,4 +234,23 @@ class PaystackService
             throw new AppException("Failed to generate link: " . $e->getMessage());
         }
     }
+
+    public function verifyPayment(string $reference,): array
+    {
+        try {
+            $response = $this->httpClient->get("transaction/verify/$reference", [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if (!$data['status']) {
+                throw new AppException("Failed to verify payment: " . ($data['message'] ?? 'Unknown error'));
+            }
+
+            return $data['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to verify payment: " . $e->getMessage());
+        }
+    }
 }

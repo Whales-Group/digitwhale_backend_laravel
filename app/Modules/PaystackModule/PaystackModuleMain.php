@@ -38,4 +38,19 @@ class PaystackModuleMain
             return ResponseHelper::error($e->getMessage());
         }
     }
+
+    public function verifyPayment()
+    {
+        try {
+            $reference = request()->route('reference');
+
+            if (is_null($reference)) {
+                throw new \InvalidArgumentException('Reference is required.');
+            }
+
+            return ResponseHelper::success($this->paystackService->verifyPayment($reference));
+        } catch (\Exception $e) {
+            return ResponseHelper::error($e->getMessage());
+        }
+    }
 }

@@ -2,19 +2,26 @@
 
 namespace App\Modules\WhaleGPTModule\Services;
 
+use App\Common\Enums\TransferType;
 use App\Common\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\Package;
 use App\Models\Subscription;
+use App\Modules\TransferModule\Services\TransactionService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class PackageService
 {
-    public function __construct()
+    protected $transactionService;
+
+    public function __construct(TransactionService $transactionService)
     {
+        $this->transactionService = $transactionService;
     }
 
     /**
@@ -45,7 +52,6 @@ class PackageService
             throw new Exception('Account cannot perform operations at the moment due to PND status. Contact customer support', 403);
         }
 
-        // Balance check only if packageType is provided (for subscribe/upgrade)
         if ($packageType) {
             $package = Package::where('type', $packageType)->first();
             if (!$package) {
@@ -84,38 +90,61 @@ class PackageService
     public function subscribe(string $packageType): JsonResponse
     {
         try {
-            // Perform security checks with package type for balance verification
-            $account = $this->performSecurityChecks($packageType);
-
             $user = Auth::user();
-            $package = Package::where('type', $packageType)->first();
+            $lock = Cache::lock("subscribe_{$user->id}", 10); // Lock for 10 seconds
 
-            $activeSubscription = $user->subscriptions()
-                ->where('is_active', true)
-                ->first();
-
-            if ($activeSubscription) {
-                throw new Exception('User already has an active subscription. Please unsubscribe first.', 400);
+            if (!$lock->get()) {
+                throw new Exception('Another subscription operation is in progress. Please try again.', 429);
             }
 
-            $subscription = Subscription::create([
-                'user_id' => $user->id,
-                'package_id' => $package->id,
-                'start_date' => Carbon::now(),
-                'end_date' => null,
-                'is_active' => true,
-            ]);
+            try {
+                $account = $this->performSecurityChecks($packageType);
+                $package = Package::where('type', $packageType)->first();
 
-            // Deduct balance if applicable
-            if ($package->price !== '0/month') {
-                $packagePrice = (float) str_replace('/month', '', $package->price);
-                $account->update(['balance' => $account->balance - $packagePrice]);
+                return DB::transaction(function () use ($user, $account, $package) {
+                    $activeSubscription = $user->subscriptions()
+                        ->where('is_active', true)
+                        ->first();
+
+                    if ($activeSubscription) {
+                        throw new Exception('User already has an active subscription. Please unsubscribe first.', 400);
+                    }
+
+                    $subscription = Subscription::create([
+                        'user_id' => $user->id,
+                        'package_id' => $package->id,
+                        'start_date' => Carbon::now(),
+                        'end_date' => null,
+                        'is_active' => true,
+                    ]);
+
+                    if ($package->price !== '0/month') {
+                        $packagePrice = (float) str_replace('/month', '', $package->price);
+                        $transactionData = [
+                            'currency' => $account->currency ?? 'NGN',
+                            'to_sys_account_id' => null,
+                            'to_user_name' => 'WhaleGPT System',
+                            'to_user_email' => 'system@whalegpt.com',
+                            'to_bank_name' => "WhaleGPT System",
+                            'to_bank_code' => "00",
+                            'to_account_number' => null,
+                            'transaction_reference' => 'SUB_' . $subscription->id . '_' . time(),
+                            'status' => 'completed',
+                            'type' => 'subscription',
+                            'amount' => $packagePrice,
+                            'note' => "Subscription to {$package->type} package",
+                        ];
+                        $this->transactionService->registerTransaction($transactionData, TransferType::WHALE_TO_WHALE);
+                    }
+
+                    return ResponseHelper::success([
+                        'message' => "Successfully subscribed to {$package->type} package",
+                        'subscription' => $subscription->load('package'),
+                    ]);
+                });
+            } finally {
+                $lock->release();
             }
-
-            return ResponseHelper::success([
-                'message' => "Successfully subscribed to {$package->type} package",
-                'subscription' => $subscription->load('package'),
-            ]);
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage(), $e->getCode() ?: 500);
         }
@@ -127,27 +156,38 @@ class PackageService
     public function unsubscribe(): JsonResponse
     {
         try {
-            // Perform security checks without balance check
-            $this->performSecurityChecks();
-
             $user = Auth::user();
-            $activeSubscription = $user->subscriptions()
-                ->where('is_active', true)
-                ->first();
+            $lock = Cache::lock("unsubscribe_{$user->id}", 10);
 
-            if (!$activeSubscription) {
-                throw new Exception('No active subscription found', 404);
+            if (!$lock->get()) {
+                throw new Exception('Another unsubscribe operation is in progress. Please try again.', 429);
             }
 
-            $activeSubscription->update([
-                'end_date' => Carbon::now(),
-                'is_active' => false,
-            ]);
+            try {
+                $this->performSecurityChecks();
 
-            return ResponseHelper::success([
-                'message' => 'Successfully unsubscribed from package',
-                'subscription' => $activeSubscription->load('package'),
-            ]);
+                return DB::transaction(function () use ($user) {
+                    $activeSubscription = $user->subscriptions()
+                        ->where('is_active', true)
+                        ->first();
+
+                    if (!$activeSubscription) {
+                        throw new Exception('No active subscription found', 404);
+                    }
+
+                    $activeSubscription->update([
+                        'end_date' => Carbon::now(),
+                        'is_active' => false,
+                    ]);
+
+                    return ResponseHelper::success([
+                        'message' => 'Successfully unsubscribed from package',
+                        'subscription' => $activeSubscription->load('package'),
+                    ]);
+                });
+            } finally {
+                $lock->release();
+            }
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage(), $e->getCode() ?: 500);
         }
@@ -159,54 +199,76 @@ class PackageService
     public function upgrade(string $newPackageType): JsonResponse
     {
         try {
-            // Perform security checks with new package type for balance verification
-            $account = $this->performSecurityChecks($newPackageType);
-
             $user = Auth::user();
-            $newPackage = Package::where('type', $newPackageType)->first();
+            $lock = Cache::lock("upgrade_{$user->id}", 10);
 
-            $activeSubscription = $user->subscriptions()
-                ->where('is_active', true)
-                ->first();
-
-            if (!$activeSubscription) {
-                return $this->subscribe($newPackageType);
+            if (!$lock->get()) {
+                throw new Exception('Another upgrade operation is in progress. Please try again.', 429);
             }
 
-            $currentPackage = $activeSubscription->package;
-            $currentPrice = (float) str_replace('/month', '', $currentPackage->price);
-            $newPrice = (float) str_replace('/month', '', $newPackage->price);
+            try {
+                $account = $this->performSecurityChecks($newPackageType);
+                $newPackage = Package::where('type', $newPackageType)->first();
 
-            if ($newPrice <= $currentPrice) {
-                throw new Exception('New package must have a higher price for upgrade', 400);
+                return DB::transaction(function () use ($user, $account, $newPackage) {
+                    $activeSubscription = $user->subscriptions()
+                        ->where('is_active', true)
+                        ->first();
+
+                    if (!$activeSubscription) {
+                        return $this->subscribe($newPackage->type);
+                    }
+
+                    $currentPackage = $activeSubscription->package;
+                    $currentPrice = (float) str_replace('/month', '', $currentPackage->price);
+                    $newPrice = (float) str_replace('/month', '', $newPackage->price);
+
+                    if ($newPrice <= $currentPrice) {
+                        throw new Exception('New package must have a higher price for upgrade', 400);
+                    }
+
+                    $additionalCost = $newPrice - $currentPrice;
+                    if ($additionalCost > $account->balance) {
+                        throw new Exception('Insufficient funds for upgrade. Please top up your account.', 400);
+                    }
+
+                    $activeSubscription->update([
+                        'end_date' => Carbon::now(),
+                        'is_active' => false,
+                    ]);
+
+                    $newSubscription = Subscription::create([
+                        'user_id' => $user->id,
+                        'package_id' => $newPackage->id,
+                        'start_date' => Carbon::now(),
+                        'end_date' => null,
+                        'is_active' => true,
+                    ]);
+
+                    $transactionData = [
+                        'currency' => $account->currency ?? 'NGN',
+                        'to_sys_account_id' => null,
+                        'to_user_name' => 'WhaleGPT System',
+                        'to_user_email' => 'system@whalegpt.com',
+                        'to_bank_name' => "WhaleGPT System",
+                        'to_bank_code' => "00",
+                        'to_account_number' => null,
+                        'transaction_reference' => 'UPG_' . $newSubscription->id . '_' . time(),
+                        'status' => 'completed',
+                        'type' => 'subscription_upgrade',
+                        'amount' => $additionalCost,
+                        'note' => "Upgrade from {$currentPackage->type} to {$newPackage->type}",
+                    ];
+                    $this->transactionService->registerTransaction($transactionData, TransferType::WHALE_TO_WHALE);
+
+                    return ResponseHelper::success([
+                        'message' => "Successfully upgraded from {$currentPackage->type} to {$newPackage->type}",
+                        'subscription' => $newSubscription->load('package'),
+                    ]);
+                });
+            } finally {
+                $lock->release();
             }
-
-            // Calculate additional cost
-            $additionalCost = $newPrice - $currentPrice;
-            if ($additionalCost > $account->balance) {
-                throw new Exception('Insufficient funds for upgrade. Please top up your account.', 400);
-            }
-
-            $activeSubscription->update([
-                'end_date' => Carbon::now(),
-                'is_active' => false,
-            ]);
-
-            $newSubscription = Subscription::create([
-                'user_id' => $user->id,
-                'package_id' => $newPackage->id,
-                'start_date' => Carbon::now(),
-                'end_date' => null,
-                'is_active' => true,
-            ]);
-
-            // Deduct additional cost
-            $account->update(['balance' => $account->balance - $additionalCost]);
-
-            return ResponseHelper::success([
-                'message' => "Successfully upgraded from {$currentPackage->type} to {$newPackage->type}",
-                'subscription' => $newSubscription->load('package'),
-            ]);
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage(), $e->getCode() ?: 500);
         }
@@ -218,49 +280,59 @@ class PackageService
     public function downgrade(string $newPackageType): JsonResponse
     {
         try {
-            // Perform security checks without balance check
-            $this->performSecurityChecks();
-
             $user = Auth::user();
-            $newPackage = Package::where('type', $newPackageType)->first();
-            
-            if (!$newPackage) {
-                throw new Exception('New package not found', 404);
+            $lock = Cache::lock("downgrade_{$user->id}", 10);
+
+            if (!$lock->get()) {
+                throw new Exception('Another downgrade operation is in progress. Please try again.', 429);
             }
 
-            $activeSubscription = $user->subscriptions()
-                ->where('is_active', true)
-                ->first();
+            try {
+                $this->performSecurityChecks();
+                $newPackage = Package::where('type', $newPackageType)->first();
 
-            if (!$activeSubscription) {
-                return $this->subscribe($newPackageType);
+                return DB::transaction(function () use ($user, $newPackage) {
+                    if (!$newPackage) {
+                        throw new Exception('New package not found', 404);
+                    }
+
+                    $activeSubscription = $user->subscriptions()
+                        ->where('is_active', true)
+                        ->first();
+
+                    if (!$activeSubscription) {
+                        return $this->subscribe($newPackage->type);
+                    }
+
+                    $currentPackage = $activeSubscription->package;
+                    $currentPrice = (float) str_replace('/month', '', $currentPackage->price);
+                    $newPrice = (float) str_replace('/month', '', $newPackage->price);
+
+                    if ($newPrice >= $currentPrice) {
+                        throw new Exception('New package must have a lower price for downgrade', 400);
+                    }
+
+                    $activeSubscription->update([
+                        'end_date' => Carbon::now(),
+                        'is_active' => false,
+                    ]);
+
+                    $newSubscription = Subscription::create([
+                        'user_id' => $user->id,
+                        'package_id' => $newPackage->id,
+                        'start_date' => Carbon::now(),
+                        'end_date' => null,
+                        'is_active' => true,
+                    ]);
+
+                    return ResponseHelper::success([
+                        'message' => "Successfully downgraded from {$currentPackage->type} to {$newPackage->type}",
+                        'subscription' => $newSubscription->load('package'),
+                    ]);
+                });
+            } finally {
+                $lock->release();
             }
-
-            $currentPackage = $activeSubscription->package;
-            $currentPrice = (float) str_replace('/month', '', $currentPackage->price);
-            $newPrice = (float) str_replace('/month', '', $newPackage->price);
-
-            if ($newPrice >= $currentPrice) {
-                throw new Exception('New package must have a lower price for downgrade', 400);
-            }
-
-            $activeSubscription->update([
-                'end_date' => Carbon::now(),
-                'is_active' => false,
-            ]);
-
-            $newSubscription = Subscription::create([
-                'user_id' => $user->id,
-                'package_id' => $newPackage->id,
-                'start_date' => Carbon::now(),
-                'end_date' => null,
-                'is_active' => true,
-            ]);
-
-            return ResponseHelper::success([
-                'message' => "Successfully downgraded from {$currentPackage->type} to {$newPackage->type}",
-                'subscription' => $newSubscription->load('package'),
-            ]);
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage(), $e->getCode() ?: 500);
         }
