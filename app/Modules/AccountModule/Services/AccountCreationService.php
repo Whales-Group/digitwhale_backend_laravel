@@ -58,7 +58,7 @@ class AccountCreationService
                 throw new AppException("Account with specified currency already exists.");
             }
 
-            $provider = ServiceProvider::FINCRA;
+            $provider = ServiceProvider::PAYSTACK;
             $providerBank = ServiceBank::WEMA_BANK;
 
             $providerResponse = $this->getProviderResponse($provider, $currency);

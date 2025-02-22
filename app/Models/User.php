@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
+use App\Common\Enums\ServiceProvider;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -72,16 +72,21 @@ class User extends Authenticatable
         });
     }
 
-    public function profileIsCompleted(): array
+    public function profileIsCompleted(ServiceProvider $serviceProvider): array
     {
-        $profileFields = [
+        $profileFields = $serviceProvider == ServiceProvider::PAYSTACK ? [
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'date_of_birth' => $this->date_of_birth,
             'phone_number' => $this->phone_number,
             'gender' => $this->gender,
             'bvn' => $this->bvn,
-        ];
+        ] : $serviceProvider == ServiceProvider::PAYSTACK ? [
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'date_of_birth' => $this->date_of_birth,
+            'phone_number' => $this->phone_number,
+        ] : [];
 
         $fieldNames = [
             'first_name' => 'First name',
