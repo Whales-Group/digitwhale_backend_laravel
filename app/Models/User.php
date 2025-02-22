@@ -74,7 +74,7 @@ class User extends Authenticatable
 
     public function profileIsCompleted(ServiceProvider $serviceProvider): array
     {
-        $profileFields = $serviceProvider == ServiceProvider::PAYSTACK ? [
+        $profileFields = $serviceProvider == ServiceProvider::FINCRA ? [
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'date_of_birth' => $this->date_of_birth,
