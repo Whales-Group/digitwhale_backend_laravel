@@ -33,8 +33,10 @@ class AccountCreationService
 
             $user = auth()->user();
             $currencyValue = request()->input('currency');
+            $provider = ServiceProvider::PAYSTACK;
+            $providerBank = ServiceBank::WEMA_BANK;
 
-            $completed = $user->profileIsCompleted();
+            $completed = $user->profileIsCompleted($provider);
             if (!$completed['bool']) {
                 throw new AppException($completed['message']);
             }
@@ -58,8 +60,7 @@ class AccountCreationService
                 throw new AppException("Account with specified currency already exists.");
             }
 
-            $provider = ServiceProvider::PAYSTACK;
-            $providerBank = ServiceBank::WEMA_BANK;
+           
 
             $providerResponse = $this->getProviderResponse($provider, $currency);
 
