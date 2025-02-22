@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Account;
 use App\Modules\AccountSettingModule\Services\AccountSettingsCreationService;
+use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\WhaleGPTModule\Services\PackageService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,7 +67,7 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::created(function () {
-            $packageService = new PackageService();
+            $packageService = new PackageService(new TransactionService());
             $packageService->subscribe('Basic');
         });
     }
