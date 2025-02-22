@@ -74,19 +74,25 @@ class User extends Authenticatable
 
     public function profileIsCompleted(ServiceProvider $serviceProvider): array
     {
-        $profileFields = $serviceProvider == ServiceProvider::FINCRA ? [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'date_of_birth' => $this->date_of_birth,
-            'phone_number' => $this->phone_number,
-            'gender' => $this->gender,
-            'bvn' => $this->bvn,
-        ] : $serviceProvider == ServiceProvider::PAYSTACK ? [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'date_of_birth' => $this->date_of_birth,
-            'phone_number' => $this->phone_number,
-        ] : [];
+        if ($serviceProvider == ServiceProvider::FINCRA) {
+            $profileFields = [
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'date_of_birth' => $this->date_of_birth,
+                'phone_number' => $this->phone_number,
+                'gender' => $this->gender,
+                'bvn' => $this->bvn,
+            ];
+        } elseif ($serviceProvider == ServiceProvider::PAYSTACK) {
+            $profileFields = [
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'date_of_birth' => $this->date_of_birth,
+                'phone_number' => $this->phone_number,
+            ];
+        } else {
+            $profileFields = [];
+        }
 
         $fieldNames = [
             'first_name' => 'First name',
