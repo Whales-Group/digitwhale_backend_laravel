@@ -28,6 +28,7 @@ class RegistrationService
             $validator = Validator::make($request->all(), [
                 "profile_type" => "required|string",
                 "business_name" => "nullable|string",
+                "country" => "required|string",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string|min:6",
             ]);
@@ -56,6 +57,7 @@ class RegistrationService
                 "profile_type" => $request->profile_type,
                 "email" => $request->email,
                 "tag" => $tag,
+                "country" => $request->country,
                 'business_name' => $request->business_name,
                 "password" => $hashedPassword,
                 "email_verified_at" => null,
