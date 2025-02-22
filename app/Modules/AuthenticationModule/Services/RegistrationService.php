@@ -57,7 +57,7 @@ class RegistrationService
                 "profile_type" => $request->profile_type,
                 "email" => $request->email,
                 "tag" => $tag,
-                "country" => $request->country,
+                "country_iso" => $request->country,
                 'business_name' => $request->business_name,
                 "password" => $hashedPassword,
                 "email_verified_at" => null,
