@@ -53,6 +53,8 @@ Route::middleware($protectedMiddleware)->group(function () {
     Route::prefix("/gpt")->group(function () {
         Route::post("/", [WhaleGptController::class, "generatePaymentLink"]);
         Route::get("/verify-payment/{reference}", [WhaleGptController::class, "verifypayment"]);
+        
+        Route::get("/tips", [WhaleGptController::class, "getTips"]);
 
         Route::prefix("/packages")->group(function () {
             
