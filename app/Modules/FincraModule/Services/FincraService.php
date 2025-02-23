@@ -2,10 +2,10 @@
 
 namespace App\Modules\FincraModule\Services;
 
-use App\Common\Enums\Cred;
-use App\Common\Enums\Currency;
-use App\Common\Enums\TransferType;
-use App\Common\Helpers\CodeHelper;
+use App\Enums\Cred;
+use App\Enums\Currency;
+use App\Enums\TransferType;
+use App\Helpers\CodeHelper;
 use App\Exceptions\AppException;
 use Error;
 use GuzzleHttp\Client;

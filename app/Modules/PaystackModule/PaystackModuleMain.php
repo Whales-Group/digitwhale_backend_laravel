@@ -2,7 +2,7 @@
 
 namespace App\Modules\PaystackModule;
 
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use App\Modules\PaystackModule\Handlers\BaseHandler;
 use App\Modules\PaystackModule\Services\PaystackService;
 use GuzzleHttp\Psr7\Request;

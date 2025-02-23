@@ -2,7 +2,7 @@
 
 namespace App\Modules\AccountSettingModule\Services;
 
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use App\Models\AccountSetting;
 use App\Models\NextOfKin;
 use App\Models\SecurityQuestion;

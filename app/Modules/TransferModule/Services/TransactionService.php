@@ -2,9 +2,9 @@
 
 namespace App\Modules\TransferModule\Services;
 
-use App\Common\Enums\TransferType;
-use App\Common\Helpers\DateHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\TransferType;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
@@ -94,7 +94,7 @@ class TransactionService
      * Get transactions based on query parameters or return all paginated.
      *
      * @param Request $request
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|array
+     * @return JsonResponse
      */
     public function getTransactions(Request $request): JsonResponse
     {

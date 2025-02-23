@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Common\Enums\VerificationType;
+use App\Enums\VerificationType;
 use App\Models\DocumentType;
 
 class DocumentTypesSeeder extends Seeder

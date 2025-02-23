@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Common\Helpers;
+namespace App\Helpers;
 
 use Illuminate\Http\JsonResponse;
 class ResponseHelper

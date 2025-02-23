@@ -1,7 +1,7 @@
 <?php
 
-use App\Common\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
+use App\Helpers\ResponseHelper;
 use App\Http\Middleware\HandleCors;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -21,7 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'VerifyApiKey' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'SetStructure' => \App\Http\Middleware\StructuralMiddleware::class,
-            'Bt'=>\App\Http\Middleware\BTMiddleware::class,
+            'BearerTokenEnforcer'=>\App\Http\Middleware\BTMiddleware::class,
+            'steril' => \App\Http\Middleware\EncryptResponseDecryptPayload::class,
         ]);
         $middleware->append(HandleCors::class);
     })

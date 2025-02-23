@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Common\Enums\TokenAbility;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\TokenAbility;
+use App\Helpers\ResponseHelper;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

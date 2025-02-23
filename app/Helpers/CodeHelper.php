@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Common\Helpers;
+namespace App\Helpers;
 
-use App\Common\Enums\Cred;
-use App\Common\Enums\IdentifierType;
+use App\Enums\Cred;
+use App\Enums\IdentifierType;
 
 class CodeHelper
 {

@@ -2,7 +2,7 @@
 
 namespace App\Modules\PaystackWebhookModule\Services;
 
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;
 
 class HandleTransferReversed

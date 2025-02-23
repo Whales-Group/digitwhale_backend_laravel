@@ -1,11 +1,12 @@
 <?php
 
-use App\Common\Enums\TokenAbility;
+use App\Enums\TokenAbility;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountSettingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\TransferController;
@@ -18,7 +19,8 @@ $publicMiddleware = ["VerifyApiKey", "SetStructure"];
 $protectedMiddleware = array_merge($publicMiddleware, [
     "auth:sanctum",
     "ability:" . TokenAbility::ACCESS_API->value,
-    // "Bt"
+    // "steril"
+    // "BearerTokenEnforcer"
 ]);
 $adminAccessMiddleWare = array_merge($publicMiddleware, [
     "auth:sanctum",
@@ -82,6 +84,7 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::prefix("/transfer")->group(function () {
             Route::post("/{account_id}", [TransferController::class, "transfer"]);
             Route::put("/{account_id}", [TransferController::class, "verifyTransferStatusBy"]);
+            Route::post("/", [TransferController::class, "validateTransfer"]);
         });
 
         Route::get("/transaction", [TransferController::class, "getTransactions"]);
@@ -183,3 +186,6 @@ Route::get('/migrate', function () {
     Artisan::call('migrate --force');
     return 'Migration Handled';
 });
+
+Route::post('/encrypt', [EncryptionController::class, 'encrypt']);
+Route::post('/decrypt', [EncryptionController::class, 'decrypt']);

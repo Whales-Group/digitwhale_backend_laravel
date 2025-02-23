@@ -2,7 +2,7 @@
 
 namespace App\Modules\PaystackModule\Services;
 
-use App\Common\Helpers\CodeHelper;
+use App\Helpers\CodeHelper;
 use App\Exceptions\AppException;
 use GuzzleHttp\Client;
 

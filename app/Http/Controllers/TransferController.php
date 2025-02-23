@@ -46,4 +46,9 @@ class TransferController extends Controller
     {
         return $this->moduleMain->getTransactions($request);
     }
+
+    public function validateTransfer(): ?JsonResponse
+    {
+        return $this->moduleMain->validateTransfer();
+    }
 }

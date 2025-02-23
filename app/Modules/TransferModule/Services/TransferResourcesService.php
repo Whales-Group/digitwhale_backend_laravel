@@ -2,10 +2,11 @@
 
 namespace App\Modules\TransferModule\Services;
 
-use App\Common\Enums\IdentifierType;
-use App\Common\Enums\ServiceProvider;
-use App\Common\Helpers\CodeHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\IdentifierType;
+use App\Enums\ServiceProvider;
+use App\Enums\TransferType;
+use App\Helpers\CodeHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
@@ -14,6 +15,7 @@ use App\Modules\PaystackModule\Services\PaystackService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransferResourcesService
 {
@@ -55,8 +57,6 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity("Failed to get Banks");
         }
     }
-
-
     public function resolveAccountNumber(Request $request, string $account_id)
     {
         $bank_code = trim($request->input('bank_code'));
@@ -104,7 +104,6 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity($e->getMessage());
         }
     }
-
     public function resolveAccountByIdentity(Request $request): JsonResponse
     {
         try {
@@ -139,9 +138,6 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity("Unable to resolve account.");
         }
     }
-
-
-
     public function verifyTransferStatusBy($account_id)
     {
         try {
@@ -155,7 +151,7 @@ class TransferResourcesService
             $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
 
             if (!$account) {
-                return ResponseHelper::notFound("Tranaction not found. Access is Invalid");
+                return ResponseHelper::notFound("Account not found. Access is Invalid");
             }
 
             $accountType = ServiceProvider::tryFrom($account->service_provider) ?? throw new AppException("Invalid Account Type");
@@ -179,6 +175,66 @@ class TransferResourcesService
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
         }
+    }
+
+
+    /**
+     * Validates a transfer request, calculates charges, and generates a validation code.
+     *
+     * @return JsonResponse
+     * @throws AppException
+     */
+    public function validateTransfer(): JsonResponse
+    {
+        $user = auth()->user();
+        $data = request()->validate([
+            'transferType' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+            'account_id' => 'required|string',
+        ]);
+
+        $transferType = TransferType::tryFrom($data['transferType'])
+            ?? throw new AppException("Invalid transfer type.");
+
+        $account = Account::where('user_id', $user->id)
+            ->where('account_id', $data['account_id'])
+            ->first();
+
+        if (!$account) {
+            throw new AppException("Invalid account id or account not found.");
+        }
+
+        $accountType = ServiceProvider::tryFrom($account->service_provider)
+            ?? throw new AppException("Invalid Service Provider");
+
+        // Calculate transfer fee based on provider
+        $transferFee = match ($accountType) {
+            ServiceProvider::FINCRA => 50,
+            ServiceProvider::PAYSTACK => 10,
+            default => throw new AppException("Invalid account service provider."),
+        };
+
+        $token = CodeHelper::generate(10);
+        DB::table('password_reset_tokens')->insert([
+            'email' => $user->email,
+            'token' => $token,
+            'created_at' => now(), // Assuming table expects timestamps
+        ]);
+        $validationCode = $token;
+
+        $response = [
+            'charge' => $transferType === TransferType::BANK_ACCOUNT_TRANSFER ? $transferFee : 0,
+            'transfer_type' => $transferType,
+            'code' => $validationCode,
+            'message' => match ($transferType) {
+                TransferType::BANK_ACCOUNT_TRANSFER => 'Bank Account transfer validation successful.',
+                TransferType::WHALE_TO_WHALE => 'Whale to Whale transfer validation successful.',
+                TransferType::CROSS_CURRENCY_PAYOUT => 'Cross Currency Payout transfer validation successful.',
+                default => throw new AppException("Invalid transfer type."),
+            },
+        ];
+
+        return ResponseHelper::success($response);
     }
 
 }

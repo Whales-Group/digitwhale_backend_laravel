@@ -2,8 +2,8 @@
 
 namespace App\Modules\WhaleGPTModule\Services;
 
-use App\Common\Enums\TransferType;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\TransferType;
+use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\Package;
 use App\Models\Subscription;

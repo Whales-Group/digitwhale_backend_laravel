@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Common\Helpers\DateHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

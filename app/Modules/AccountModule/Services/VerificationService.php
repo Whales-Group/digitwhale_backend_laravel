@@ -2,7 +2,7 @@
 
 namespace App\Modules\AccountModule\Services;
 
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\DocumentType;
 use App\Models\UserDocument;

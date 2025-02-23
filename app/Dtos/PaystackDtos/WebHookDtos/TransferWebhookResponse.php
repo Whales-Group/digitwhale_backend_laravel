@@ -1,7 +1,7 @@
 <?php
 namespace App\Dtos\PaystackDtos\WebHookDtos;
 
-use App\Common\Enums\PaystackEventType;
+use App\Enums\PaystackEventType;
 
 class TransferWebhookResponse
 {

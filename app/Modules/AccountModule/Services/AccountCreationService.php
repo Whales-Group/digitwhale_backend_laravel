@@ -2,13 +2,13 @@
 
 namespace App\Modules\AccountModule\Services;
 
-use App\Common\Enums\AccountType;
-use App\Common\Enums\Currency;
-use App\Common\Enums\ServiceBank;
-use App\Common\Enums\ServiceProvider;
-use App\Common\Helpers\CodeHelper;
-use App\Common\Helpers\DateHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\AccountType;
+use App\Enums\Currency;
+use App\Enums\ServiceBank;
+use App\Enums\ServiceProvider;
+use App\Helpers\CodeHelper;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\User;

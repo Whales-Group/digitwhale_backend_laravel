@@ -2,7 +2,7 @@
 
 namespace App\Modules\FincraModule\Handlers;
 
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\AppLog;
 use App\Models\TransactionEntry;

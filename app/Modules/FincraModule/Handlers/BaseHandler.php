@@ -2,8 +2,8 @@
 
 namespace App\Modules\FincraModule\Handlers;
 
-use App\Common\Enums\FincraWebhookEvent;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\FincraWebhookEvent;
+use App\Helpers\ResponseHelper;
 use App\Models\AppLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

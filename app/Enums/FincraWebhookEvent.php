@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Common\Enums;
+namespace App\Enums;
 
 enum FincraWebhookEvent: string
 {

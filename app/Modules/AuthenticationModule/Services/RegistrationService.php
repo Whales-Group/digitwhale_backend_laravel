@@ -2,8 +2,8 @@
 
 namespace App\Modules\AuthenticationModule\Services;
 
-use App\Common\Helpers\CodeHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\CodeHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\User;
 use App\Modules\MailModule\MailModuleMain;

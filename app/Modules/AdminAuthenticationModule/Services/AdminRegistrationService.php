@@ -2,8 +2,8 @@
 
 namespace App\Modules\AdminAuthenticationModule\Services;
 
-use App\Common\Helpers\CodeHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\CodeHelper;
+use App\Helpers\ResponseHelper;
 use App\Models\AdminUser; // Use the AdminUser model instead of AdminUser
 use App\Models\User;
 use App\Modules\MailModule\MailModuleMain;

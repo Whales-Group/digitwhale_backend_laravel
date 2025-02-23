@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Common\Helpers;
+namespace App\Helpers;
 
 use Carbon\Carbon;
 
@@ -13,7 +13,7 @@ class DateHelper
      * Returns present Date.
      *
      * @param string|null $date
-     * @return bool
+     * @return Carbon
      */
     public static function now()
     {

@@ -2,13 +2,13 @@
 
 namespace App\Modules\AuthenticationModule\Services;
 
-use App\Common\Enums\TokenAbility;
+use App\Enums\TokenAbility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Exception;
-use App\Common\Helpers\ResponseHelper;
+use App\Helpers\ResponseHelper;
 
 class SignInService
 {

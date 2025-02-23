@@ -2,8 +2,8 @@
 
 namespace App\Modules\AccountModule\Services;
 
-use App\Common\Enums\Currency;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\Currency;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use Illuminate\Http\JsonResponse;

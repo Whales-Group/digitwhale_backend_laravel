@@ -2,11 +2,11 @@
 
 namespace App\Modules\TransferModule\Services;
 
-use App\Common\Enums\Cred;
-use App\Common\Enums\ServiceProvider;
-use App\Common\Enums\TransferType;
-use App\Common\Helpers\CodeHelper;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\Cred;
+use App\Enums\ServiceProvider;
+use App\Enums\TransferType;
+use App\Helpers\CodeHelper;
+use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
@@ -24,6 +24,8 @@ class TransferService
     public FincraService $fincraService;
     public PaystackService $paystackService;
 
+    public TransferResourcesService $transferResourse;
+
     public TransactionService $transactionService;
 
     public function __construct()
@@ -31,12 +33,14 @@ class TransferService
         $this->fincraService = FincraService::getInstance();
         $this->paystackService = PaystackService::getInstance();
         $this->transactionService = new TransactionService();
+        $this->transferResourse = new TransferResourcesService();
     }
 
     public function transfer(Request $request, string $account_id)
     {
 
         $validator = Validator::make($request->all(), [
+            "code" => "required|string",
             "transfer_type" => "required|string",
             "amount" => "required|integer",
 
@@ -50,10 +54,31 @@ class TransferService
                 error: $validator->errors()->toArray()
             );
         }
+
+
         DB::beginTransaction();
 
         $user = auth()->user();
         $account = $this->performSecurityCheckOnSender($account_id, $request->recieving_account_id, $request->amount);
+
+        $tokenRecord = DB::table('password_reset_tokens')
+            ->where('email', $user->email)
+            ->where('token', $request->code)
+            ->first();
+
+        if (!$tokenRecord) {
+            return ResponseHelper::unprocessableEntity(
+                message: "Invalidated Transfer.",
+                error: [
+                    "transfer_code" => ["The transfer is invalid."]
+                ]
+            );
+        }
+
+        DB::table('password_reset_tokens')
+            ->where('email', $user->email)
+            ->where('token', $request->code)
+            ->delete();
 
         try {
             $accountType = ServiceProvider::tryFrom($account->service_provider);
@@ -85,7 +110,7 @@ class TransferService
             } else {
                 throw new AppException('Too many requests, please try again.');
             }
-
+            /// TODO: verify transaction before updating the transaction table
             $transaction = $this->transactionService->registerTransaction($response, $transferType);
 
             return ResponseHelper::success(message: "Transfer Successful", data: $transaction);
@@ -166,7 +191,7 @@ class TransferService
 
         return $response;
     }
-   
+
     private function handlePaystackTransfer(Request $request, string $account_id): mixed
     {
         throw new AppException("Service Unavailable. Contact support to switch service provider.");

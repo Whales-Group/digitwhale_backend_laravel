@@ -2,8 +2,8 @@
 
 namespace App\Modules\AdminAuthenticationModule\Services;
 
-use App\Common\Enums\TokenAbility;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\TokenAbility;
+use App\Helpers\ResponseHelper;
 use App\Models\AdminUser;
 use Exception;
 use Illuminate\Http\Request;

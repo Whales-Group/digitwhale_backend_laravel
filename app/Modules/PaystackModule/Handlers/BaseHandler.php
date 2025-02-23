@@ -2,8 +2,8 @@
 
 namespace App\Modules\PaystackModule\Handlers;
 
-use App\Common\Enums\PaystackWebhookEvent;
-use App\Common\Helpers\ResponseHelper;
+use App\Enums\PaystackWebhookEvent;
+use App\Helpers\ResponseHelper;
 use App\Modules\PaystackWebhookModule\Services\HandleChargeSuccess;
 use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationFailed;
 use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationSuccess;
