@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\AppException;
+use App\Exceptions\CodedException;
 use App\Helpers\ResponseHelper;
 use App\Http\Middleware\HandleCors;
 use Illuminate\Auth\AuthenticationException;
@@ -45,7 +46,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 message: $exception->getMessage(),
             );
         });
-
+        
+        $exceptions->render(function (CodedException $exception, $request) {
+            return ResponseHelper::error(
+                message: $exception->getMessage(),
+            );
+        });
+        
         $exceptions->render(function (AuthenticationException $exception, $request) {
             return ResponseHelper::error(
                 message: 'Please provide a valid bearer token.',

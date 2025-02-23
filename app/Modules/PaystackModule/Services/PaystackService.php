@@ -253,4 +253,17 @@ class PaystackService
             throw new AppException("Failed to verify payment: " . $e->getMessage());
         }
     }
+    public function getWalletBalance(): array
+    {
+        try {
+            $response = $this->httpClient->get("/balance", [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
+    }
 }

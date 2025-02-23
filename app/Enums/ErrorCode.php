@@ -9,6 +9,7 @@ enum ErrorCode: int
     case INVALID_SERVICE_PROVIDER = 1003;
     case VALIDATION_CODE_FAILED = 1004;
     case GENERAL_ERROR = 9999;
+    case INSUFFICIENT_PROVIDER_BALANCE = 1192;
 
     /**
      * Get the error message associated with the code.
@@ -23,6 +24,8 @@ enum ErrorCode: int
             self::INVALID_SERVICE_PROVIDER => 'Invalid service provider.',
             self::VALIDATION_CODE_FAILED => 'Failed to generate validation code.',
             self::GENERAL_ERROR => 'An unexpected error occurred.',
+            self::INSUFFICIENT_PROVIDER_BALANCE => 'Failed to perform transaction [' . $this->code() ."]",
+
         };
     }
 

@@ -247,4 +247,19 @@ class FincraService
             throw new AppException($e->getMessage());
         }
     }
+
+    public function getWalletBalance(): array
+    {
+        $NGN_wallet_Id = 439526;
+        try {
+            $response = $this->httpClient->get("/wallets/$NGN_wallet_Id", [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
+    }
 }

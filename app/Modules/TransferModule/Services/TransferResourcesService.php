@@ -2,12 +2,14 @@
 
 namespace App\Modules\TransferModule\Services;
 
+use App\Enums\ErrorCode;
 use App\Enums\IdentifierType;
 use App\Enums\ServiceProvider;
 use App\Enums\TransferType;
+use App\Exceptions\AppException;
+use App\Exceptions\CodedException;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
-use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Modules\FincraModule\Services\FincraService;
@@ -184,10 +186,10 @@ class TransferResourcesService
      * @return JsonResponse
      * @throws AppException
      */
-    public function validateTransfer(): JsonResponse
+    public function validateTransfer(?Request $request = null): JsonResponse
     {
         $user = auth()->user();
-        $data = request()->validate([
+        $data = ($request ?? request())->validate([
             'transferType' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'account_id' => 'required|string',
@@ -214,11 +216,21 @@ class TransferResourcesService
             default => throw new AppException("Invalid account service provider."),
         };
 
+        $availableBalance = match ($accountType) {
+            ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
+            ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
+            default => throw new AppException("Invalid account service provider."),
+        };
+
+        if ((float)$availableBalance - (float)$data['amount'] < 150) {
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+        }
+
         $token = CodeHelper::generate(10);
         DB::table('password_reset_tokens')->insert([
             'email' => $user->email,
             'token' => $token,
-            'created_at' => now(), // Assuming table expects timestamps
+            'created_at' => now(),
         ]);
         $validationCode = $token;
 

@@ -2,14 +2,12 @@
 
 namespace App\Modules\TransferModule\Services;
 
-use App\Enums\Cred;
 use App\Enums\ServiceProvider;
 use App\Enums\TransferType;
+use App\Exceptions\AppException;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
-use App\Exceptions\AppException;
 use App\Models\Account;
-use App\Models\TransactionEntry;
 use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\PaystackModule\Services\PaystackService;
@@ -23,11 +21,8 @@ class TransferService
 {
     public FincraService $fincraService;
     public PaystackService $paystackService;
-
     public TransferResourcesService $transferResourse;
-
     public TransactionService $transactionService;
-
     public function __construct()
     {
         $this->fincraService = FincraService::getInstance();
@@ -123,7 +118,6 @@ class TransferService
             $lock->release();
         }
     }
-
     private function handleFincraTransfer(Request $request, string $account_id): array
     {
         $recieving_account_id = trim($request->get("recieving_account_id"));
@@ -142,8 +136,28 @@ class TransferService
         $sender = $this->performSecurityCheckOnSender($account_id, $recieving_account_id, $amount);
         $user = auth()->user();
         $reference = CodeHelper::generateSecureReference();
+        $requestData = new Request([
+            'transferType' => 'BANK_ACCOUNT_TRANSFER',
+            'amount' => $amount,
+            'account_id' => $account_id,
+        ]);
+        $validatedTransfer = $this->transferResourse->validateTransfer($requestData);
+        $validatedTransferContent = json_decode($validatedTransfer->getContent(), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($validatedTransferContent['data']['charge'])) {
+            throw new AppException('Invalid response from validateTransfer.');
+        }
+
+        $charge = $validatedTransferContent['data']['charge'];
+        // check if amount - charge is less than 100 which is the minimum enternal transferable
+        $amount_sendable = (int) $amount - (int) $charge;
+
+        if($amount_sendable < 100){
+            throw new AppException("Minimum destination amount should not be less than (NGN 100.00).");
+        }
+
         $payload = [
-            'amount' => (int) $amount - 50,
+            'amount' => $amount_sendable,
             'beneficiary' => [
                 'accountHolderName' => $beneficiary_account_holder_name,
                 'accountNumber' => $beneficiary_account_number,
@@ -171,7 +185,8 @@ class TransferService
             ],
         ];
 
-        $fincra_res = $this->fincraService->runTransfer(TransferType::BANK_ACCOUNT_TRANSFER, $payload);
+        $fincra_res =
+         $this->fincraService->runTransfer(TransferType::BANK_ACCOUNT_TRANSFER, $payload);
 
         $response = [
             'currency' => $sender->currency,
