@@ -21,8 +21,8 @@ class HomeCardService
     "display" => [
      "title" => "Complete Profile",
      "description" => "Finish setting up your profile to unlock all features.",
-     "tile_color" => "#FF5733", // Orange
-     "content_color" => "#FFFFFF", // White
+     "tile_color" => "#1C274C",
+     "content_color" => "#FFFFFF",
      "text_colors" => ["BLUE", "PURPLE"],
     ],
     "content_data" => [
@@ -40,8 +40,8 @@ class HomeCardService
     "display" => [
      "title" => "Add Payment Method",
      "description" => "Link a card or bank account for seamless transactions.",
-     "tile_color" => "#33FF57", // Green
-     "content_color" => "#000000", // Black
+     "tile_color" => "#031952", // Green
+     "content_color" => "#1C274C", // Black
      "text_colors" => ["RED", "YELLOW"],
     ],
     "content_data" => [
@@ -59,7 +59,7 @@ class HomeCardService
     "display" => [
      "title" => "Set Notifications",
      "description" => "Choose how you want to receive updates.",
-     "tile_color" => "#3357FF", // Blue
+     "tile_color" => "#333333", // Blue
      "content_color" => "#FFFFFF", // White
      "text_colors" => ["GREEN", "ORANGE"],
     ],
@@ -78,8 +78,8 @@ class HomeCardService
     "display" => [
      "title" => "Verify Identity",
      "description" => "Complete a quick security check to protect your account.",
-     "tile_color" => "#FF33A1", // Pink
-     "content_color" => "#000000", // Black
+     "tile_color" => "#414A61", // Pink
+     "content_color" => "#FFFFFF", // Black
      "text_colors" => ["CYAN", "MAGENTA"],
     ],
     "content_data" => [
