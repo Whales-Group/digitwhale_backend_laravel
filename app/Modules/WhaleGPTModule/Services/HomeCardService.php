@@ -40,7 +40,7 @@ class HomeCardService
     "display" => [
      "title" => "Add Payment Method",
      "description" => "Link a card or bank account for seamless transactions.",
-     "tile_color" => "#031952", // Green
+     "tile_color" => "#bbbccb", // Green
      "content_color" => "#1C274C", // Black
      "text_colors" => ["RED", "YELLOW"],
     ],
