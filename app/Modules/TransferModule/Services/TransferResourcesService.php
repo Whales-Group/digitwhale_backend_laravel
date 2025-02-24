@@ -209,21 +209,24 @@ class TransferResourcesService
         $accountType = ServiceProvider::tryFrom($account->service_provider)
             ?? throw new AppException("Invalid Service Provider");
 
-        // Calculate transfer fee based on provider
-        $transferFee = match ($accountType) {
-            ServiceProvider::FINCRA => 50,
-            ServiceProvider::PAYSTACK => 10,
-            default => throw new AppException("Invalid account service provider."),
-        };
+        if ($transferType != TransferType::WHALE_TO_WHALE) {
+            
+            // Calculate transfer fee based on provider
+            $transferFee = match ($accountType) {
+                ServiceProvider::FINCRA => 50,
+                ServiceProvider::PAYSTACK => 10,
+                default => throw new AppException("Invalid account service provider."),
+            };
 
-        $availableBalance = match ($accountType) {
-            ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
-            ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
-            default => throw new AppException("Invalid account service provider."),
-        };
+            $availableBalance = match ($accountType) {
+                ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
+                ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
+                default => throw new AppException("Invalid account service provider."),
+            };
 
-        if ((float)$availableBalance - (float)$data['amount'] < 150) {
-            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+            if ((float) $availableBalance - (float) $data['amount'] < 150) {
+                throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+            }
         }
 
         $token = CodeHelper::generate(10);
