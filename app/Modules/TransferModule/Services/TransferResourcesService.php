@@ -206,19 +206,20 @@ class TransferResourcesService
             throw new AppException("Invalid account id or account not found.");
         }
 
-        $accountType = ServiceProvider::tryFrom($account->service_provider)
+        $service_provider = ServiceProvider::tryFrom($account->service_provider)
             ?? throw new AppException("Invalid Service Provider");
 
-        if ($transferType != TransferType::WHALE_TO_WHALE) {
-            
-            // Calculate transfer fee based on provider
-            $transferFee = match ($accountType) {
-                ServiceProvider::FINCRA => 50,
-                ServiceProvider::PAYSTACK => 10,
-                default => throw new AppException("Invalid account service provider."),
-            };
 
-            $availableBalance = match ($accountType) {
+
+        // Calculate transfer fee based on provider
+        $transferFee = match ($service_provider) {
+            ServiceProvider::FINCRA => 50,
+            ServiceProvider::PAYSTACK => 10,
+            default => throw new AppException("Invalid account service provider."),
+        };
+
+        if ($transferType != TransferType::WHALE_TO_WHALE) {
+            $availableBalance = match ($service_provider) {
                 ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
                 ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
                 default => throw new AppException("Invalid account service provider."),
