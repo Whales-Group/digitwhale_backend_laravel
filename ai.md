@@ -1,0 +1,1 @@
+Based on the provided transaction history, Finn Dan-Amuda has transferred a total of **₦1,050,050** to other users.  This calculation includes both successful and processing transactions.\n
