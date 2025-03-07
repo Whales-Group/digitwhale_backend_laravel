@@ -7,6 +7,7 @@ use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\ClientInterface as HttpClientInterface;
 use GuzzleHttp\Exception\TransferException;
+use Illuminate\Console\Application;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Mail\Mailer;
@@ -386,7 +387,7 @@ class Event
      *
      * @throws \LogicException
      */
-    public function emailOutputTo($addresses, $onlyIfOutputExists = false)
+    public function emailOutputTo($addresses, $onlyIfOutputExists = true)
     {
         $this->ensureOutputIsBeingCaptured();
 
@@ -447,7 +448,7 @@ class Event
      * @param  bool  $onlyIfOutputExists
      * @return void
      */
-    protected function emailOutput(Mailer $mailer, $addresses, $onlyIfOutputExists = false)
+    protected function emailOutput(Mailer $mailer, $addresses, $onlyIfOutputExists = true)
     {
         $text = is_file($this->output) ? file_get_contents($this->output) : '';
 
@@ -811,7 +812,8 @@ class Event
             return $mutexNameResolver($this);
         }
 
-        return 'framework'.DIRECTORY_SEPARATOR.'schedule-'.sha1($this->expression.$this->command);
+        return 'framework'.DIRECTORY_SEPARATOR.'schedule-'.
+            sha1($this->expression.$this->normalizeCommand($this->command ?? ''));
     }
 
     /**
@@ -837,5 +839,22 @@ class Event
         if ($this->withoutOverlapping) {
             $this->mutex->forget($this);
         }
+    }
+
+    /**
+     * Format the given command string with a normalized PHP binary path.
+     *
+     * @param  string  $command
+     * @return string
+     */
+    public static function normalizeCommand($command)
+    {
+        return str_replace([
+            Application::phpBinary(),
+            Application::artisanBinary(),
+        ], [
+            'php',
+            preg_replace("#['\"]#", '', Application::artisanBinary()),
+        ], $command);
     }
 }

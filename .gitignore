@@ -1,5 +1,3 @@
-.vercel.json
-.env
 /.phpunit.cache
 /node_modules
 /public/build

@@ -5,7 +5,7 @@ namespace App\Modules\PaystackModule;
 use App\Helpers\ResponseHelper;
 use App\Modules\PaystackModule\Handlers\BaseHandler;
 use App\Modules\PaystackModule\Services\PaystackService;
-use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Request;
 
 class PaystackModuleMain
 {

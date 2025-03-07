@@ -10,7 +10,6 @@ use App\Helpers\CodeHelper;
 use Error;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
-use Log;
 
 class FlutterWaveService
 {
