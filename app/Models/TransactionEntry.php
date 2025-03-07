@@ -39,6 +39,11 @@ class TransactionEntry extends Model
         'new_balance',
     ];
 
+    public static $promptProtect = [
+        'from_sys_account_id',
+        'to_sys_account_id',
+        "id"
+    ];
     protected $casts = [
         'timestamp' => 'datetime',
         'amount' => 'double',
