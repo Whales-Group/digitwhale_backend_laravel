@@ -2,34 +2,40 @@
 
 namespace App\Modules\BillsAndPaymentsModule;
 
+use App\Modules\BillsAndPaymentsModule\Services\NetworkBillsService;
+use App\Modules\BillsAndPaymentsModule\Services\UtilityBillsService;
+use App\Modules\FlutterWaveModule\FlutterWaveModule;
 use App\Modules\FlutterWaveModule\Services\FlutterWaveService;
 
 class BillsAndPaymentsModuleMain
 {
- public FlutterWaveService $flutterWaveService;
- public function __construct(
-  FlutterWaveService $flutterWaveService
- ) {
-  $this->flutterWaveService = $flutterWaveService;
- }
+    public NetworkBillsService $networkBillsService;
+    public UtilityBillsService $utilityBillsService;
 
- public function getNetworkBillers()
- {
-  $this->flutterWaveService->getNetworkBillers();
- }
- public function getUtilityBillers()
- {
-  $this->flutterWaveService->getUtilityBillers();
- }
- public function payNetworkBill()
- {
-  $this->flutterWaveService->payNetworkBill();
 
- }
- public function payUtilityBill()
- {
-  $this->flutterWaveService->payUtilityBill();
+    public function __construct(
+        NetworkBillsService $networkBillsService,
+        UtilityBillsService $utilityBillsService
+    ) {
+       
+        $this->networkBillsService = $networkBillsService;
+        $this->utilityBillsService = $utilityBillsService;
+    }
 
- }
-
+    public function getNetworkBillers()
+    {
+        $this->networkBillsService->getNetworkBillers();
+    }
+    public function getUtilityBillers()
+    {
+        $this->utilityBillsService->getUtilityBillers();
+    }
+    public function payNetworkBill()
+    {
+        $this->networkBillsService->payNetworkBill();
+    }
+    public function payUtilityBill()
+    {
+        $this->utilityBillsService->payUtilityBill();
+    }
 }

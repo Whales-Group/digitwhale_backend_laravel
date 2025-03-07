@@ -9,6 +9,7 @@ use App\Exceptions\AppException;
 use App\Helpers\CodeHelper;
 use Error;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
 use Log;
 
 class FlutterWaveService
@@ -43,8 +44,9 @@ class FlutterWaveService
     private function buildAuthHeader(): array
     {
         return [
-            'api-key' => 'S2OWmj2VdpXeXE8ipngIVEBtk8LfFFyc',
+            'Authorization' => 'Bearer ' . config('services.flutterwave.test_sk'),
             'Content-Type' => 'application/json',
+            'accept' => 'application/json',
         ];
     }
 
@@ -189,7 +191,7 @@ class FlutterWaveService
 
     ): array {
         $payload = [
-            "dateOfBirth" => $dateOfBirth /*"10-12-1993"*/ ,
+            "dateOfBirth" => $dateOfBirth /*"10-12-1993"*/,
             "accountType" => "individual",
             "currency" => $currency ?? "NGN",
             "KYCInformation" => [
@@ -264,16 +266,51 @@ class FlutterWaveService
     }
 
     /// BILL PAYMENTS
-    public function getNetworkBillers()
+    public function getNetworkBillers(string $country = 'NG', string $type = 'AIRTIME'): array
     {
+        try {
+            $response = Http::withHeaders($this->buildAuthHeader())->get(
+                "/v3/bills/{$type}/billers?country={$country}"
+            );
+
+            $response->throw(); // Throw an exception for non-200 status codes
+
+            return $response->json();
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch {$type} billers: " . $e->getMessage());
+        }
     }
-    public function getUtilityBillers()
+
+    public function getUtilityBillers(string $country = 'NG', string $type = 'CABLEBILLS'): array
     {
+        try {
+            $response = Http::withHeaders($this->buildAuthHeader())->get(
+                "/v3/bills/{$type}/billers?country={$country}"
+            );
+
+            $response->throw(); // Throw an exception for non-200 status codes
+
+            return $response->json();
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch {$type} billers: " . $e->getMessage());
+        }
     }
-    public function payNetworkBill()
+
+    public function getBillInformation(string $billerCode): array
     {
+        try {
+            $response = Http::withHeaders($this->buildAuthHeader())->get(
+                "/v3/billers/{$billerCode}/items"
+            );
+
+            $response->throw(); // Throw an exception for non-200 status codes
+
+            return $response->json();
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch bill information for biller code {$billerCode}: " . $e->getMessage());
+        }
     }
-    public function payUtilityBill()
-    {
-    }
+
+    public function payNetworkBill() {}
+    public function payUtilityBill() {}
 }

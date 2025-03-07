@@ -9,7 +9,7 @@ use App\Helpers\CodeHelper;
 use App\Exceptions\AppException;
 use Error;
 use GuzzleHttp\Client;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class FincraService
 {
