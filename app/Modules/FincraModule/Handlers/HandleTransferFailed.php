@@ -4,7 +4,6 @@ namespace App\Modules\FincraModule\Handlers;
 
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
-use App\Models\AppLog;
 use App\Models\TransactionEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -14,11 +13,11 @@ class HandleTransferFailed
     public static function handle(array $transactionData): ?JsonResponse
     {
         // Log received transaction data
-        AppLog::info('Processing failed transfer', ['transactionData' => $transactionData]);
+        Log::info('Processing failed transfer', ['transactionData' => $transactionData]);
 
         // Ensure transaction does not already exist
         if (TransactionEntry::where('transaction_reference', $transactionData['reference'])->exists()) {
-            AppLog::info('Duplicate transaction detected', ['reference' => $transactionData['reference']]);
+            Log::info('Duplicate transaction detected', ['reference' => $transactionData['reference']]);
             return ResponseHelper::error('Duplicate transaction detected', 409);
         }
 
@@ -26,23 +25,23 @@ class HandleTransferFailed
         $account = Account::where("dedicated_account_id", $transactionData['virtualAccount'])->first();
 
         if (!$account) {
-            AppLog::error("Account not found", ['virtualAccount' => $transactionData['virtualAccount']]);
+            Log::error("Account not found", ['virtualAccount' => $transactionData['virtualAccount']]);
             return ResponseHelper::error('Account not found', 404);
         }
 
         // Log account information
-        AppLog::debug("Account found", ['account_id' => $account->id, 'user_id' => $account->user_id]);
+        Log::debug("Account found", ['account_id' => $account->id, 'user_id' => $account->user_id]);
 
         // Update user balance
         try {
 
-            AppLog::info("Account credited failed", [
+            Log::info("Account credited failed", [
                 'account_id' => $account->id,
                 'previous_balance' => $account->balance,
                 'amount_received' => $transactionData['amountReceived']
             ]);
         } catch (\Exception $e) {
-            AppLog::error("Failed to update account balance", ['error' => $e->getMessage()]);
+            Log::error("Failed to update account balance", ['error' => $e->getMessage()]);
             return ResponseHelper::error('Failed to update balance', 500);
         }
 
@@ -77,7 +76,7 @@ class HandleTransferFailed
                 'new_balance' => $account->balance,
             ]);
 
-            AppLog::info("Transaction recorded failed", [
+            Log::info("Transaction recorded failed", [
                 'transaction_reference' => $transactionData['reference'],
                 'amount' => $transactionData['destinationAmount']
             ]);
@@ -87,7 +86,7 @@ class HandleTransferFailed
                 'data' => $transaction,
             ]);
         } catch (\Exception $e) {
-            AppLog::error("Failed to record transaction", ['error' => $e->getMessage()]);
+            Log::error("Failed to record transaction", ['error' => $e->getMessage()]);
             return ResponseHelper::error('Failed to record transaction', 500);
         }
     }
