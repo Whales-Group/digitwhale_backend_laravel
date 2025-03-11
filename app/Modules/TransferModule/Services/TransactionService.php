@@ -96,7 +96,7 @@ class TransactionService
      * @param Request $request
      * @return JsonResponse
      */
-    public function getTransactions(?Request $request): JsonResponse
+    public function getTransactions(Request $request): JsonResponse
     {
         $user = auth()->user();
 

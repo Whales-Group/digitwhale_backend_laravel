@@ -12,17 +12,17 @@ class WhaleGptController extends Controller
 
  public PaystackModuleMain $paystackModuleMain;
  public WhaleGPTModuleMain $vippsModuleMain;
- public AiModuleMain $aimoduleMain;
+ public AiModuleMain $aiModuleMain;
 
  public function __construct(
      PaystackModuleMain $paystackModuleMain,
      WhaleGPTModuleMain $vippsModuleMain,
-     AiModuleMain $aimoduleMain
+     AiModuleMain $aiModuleMain
 
  ) {
      $this->paystackModuleMain = $paystackModuleMain;
      $this->vippsModuleMain = $vippsModuleMain;
-     $this->aimoduleMain = $aimoduleMain;
+     $this->aiModuleMain = $aiModuleMain;
 
  }
  public function generatePaymentLink()
@@ -42,6 +42,6 @@ class WhaleGptController extends Controller
 
     public function conversation()
     {
-        return $this->aimoduleMain->processQuery();
+        return $this->aiModuleMain->processQuery();
     }
 }

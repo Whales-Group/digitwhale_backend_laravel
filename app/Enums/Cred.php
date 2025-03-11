@@ -10,6 +10,4 @@ enum Cred: string
     case COMPANY_EMAIL = 'support@whales.com.ng';
     case COMPANY_PHONE = '+2349068814392';
     case ALT_COMPANY_NAME = 'DigitWhale';
-
-    case LOCK_TIME_IN_SECONDS = '10';
 }
