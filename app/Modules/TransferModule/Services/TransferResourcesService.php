@@ -206,28 +206,24 @@ class TransferResourcesService
             throw new AppException("Invalid account id or account not found.");
         }
 
-        $service_provider = ServiceProvider::tryFrom($account->service_provider)
+        $accountType = ServiceProvider::tryFrom($account->service_provider)
             ?? throw new AppException("Invalid Service Provider");
 
-
-
         // Calculate transfer fee based on provider
-        $transferFee = match ($service_provider) {
+        $transferFee = match ($accountType) {
             ServiceProvider::FINCRA => 50,
             ServiceProvider::PAYSTACK => 10,
             default => throw new AppException("Invalid account service provider."),
         };
 
-        if ($transferType != TransferType::WHALE_TO_WHALE) {
-            $availableBalance = match ($service_provider) {
-                ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
-                ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
-                default => throw new AppException("Invalid account service provider."),
-            };
+        $availableBalance = match ($accountType) {
+            ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
+            ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
+            default => throw new AppException("Invalid account service provider."),
+        };
 
-            if ((float) $availableBalance - (float) $data['amount'] < 150) {
-                throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
-            }
+        if ((float)$availableBalance - (float)$data['amount'] < 150) {
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         }
 
         $token = CodeHelper::generate(10);

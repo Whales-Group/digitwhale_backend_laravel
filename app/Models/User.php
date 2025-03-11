@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ServiceProvider;
 use App\Models\Account;
 use App\Modules\AccountSettingModule\Services\AccountSettingsCreationService;
 use App\Modules\TransferModule\Services\TransactionService;
@@ -13,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Enums\ServiceProvider;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -42,14 +42,6 @@ class User extends Authenticatable
         "city",
         "street_address",
         "street_number",
-    ];
-
-
-    public static $promptProtect = [
-        "nin",
-        "bvn",
-        "password",
-        "email_verified_at",
     ];
 
     protected $hidden = [

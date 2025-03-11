@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppLog;
 use App\Modules\FincraModule\FincraModuleMain;
 use App\Modules\PaystackModule\PaystackModuleMain;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class MiscellaneousController extends Controller
 {
@@ -29,7 +29,7 @@ class MiscellaneousController extends Controller
 
     public function handleFincraWebhook(Request $request): ?JsonResponse
     {
-        Log::info("handleFincraWebhook ", ["Request" => $request->all()]);
+        AppLog::info("handleFincraWebhook ", ["Request" => $request->all()]);
         return $this->fincraModule->handleWebhook($request);
     }
 }

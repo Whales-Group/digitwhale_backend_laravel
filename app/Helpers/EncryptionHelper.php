@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Exceptions\AppException;
+use App\Models\AppLog;
 use Illuminate\Support\Facades\Log;
 
 class EncryptionHelper
@@ -39,7 +40,7 @@ class EncryptionHelper
             return base64_encode($encrypted);
         } catch (\Exception $e) {
             Log::error('Encryption error: ' . $e->getMessage());
-            Log::error($e->getMessage());
+            AppLog::error($e->getMessage());
             throw $e;
         }
     }
@@ -78,7 +79,7 @@ class EncryptionHelper
             return $decryptedData;
         } catch (\Exception $e) {
             Log::error('Decryption error: ' . $e->getMessage());
-            Log::error($e->getMessage());
+            AppLog::error($e->getMessage());
             throw $e;
         }
     }

@@ -4,6 +4,7 @@ namespace App\Modules\FlutterWaveModule\Handlers;
 
 use App\Enums\FincraWebhookEvent;
 use App\Helpers\ResponseHelper;
+use App\Models\AppLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ class BaseHandler
 {
     public function handle(Request $request): ?JsonResponse
     {
-        Log::info("BaseHandler ", ["Request" => $request->all()]);
+        AppLog::info("BaseHandler ", ["Request" => $request->all()]);
         $merchantWebhookSecretKey = '25d3de0a45824666bf2439ed2e5787f1'/*env('FINCRA_WEBHOOK_SECRET')*/ ;
         $data = $request->all();
         $signatureFromWebhook = $request->header('signature');

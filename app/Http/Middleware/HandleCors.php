@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\Log;
+use App\Models\AppLog;
 
 class HandleCors
 {
@@ -17,7 +18,7 @@ class HandleCors
     public function handle($request, Closure $next)
     {
         $response = $next($request);
-        Log::debug($request);
+        AppLog::debug($request);
         $response->headers->set('Access-Control-Allow-Origin', '*');
         $response->headers->set('Access-Control-Allow-Methods', '*');
         $response->headers->set('Access-Control-Allow-Headers', '*');

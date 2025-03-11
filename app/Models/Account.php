@@ -36,17 +36,6 @@ class Account extends Model
         'service_bank'
     ];
 
-    public static $promptProtect = [
-        "id",
-        'user_id',
-        'account_id',
-        'pnd',
-        'pnc',
-        'dedicated_account_id',
-        'customer_code',
-        'service_provider',
-        'service_bank',
-    ];
     protected $casts = [
         'blacklisted' => 'boolean',
         'enabled' => 'boolean',
