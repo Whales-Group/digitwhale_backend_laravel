@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Modules\Service\AiModule\ChatGPTService;
+namespace App\Modules\AiModule\Providers\GeminiProvider; 
 
 use App\Exceptions\AppException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
-class ChatGPTService
+class ChatGPT
 {
-    private static ?ChatGPTService $instance = null;
+    private static ?ChatGPT $instance = null;
     private static ?string $secretKey = null;
     private string $baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
     private Client $client;
@@ -18,10 +18,10 @@ class ChatGPTService
         $this->client = new Client(['base_uri' => $this->baseUrl]);
     }
 
-    public static function getInstance(): ChatGPTService
+    public static function getInstance(): ChatGPT
     {
         if (self::$instance === null) {
-            self::$instance = new ChatGPTService();
+            self::$instance = new ChatGPT();
         }
         return self::$instance;
     }

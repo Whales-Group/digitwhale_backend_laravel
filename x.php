@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Modules\AiModule\Services\GeminiService;
+namespace App\Modules\AiModule\Providers\GeminiProvider;
 
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Models\User;
-use App\Modules\AiModule\Engines\ConversationalEngine;
+use App\Modules\AiModule\Engines\BaseEngine;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Auth;
 
-class GeminiConversationService
+class Gemini
 {
   private static string $baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
   private static string $apiKey;
   private static Client $client;
   private static array $protectedModels = [
     Account::class,
+    User::class,
     TransactionEntry::class,
-    User::class
   ];
 
   public static function initialize(): void
@@ -95,59 +95,59 @@ class GeminiConversationService
     }
 
     $content = $decodedResponse['candidates'][0]['content']['parts'][0]['text'] ?? '';
-    // $sensitiveFields = self::getSensitiveFields();
-    // foreach ($sensitiveFields as $field) {
-    //     if (stripos($content, $field) !== false) {
-    //         throw new AppException("Response contains restricted information.");
-    //     }
-    // }
+    $sensitiveFields = self::getSensitiveFields();
+    foreach ($sensitiveFields as $field) {
+        if (stripos($content, $field) !== false) {
+            throw new AppException("Response contains restricted information.");
+        }
+    }
 
     return $content;
   }
 
   private static function getPromptPrefix(string $text): string
   {
-      $prefix = "
-  " . ConversationalEngine::$IamString . "
+    $prefix = "
+  " . BaseEngine::$IamString . "
   
   
   ### General Guidelines:
-  " . self::formatClaves(ConversationalEngine::generalGuidelines(self::getSensitiveFields())) . "
+  " . self::formatClaves(BaseEngine::generalGuidelines(self::getSensitiveFields())) . "
   
   " . (self::isAlignedWithGoals($text) ? '' : self::getSarcasticJoke()) . "
   
   ### Response Tone & Format:
-  " . self::formatClaves(ConversationalEngine::responseToneAndFormat()) . "
+  " . self::formatClaves(BaseEngine::responseToneAndFormat()) . "
   
   ### Support & Contact Information:
-  " . self::formatClaves(ConversationalEngine::supportInformation()) . "
+  " . self::formatClaves(BaseEngine::supportInformation()) . "
   
   ### Platform Features:
-  " . self::formatClaves(ConversationalEngine::platformFeatures()) . "
+  " . self::formatClaves(BaseEngine::platformFeatures()) . "
   
   ### Supported Currencies:
   DigitWhale currently supports only **one currency per transaction**:
-  " . self::formatClaves(ConversationalEngine::supportedCurrencies()) . "
+  " . self::formatClaves(BaseEngine::supportedCurrencies()) . "
   
   ### Account Limitations:
   - Each user is allowed **a maximum of 3 accounts**.
   
   Now, please process and respond to the following query:";
-  
-      return $prefix;
+
+    return $prefix;
   }
-  
+
   private static function isAlignedWithGoals(string $text): bool
   {
-      $goals = ConversationalEngine::$IamString; // Assuming this contains goals/directives
-      return stripos($text, $goals) !== false; // Simple check; enhance as needed
+    $goals = BaseEngine::$IamString; // Assuming this contains goals/directives
+    return stripos($text, $goals) !== false; // Simple check; enhance as needed
   }
-  
+
 
   private static function getSarcasticJoke(): string
   {
-      return "
-  Oh, looks like someone tried to sneak a square peg into " . ConversationalEngine::$IamString . "'s round hole! 
+    return "
+  Oh, looks like someone tried to sneak a square peg into " . BaseEngine::$IamString . "'s round hole! 
   Here’s a tip: I’m built to solve *specific* problems, not to entertain off-topic quests—try again, champ!
   ";
   }
@@ -160,7 +160,7 @@ class GeminiConversationService
         $sensitiveFields = array_merge($sensitiveFields, $modelClass::$promptProtect);
       }
     }
-    return array_unique($sensitiveFields);
+    return ($sensitiveFields);
   }
 
   private static function getUserContext(): array
@@ -201,7 +201,7 @@ class GeminiConversationService
           ->orWhereIn('to_sys_account_id', $accountIds);
       })
         ->orderBy('created_at', 'desc')
-        // ->take()
+        ->take(6)
         ->get();
 
       if ($transactions->isNotEmpty()) {

@@ -6,7 +6,7 @@ use App\Enums\ServiceProvider;
 use App\Models\Account;
 use App\Modules\AccountSettingModule\Services\AccountSettingsCreationService;
 use App\Modules\TransferModule\Services\TransactionService;
-use App\Modules\WhaleGPTModule\Services\PackageService;
+use App\Modules\UtilsModule\Services\PackageService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;

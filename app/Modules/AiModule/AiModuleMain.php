@@ -4,7 +4,7 @@ namespace App\Modules\AiModule;
 
 use App\Exceptions\AppException;
 use App\Helpers\ResponseHelper;
-use App\Modules\AiModule\Services\GeminiService\GeminiConversationService;
+use App\Modules\AiModule\Providers\GeminiProvider\Gemini;
 use Illuminate\Http\JsonResponse;
 
 class AiModuleMain
@@ -18,7 +18,7 @@ class AiModuleMain
     throw new \Exception("Query text is required.");
    }
 
-   $textResponse = GeminiConversationService::query($queryText);
+   $textResponse = Gemini::query($queryText);
    return ResponseHelper::success(data: ['text' => $textResponse]);
   } catch (\Throwable $e) {
    throw new AppException($e->getMessage());

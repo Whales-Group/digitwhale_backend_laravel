@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\WhaleGPTModule\Services;
+namespace App\Modules\UtilsModule\Services;
 
 use App\Helpers\ResponseHelper;
 
