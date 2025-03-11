@@ -8,10 +8,11 @@
     ],
     "license": "MIT",
     "require": {
-      "php": "^8.2",
-      "laravel/framework": "^11.9",
-      "laravel/sanctum": "^4.0",
-      "laravel/tinker": "^2.9"
+        "php": "^8.2",
+        "laravel/framework": "^11.9",
+        "laravel/pulse": "^1.4",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^2.9"
     },
     "require-dev": {
       "fakerphp/faker": "^1.23",
@@ -66,4 +67,3 @@
     "minimum-stability": "stable",
     "prefer-stable": true
   }
-  
