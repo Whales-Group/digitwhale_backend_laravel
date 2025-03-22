@@ -1,18 +1,17 @@
 <?php
 
 use App\Enums\TokenAbility;
-use App\Helpers\ResponseHelper;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountSettingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UtilsController;
-use App\Http\Controllers\WhaleGptController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -65,27 +64,19 @@ Route::middleware($protectedMiddleware)->group(function () {
     Route::post('/complete-profile', [AuthController::class, 'completeProfile']);
     Route::get('/user', [AuthController::class, 'getAuthenticatedUser']);
 
-    // GPT Services
     Route::prefix('gpt')->group(function () {
         Route::post('/', [UtilsController::class, 'generatePaymentLink']);
         Route::get('/verify-payment/{reference}', [UtilsController::class, 'verifypayment']);
         Route::get('/tips', [UtilsController::class, 'getTips']);
 
-        Route::prefix('models')->group(function () {
-
-            Route::prefix('conversation')->group(function () {
-                Route::post('/j2.0', [AiController::class, 'conversation']);
-            });
-
-            Route::prefix('transaction-accessment')->group(function () {
-                Route::post('/vivianSX1.0', function () {
-                    return ResponseHelper::success(message:"You've reached Our Transaction Accessment Model VivianSX1.0");
-                });
-            });
-
+        Route::prefix('c')->name('c.')->group(function () {
+            Route::post('/chat', [AiController::class, 'chat'])->name('chat');
+            Route::post('/', [AiController::class, 'startConversation'])->name('start-conversation');
+            Route::get('/', [AiController::class, 'getConversationHistory'])->name('conversation-history');
+            Route::delete('/', [AiController::class, 'deleteConversation'])->name('delete-conversation');
+            Route::put('/', [AiController::class, 'recoverConversation'])->name('recover-conversation');
+            Route::get('/select-model', [AiController::class, 'selectModel'])->name('select-model');
         });
-
-
         Route::prefix('packages')->group(function () {
             Route::get('/', [UtilsController::class, 'getPackages']);
             Route::post('/subscribe/{packageType}', [UtilsController::class, 'subscribe']);
@@ -110,6 +101,16 @@ Route::middleware($protectedMiddleware)->group(function () {
             Route::put('/', [AccountSettingController::class, 'updateAccountSettings']);
         });
 
+        Route::prefix('beneficiaries')->group(function () {
+            Route::get('/', [BeneficiaryController::class, 'getAllBeneficiaries']);
+            Route::post('/', [BeneficiaryController::class, 'createBeneficiary']);
+            Route::put('/{beneficiary_id}', [BeneficiaryController::class, 'updateBeneficiary']);
+            Route::delete('/{beneficiary_id}', [BeneficiaryController::class, 'deleteBeneficiary']);
+            Route::post('/{beneficiary_id}/favorite', [BeneficiaryController::class, 'markAsFavorite']);
+            Route::delete('/{beneficiary_id}/favorite', [BeneficiaryController::class, 'unmarkAsFavorite']);
+            Route::get('/favorites', [BeneficiaryController::class, 'getFavoriteBeneficiaries']);
+        });
+        
         Route::prefix('transfer')->group(function () {
             Route::post('/{account_id}', [TransferController::class, 'transfer']);
             Route::put('/{account_id}', [TransferController::class, 'verifyTransferStatusBy']);
@@ -217,3 +218,4 @@ Route::group(['prefix' => 'utils'], function () {
         return 'Migration Handled';
     });
 });
+

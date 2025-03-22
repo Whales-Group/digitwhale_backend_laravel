@@ -3,23 +3,63 @@
 namespace App\Http\Controllers;
 
 use App\Modules\AiModule\AiModuleMain;
-use App\Modules\PaystackModule\PaystackModuleMain;
-use App\Modules\PaystackModule\Services\PaystackService;
-use App\Modules\UtilsModule\UtilsModuleMain;
+use Illuminate\Http\JsonResponse;
 
 class AiController extends Controller
 {
-    public AiModuleMain $aiModuleMain;
+    protected $aiModuleMain;
 
-    public function __construct(
-        AiModuleMain $aiModuleMain
-
-    ) {
-        $this->aiModuleMain = $aiModuleMain;
-
-    }
-    public function conversation()
+    public function __construct(AiModuleMain $aiModuleMain)
     {
-        return $this->aiModuleMain->processQuery();
+        // Inject the AiModuleMain instance
+        $this->aiModuleMain = $aiModuleMain;
+    }
+
+    /**
+     * Handle chat requests.
+     */
+    public function chat(): JsonResponse
+    {
+        return $this->aiModuleMain->chat();
+    }
+
+    /**
+     * Start a new conversation.
+     */
+    public function startConversation(): JsonResponse
+    {
+        return $this->aiModuleMain->startConversation();
+    }
+
+    /**
+     * Retrieve conversation history.
+     */
+    public function getConversationHistory(): JsonResponse
+    {
+        return $this->aiModuleMain->getConversationHistory();
+    }
+
+    /**
+     * Delete a conversation.
+     */
+    public function deleteConversation(): JsonResponse
+    {
+        return $this->aiModuleMain->deleteConversation();
+    }
+
+    /**
+     * Recover a deleted conversation.
+     */
+    public function recoverConversation(): JsonResponse
+    {
+        return $this->aiModuleMain->recoverConversation();
+    }
+
+    /**
+     * Select a model based on user preferences and subscription.
+     */
+    public function selectModel(): JsonResponse
+    {
+        return $this->aiModuleMain->selectModel();
     }
 }

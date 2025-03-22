@@ -132,4 +132,9 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
+    public function beneficiaries()
+    {
+        return $this->hasMany(Beneficiary::class);
+    }
+
 }
