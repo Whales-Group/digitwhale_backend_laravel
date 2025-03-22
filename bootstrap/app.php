@@ -6,8 +6,15 @@ use App\Helpers\ResponseHelper;
 use App\Http\Middleware\HandleCors;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Http\Kernel;
+use Illuminate\Http\Request;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
+
+$router = app('router');
+$kernel = new Kernel($app, $router);
+$kernel->handle(
+    $request = Request::capture()
+);
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
