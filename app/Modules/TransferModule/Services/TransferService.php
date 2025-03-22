@@ -2,15 +2,12 @@
 
 namespace App\Modules\TransferModule\Services;
 
-use App\Enums\ErrorCode;
 use App\Enums\ServiceProvider;
 use App\Enums\TransferType;
 use App\Exceptions\AppException;
-use App\Exceptions\CodedException;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
-use App\Models\Beneficiary;
 use App\Models\User;
 use App\Modules\FincraModule\Services\FincraService;
 use App\Modules\FlutterWaveModule\Services\FlutterWaveService;
@@ -37,7 +34,6 @@ class TransferService
         $this->transactionService = new TransactionService();
         $this->transferResourse = new TransferResourcesService();
     }
-
     public function transfer(Request $request, string $account_id)
     {
         $validator = $this->validateRequest($request);
@@ -83,7 +79,6 @@ class TransferService
             $lock?->release();
         }
     }
-
     protected function validateRequest(Request $request)
     {
         return Validator::make($request->all(), [
@@ -93,7 +88,6 @@ class TransferService
             "recieving_account_id" => "sometimes|string|required_if:transfer_type,corporate",
         ]);
     }
-
     protected function validateTransferCode(string $email, string $code): bool
     {
         return DB::table('password_reset_tokens')
@@ -101,7 +95,6 @@ class TransferService
             ->where('token', $code)
             ->delete() > 0;
     }
-
     protected function handleExternalTransfer(Request $request, Account $account, TransferType $transferType): array
     {
         return match ($account->service_provider) {
@@ -111,7 +104,6 @@ class TransferService
             default => $this->handleFlutterWaveTransfer($request, $account),
         };
     }
-
     private function handleFincraTransfer(Request $request, Account $account): array
     {
         $validatedData = $this->validateTransferData($request, $account);
@@ -128,10 +120,10 @@ class TransferService
             $validatedData['charge'],
             $transferResponse['data']['status'],
             $request->note,
-            $payload['beneficiary']
+            $payload['beneficiary'],
+            $request->type
         );
     }
-
     private function handleFlutterWaveTransfer(Request $request, Account $account): array
     {
         $validatedData = $this->validateTransferData($request, $account);
@@ -148,10 +140,10 @@ class TransferService
                 'accountNumber' => $request->beneficiary_account_number,
                 'bankCode' => $request->beneficiary_bank_code,
                 'email' => $request->beneficiary_email
-            ]
+            ],
+            $request->type
         );
     }
-
     private function validateTransferData(Request $request, Account $account): array
     {
         $validationResponse = $this->transferResourse->validateTransfer(new Request([
@@ -173,14 +165,12 @@ class TransferService
             'sendable_amount' => (int) $request->amount - (int) $responseData['data']['charge']
         ];
     }
-
     private function validateSendableAmount(int $amount, int $charge): void
     {
         if (($amount - $charge) < 100) {
             throw new AppException("Minimum destination amount should not be less than (NGN 100.00).");
         }
     }
-
     private function createFincraPayload(Request $request, Account $account, array $validatedData): array
     {
         $user = auth()->user();
@@ -224,7 +214,6 @@ class TransferService
             "debit_currency" => "NGN"
         ]);
     }
-
     private function handleInternalTransfer(Request $request, string $account_id): array
     {
         $receiverAccount = $this->validateReceiverAccount($request->recieving_account_id);
@@ -240,17 +229,16 @@ class TransferService
             $senderAccount,
             $receiverAccount,
             $request->amount,
-            $request->note
+            $request->note,
+            $request->type
         );
     }
-
     private function updateBalances(Account $sender, Account $receiver, int $amount): void
     {
         $sender->decrement('balance', $amount);
         $receiver->increment('balance', $amount);
     }
-
-    private function buildInternalTransactionData(Account $sender, Account $receiver, int $amount, string $note): array
+    private function buildInternalTransactionData(Account $sender, Account $receiver, int $amount, string $note, string $type): array
     {
         $receiverUser = User::findOrFail($receiver->user_id);
 
@@ -262,24 +250,24 @@ class TransferService
                 : $receiverUser->business_name,
             'to_user_email' => $receiverUser->email,
             'to_bank_name' => $receiver->service_bank,
-            'to_bank_code' => 'Internal Transfer',
+            'to_bank_code' => $receiver->service_bank,
             'to_account_number' => $receiver->account_number,
             'transaction_reference' => CodeHelper::generateSecureReference(),
             'status' => 'successful',
-            'type' => 'internal',
+            'type' => $type,
             'amount' => $amount,
             'note' => "[Digitwhale/Transfer] | " . $note,
             'entry_type' => 'debit',
         ];
     }
-
     private function buildTransactionData(
         Account $account,
         int $amount,
         int $charge,
         string $status,
         string $note,
-        array $beneficiary
+        array $beneficiary,
+        string $type
     ): array {
         return [
             'currency' => $account->currency,
@@ -291,14 +279,13 @@ class TransferService
             'to_account_number' => $beneficiary['accountNumber'] ?? '',
             'transaction_reference' => CodeHelper::generateSecureReference(),
             'status' => $status,
-            'type' => 'external',
+            'type' => $type,
             'amount' => $amount,
             'note' => "[NIP/Transfer] | " . $note,
             'entry_type' => 'debit',
             'charge' => $charge,
         ];
     }
-
     private function validateSenderAccount(string $accountId, ?string $receiverId, int $amount): Account
     {
         $account = Account::where('user_id', auth()->id())
@@ -323,7 +310,6 @@ class TransferService
 
         return $account;
     }
-
     private function validateReceiverAccount(string $accountId): Account
     {
         $account = Account::where('account_id', $accountId)
