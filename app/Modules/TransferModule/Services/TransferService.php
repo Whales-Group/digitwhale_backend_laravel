@@ -246,7 +246,7 @@ class TransferService
             'currency' => $sender->currency,
             'to_sys_account_id' => $receiver->id,
             'to_user_name' => $receiverUser->profile_type === 'personal'
-                ? $receiverUser->full_name
+                ? $receiver->validated_name
                 : $receiverUser->business_name,
             'to_user_email' => $receiverUser->email,
             'to_bank_name' => $receiver->service_bank,
