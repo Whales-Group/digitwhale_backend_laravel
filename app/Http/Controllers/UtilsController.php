@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Modules\AiModule\AiModuleMain;
-use App\Modules\PaystackModule\PaystackModuleMain;
 use App\Modules\PaystackModule\Services\PaystackService;
+use App\Modules\PaystackModule\PaystackModuleMain;
 use App\Modules\UtilsModule\UtilsModuleMain;
 
 class UtilsController extends Controller
