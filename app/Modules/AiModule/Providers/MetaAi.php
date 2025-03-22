@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Auth;
 use Psr\Http\Message\ResponseInterface;
 
-class MetaAI
+class MetaAi
 {
     private static string $baseUrl = "https://openrouter.ai/api/v1/chat/completions";
     private static string $apiKey = "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";

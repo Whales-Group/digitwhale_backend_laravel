@@ -4,17 +4,17 @@ namespace App\Modules\PaystackModule\Handlers;
 
 use App\Enums\PaystackWebhookEvent;
 use App\Helpers\ResponseHelper;
-use App\Modules\PaystackWebhookModule\Services\HandleChargeSuccess;
-use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationFailed;
-use App\Modules\PaystackWebhookModule\Services\HandleCustomerIdentificationSuccess;
-use App\Modules\PaystackWebhookModule\Services\HandleDedicatedAccountAssignFailed;
-use App\Modules\PaystackWebhookModule\Services\HandleDedicatedAccountAssignSuccess;
-use App\Modules\PaystackWebhookModule\Services\HandleTransferFailed;
-use App\Modules\PaystackWebhookModule\Services\HandleTransferReversed;
-use App\Modules\PaystackWebhookModule\Services\HandleTransferSuccess;
+use App\Models\AppLog;
+use App\Modules\PaystackModule\Services\HandleChargeSuccess;
+use App\Modules\PaystackModule\Services\HandleCustomerIdentificationFailed;
+use App\Modules\PaystackModule\Services\HandleCustomerIdentificationSuccess;
+use App\Modules\PaystackModule\Services\HandleDedicatedAccountAssignFailed;
+use App\Modules\PaystackModule\Services\HandleDedicatedAccountAssignSuccess;
+use App\Modules\PaystackModule\Services\HandleTransferFailed;
+use App\Modules\PaystackModule\Services\HandleTransferReversed;
+use App\Modules\PaystackModule\Services\HandleTransferSuccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\AppLog;
 
 class BaseHandler
 {

@@ -10,7 +10,7 @@ use App\Modules\AiModule\AiModels\ConversationalModel\ConversationalModelMain;
 use App\Modules\AiModule\AiModels\TransactionAccessmentModel\TransactionAccessmentModelMain;
 use App\Modules\AiModule\Providers\DeepSeek;
 use App\Modules\AiModule\Providers\Gemini;
-use App\Modules\AiModule\Providers\MetaAI;
+use App\Modules\AiModule\Providers\MetaAi;
 use App\Modules\AiModule\Providers\OpenChat;
 use App\Modules\UtilsModule\Services\PackageService;
 use Exception;

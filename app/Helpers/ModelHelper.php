@@ -5,7 +5,7 @@ namespace App\Helpers;
 use App\Exceptions\AppException;
 use App\Modules\AiModule\Providers\DeepSeek;
 use App\Modules\AiModule\Providers\Gemini;
-use App\Modules\AiModule\Providers\MetaAI;
+use App\Modules\AiModule\Providers\MetaAi;
 use App\Modules\AiModule\Providers\OpenChat;
 
 class ModelHelper
@@ -59,7 +59,7 @@ class ModelHelper
     "DeepSeek" => DeepSeek::class,
     "Gemini" => Gemini::class,
     "OpenChat" => OpenChat::class,
-    "MetaAI" => MetaAI::class,
+    "MetaAI" => MetaAi::class,
   ];
   public static function DefaultProvider(string $message, int $conversationId = 0): string
   {
