@@ -73,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return ResponseHelper::internalServerError(
                 message: 'An unexpected error occurred.',
-                error: config('app.debug') ? $exception->getMessage() : null
+                error:  $exception->getMessage()
             );
         });
     })
