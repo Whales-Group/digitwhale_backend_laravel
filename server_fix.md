@@ -19,6 +19,8 @@ composer remove laravel/framework && composer require laravel/framework
 
 ---
 
+
+
 ## **Attempt 2: Force Framework Reinstallation**  
 **Command**:  
 ```bash
