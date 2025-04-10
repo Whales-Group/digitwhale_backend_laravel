@@ -2,7 +2,7 @@
 
 namespace App\Modules\BillsAndPaymentsModule;
 
-use App\Modules\FlutterWaveModule\Services\FlutterWaveService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
 
 class BillsAndPaymentsModuleMain
 {

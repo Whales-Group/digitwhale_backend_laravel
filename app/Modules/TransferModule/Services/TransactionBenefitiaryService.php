@@ -6,9 +6,9 @@ use App\Exceptions\AppException;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\Beneficiary;
-use App\Modules\FincraModule\Services\FincraService;
-use App\Modules\FlutterWaveModule\Services\FlutterWaveService;
-use App\Modules\PaystackModule\Services\PaystackService;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Gateways\Paystack\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

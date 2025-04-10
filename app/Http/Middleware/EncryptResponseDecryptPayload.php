@@ -21,7 +21,6 @@ class EncryptResponseDecryptPayload
         // Decrypt 'data' field from incoming payload if present
         if ($request->isJson() && $request->getContent()) {
             $encryptedPayload = $request->getContent();
-            var_dump($request->getContent());
 
             if (isset($encryptedPayload['data'])) {
                 $decryptedData = EncryptionHelper::decrypt($encryptedPayload['data']);

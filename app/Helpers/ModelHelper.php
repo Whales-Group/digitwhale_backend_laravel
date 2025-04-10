@@ -3,15 +3,12 @@
 namespace App\Helpers;
 
 use App\Exceptions\AppException;
-use App\Modules\AiModule\Providers\DeepSeek;
-use App\Modules\AiModule\Providers\Gemini;
-use App\Modules\AiModule\Providers\MetaAi;
-use App\Modules\AiModule\Providers\OpenChat;
+use App\Modules\AiModule\Engines\ProviderEngine;
 
 class ModelHelper
 {
   public static $defaultModel = 'j.1.0';
-  public static $defaultProvider = 'OpenChat';
+  public static $defaultProvider = 'DeepSeek';
 
   public static $models = [
     [
@@ -55,25 +52,17 @@ class ModelHelper
     return $allModels;
   }
 
-  public static $providers = [
-    "DeepSeek" => DeepSeek::class,
-    "Gemini" => Gemini::class,
-    "OpenChat" => OpenChat::class,
-    "MetaAI" => MetaAi::class,
-  ];
-  public static function DefaultProvider(string $message, int $conversationId = 0): string
+
+  public static function DefaultProvider(string $message, string $modelSlug, int $conversationId = 0): string
   {
-    $modelClass = self::$providers[self::$defaultProvider] ?? null;
+    ProviderEngine::initialize($modelSlug??'OpenChat');
 
-    if (!$modelClass || !class_exists($modelClass)) {
-      throw new AppException("Invalid default model class: " . ($modelClass ?? 'none'));
-    }
-    call_user_func([$modelClass, 'initialize']);
+    $call = ProviderEngine::query($message, $conversationId);
 
-    return call_user_func([$modelClass, 'query'], $message, $conversationId);
+    return $call;
   }
   public static function getModelClass(string $modelName): ?string
   {
-    return self::$providers[$modelName] ?? null;
+    return ProviderEngine::$providers[$modelName] ?? null;
   }
 }

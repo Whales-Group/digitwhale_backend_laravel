@@ -30,6 +30,7 @@ $adminAccessMiddleWare = array_merge($publicMiddleware, [
 Route::group(['prefix' => 'webhooks'], function () {
     Route::post('/paystack-whale', [MiscellaneousController::class, 'handlePaystackWebhook']);
     Route::post('/fincra-whale', [MiscellaneousController::class, 'handleFincraWebhook']);
+    Route::post('/flutterwave-whale', [MiscellaneousController::class, 'handleFlutterwaveWebhook']);
 });
 
 // Authentication Routes
@@ -69,7 +70,7 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::get('/verify-payment/{reference}', [UtilsController::class, 'verifypayment']);
         Route::get('/tips', [UtilsController::class, 'getTips']);
 
-        Route::prefix('c')->name('c.')->group(function () {
+        Route::prefix('c')->name('c')->group(function () {
             Route::post('/chat', [AiController::class, 'chat'])->name('chat');
             Route::post('/', [AiController::class, 'startConversation'])->name('start-conversation');
             Route::get('/', [AiController::class, 'getConversationHistory'])->name('conversation-history');

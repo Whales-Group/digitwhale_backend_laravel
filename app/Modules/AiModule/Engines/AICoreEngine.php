@@ -11,7 +11,7 @@ use App\Modules\AiModule\AiModels\TransactionAccessmentModel\TransactionAccessme
 use App\Modules\AiModule\Providers\DeepSeek;
 use App\Modules\AiModule\Providers\Gemini;
 use App\Modules\AiModule\Providers\MetaAi;
-use App\Modules\AiModule\Providers\OpenChat;
+use App\Modules\AiModule\Providers\ProviderEngine;
 use App\Modules\UtilsModule\Services\PackageService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -140,7 +140,7 @@ class AICoreEngine
 
         return strtolower($subscription->package->type);
     }
-    public function chat(int $conversationId, string $modelSlug, string $userMessage): array
+    public function chat(int $conversationId, string $modelSlug, string $userMessage): mixed
     {
         $userId = auth()->user()->id;
 
@@ -151,6 +151,7 @@ class AICoreEngine
 
             $this->registerMessage($conversationId, $modelSlug, $userMessage, $userId);
             $this->registerMessage($conversationId, $modelSlug, $response, $userId, true);
+
 
             return [
                 'user_message' => $userMessage,
@@ -163,7 +164,7 @@ class AICoreEngine
     }
     protected function ModelCall(string $modelSlug, string $message, int $conversationId): mixed
     {
-        return ModelHelper::DefaultProvider($message, $conversationId);
+        return ModelHelper::DefaultProvider($message, $modelSlug, $conversationId);
     }
     private function validateConversationExists(int $conversationId): void
     {

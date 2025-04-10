@@ -12,10 +12,11 @@ use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\User;
-use App\Modules\FincraModule\Services\FincraService;
-use App\Modules\PaystackModule\Services\PaystackService;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\Paystack\Services\PaystackService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+
 use Exception;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use ValueError;
 
@@ -33,7 +34,7 @@ class AccountCreationService
 
             $user = auth()->user();
             $currencyValue = request()->input('currency');
-            $provider = ServiceProvider::PAYSTACK;
+            $provider = ServiceProvider::FLUTTERWAVE;
             $providerBank = ServiceBank::WEMA_BANK;
 
             $completed = $user->profileIsCompleted($provider);
@@ -59,8 +60,6 @@ class AccountCreationService
             if (Account::where(["user_id" => $user->id, "currency" => $currency])->exists()) {
                 throw new AppException("Account with specified currency already exists.");
             }
-
-           
 
             $providerResponse = $this->getProviderResponse($provider, $currency);
 
@@ -96,6 +95,7 @@ class AccountCreationService
         return match ($provider) {
             ServiceProvider::PAYSTACK => $this->getPaystackResponse($currency),
             ServiceProvider::FINCRA => $this->getFincraResponse($currency),
+            ServiceProvider::FLUTTERWAVE => $this->getFlutterWaveResponse($currency),
             default => throw new AppException("Invalid Service Provider."),
         };
     }
@@ -177,6 +177,66 @@ class AccountCreationService
             "customer_code" => $fincra_dva['data']['accountNumber'],
             "customer_id" => $fincra_dva['data']['_id'],
             'dedicated_account_id' => $fincra_dva['data']['_id'],
+            "phone" => $user->phone_number
+        ];
+    }
+
+    /**
+     * Get FlutterWaveService-specific response.
+     *
+     * @return array
+     */
+    private function getFlutterWaveResponse(Currency $currency): array
+    {
+        $user = request()->user();
+
+        $flutterWave = FlutterWaveService::getInstance();
+
+        if (!$user->bvn) {
+            throw new AppException("BVN not found. Update bvn and try again.");
+        }
+
+        $currencyValue = "";
+
+        switch ($currency) {
+            case Currency::NAIRA:
+                $currencyValue = "NGN";
+                break;
+            default:
+                throw new AppException("Selected Currency Not Supported for Provider FLUTTERWAVE");
+        }
+
+        // $flutter_dva = $flutterWave->createDVA(
+        //     email: "abraham@flutterwavego.com",
+        //     txRef: "apex_tx_ref-002201",
+        //     phoneNumber: "08100000000",
+        //     firstName: "John",
+        //     lastName: "Doe",
+        //     narration: "Kids Foundation",
+        //     bvn: "1234567890",
+        //     isPermanent: true
+        // );
+
+        $flutter_dva = $flutterWave->createDVA(
+            email: $user->email,
+            txRef: CodeHelper::generateSecureReference(),
+            phoneNumber: $user->phone_number ?? '',
+            firstName: $user->first_name,
+            lastName: $user->last_name,
+            narration: ($user->profile_type === 'personal' ? "{$user->first_name} {$user->last_name}" : $user->business_name),
+            bvn: $user->bvn,
+            isPermanent: true
+        );
+
+        return [
+            "service_provider" => ServiceProvider::FLUTTERWAVE,
+            "bank" => $flutter_dva['data']['bank_name'],
+            "account_name" => $user->profile_type === 'personal' ? "{$user->first_name} {$user->last_name}" : $user->business_name,
+            "account_number" => $flutter_dva['data']['account_number'],
+            "currency" => $currencyValue,
+            "customer_code" => $flutter_dva['data']['flw_ref'],
+            "customer_id" => $flutter_dva['data']['order_ref'],
+            'dedicated_account_id' => $flutter_dva['data']['order_ref'],
             "phone" => $user->phone_number
         ];
     }
