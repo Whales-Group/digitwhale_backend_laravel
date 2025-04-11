@@ -337,8 +337,8 @@ class ComponentTagCompiler
                 }
 
                 $formattedComponent = str_starts_with($component, $path['prefix'].$delimiter)
-                        ? Str::after($component, $delimiter)
-                        : $component;
+                    ? Str::after($component, $delimiter)
+                    : $component;
 
                 if (! is_null($guess = match (true) {
                     $viewFactory->exists($guess = $path['prefixHash'].$delimiter.$formattedComponent) => $guess,
@@ -421,8 +421,8 @@ class ComponentTagCompiler
     public function guessClassName(string $component)
     {
         $namespace = Container::getInstance()
-                    ->make(Application::class)
-                    ->getNamespace();
+            ->make(Application::class)
+            ->getNamespace();
 
         $class = $this->formatClassName($component);
 
@@ -485,8 +485,8 @@ class ComponentTagCompiler
         $constructor = (new ReflectionClass($class))->getConstructor();
 
         $parameterNames = $constructor
-                    ? (new Collection($constructor->getParameters()))->map->getName()->all()
-                    : [];
+            ? (new Collection($constructor->getParameters()))->map->getName()->all()
+            : [];
 
         return (new Collection($attributes))
             ->partition(fn ($value, $key) => in_array(Str::camel($key), $parameterNames))
@@ -772,8 +772,8 @@ class ComponentTagCompiler
             }
 
             return $token[0] === T_INLINE_HTML
-                        ? str_replace("'", "\\'", $token[1])
-                        : $token[1];
+                ? str_replace("'", "\\'", $token[1])
+                : $token[1];
         })->implode('');
     }
 
@@ -787,12 +787,12 @@ class ComponentTagCompiler
     protected function attributesToString(array $attributes, $escapeBound = true)
     {
         return (new Collection($attributes))
-                ->map(function (string $value, string $attribute) use ($escapeBound) {
-                    return $escapeBound && isset($this->boundAttributes[$attribute]) && $value !== 'true' && ! is_numeric($value)
-                                ? "'{$attribute}' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute({$value})"
-                                : "'{$attribute}' => {$value}";
-                })
-                ->implode(',');
+            ->map(function (string $value, string $attribute) use ($escapeBound) {
+                return $escapeBound && isset($this->boundAttributes[$attribute]) && $value !== 'true' && ! is_numeric($value)
+                    ? "'{$attribute}' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute({$value})"
+                    : "'{$attribute}' => {$value}";
+            })
+            ->implode(',');
     }
 
     /**
@@ -804,7 +804,7 @@ class ComponentTagCompiler
     public function stripQuotes(string $value)
     {
         return Str::startsWith($value, ['"', '\''])
-                    ? substr($value, 1, -1)
-                    : $value;
+            ? substr($value, 1, -1)
+            : $value;
     }
 }

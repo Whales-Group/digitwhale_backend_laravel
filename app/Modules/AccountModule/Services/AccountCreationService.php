@@ -12,10 +12,11 @@ use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\User;
-use App\Modules\FincraModule\Services\FincraService;
-use App\Modules\PaystackModule\Services\PaystackService;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\Paystack\Services\PaystackService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+
 use Exception;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use ValueError;
 
@@ -33,7 +34,7 @@ class AccountCreationService
 
             $user = auth()->user();
             $currencyValue = request()->input('currency');
-            $provider = ServiceProvider::PAYSTACK;
+            $provider = ServiceProvider::FLUTTERWAVE;
             $providerBank = ServiceBank::WEMA_BANK;
 
             $completed = $user->profileIsCompleted($provider);
@@ -59,8 +60,6 @@ class AccountCreationService
             if (Account::where(["user_id" => $user->id, "currency" => $currency])->exists()) {
                 throw new AppException("Account with specified currency already exists.");
             }
-
-           
 
             $providerResponse = $this->getProviderResponse($provider, $currency);
 
@@ -96,89 +95,9 @@ class AccountCreationService
         return match ($provider) {
             ServiceProvider::PAYSTACK => $this->getPaystackResponse($currency),
             ServiceProvider::FINCRA => $this->getFincraResponse($currency),
+            ServiceProvider::FLUTTERWAVE => $this->getFlutterWaveResponse($currency),
             default => throw new AppException("Invalid Service Provider."),
         };
-    }
-
-    /**
-     * Get Paystack-specific response.
-     *
-     * @return array
-     */
-    private function getPaystackResponse(Currency $currency): array
-    {
-        $user = request()->user();
-
-        $paystack = PaystackService::getInstance();
-
-        $customer = $paystack->createCustomer([
-            'email' => $user->email,
-            'first_name' => $user->first_name ?? null,
-            'last_name' => $user->last_name ?? null,
-            'phone' => $user->phone_number ?? null,
-        ]);
-
-        $paystack_dva = $paystack->createDVA(customer: $customer['data']['customer_code'], phone: $user->phone_number ?? null);
-
-        return [
-            "service_provider" => ServiceProvider::PAYSTACK,
-            "bank" => $paystack_dva['data']['bank']['name'],
-            "account_name" => $paystack_dva['data']['account_name'],
-            "account_number" => $paystack_dva['data']['account_number'],
-            "currency" => $paystack_dva['data']['currency'],
-            "customer_code" => $paystack_dva['data']['customer']['customer_code'],
-            "customer_id" => $paystack_dva['data']['customer']['id'],
-            'dedicated_account_id' => $paystack_dva['data']['id'],
-            "phone" => $paystack_dva['data']['customer']['phone']
-        ];
-    }
-
-    /**
-     * Get Fincra-specific response.
-     *
-     * @return array
-     */
-    private function getFincraResponse(Currency $currency): array
-    {
-        $user = request()->user();
-
-        $fincra = FincraService::getInstance();
-
-        if (!$user->bvn) {
-            throw new AppException("BVN not found. Update bvn and try again.");
-        }
-
-        $currencyValue = "";
-
-        switch ($currency) {
-            case Currency::NAIRA:
-                $currencyValue = "NGN";
-                break;
-            default:
-                throw new AppException("Selected Currency Not Supported for Provider FINCRA");
-        }
-
-        $fincra_dva = $fincra->createDVA(
-            dateOfBirth: DateHelper::format($user->date_of_birth, "m-d-Y"),
-            firstName: $user->first_name,
-            lastName: $user->last_name,
-            bvn: $user->bvn,
-            bank: "wema",
-            currency: $currencyValue,
-            email: $user->email
-        );
-
-        return [
-            "service_provider" => ServiceProvider::FINCRA,
-            "bank" => $fincra_dva['data']['accountInformation']['bankName'],
-            "account_name" => $fincra_dva['data']['accountInformation']['accountName'],
-            "account_number" => $fincra_dva['data']['accountInformation']['accountNumber'],
-            "currency" => $fincra_dva['data']['currency'],
-            "customer_code" => $fincra_dva['data']['accountNumber'],
-            "customer_id" => $fincra_dva['data']['_id'],
-            'dedicated_account_id' => $fincra_dva['data']['_id'],
-            "phone" => $user->phone_number
-        ];
     }
 
     /**

@@ -275,7 +275,7 @@ class View implements ArrayAccess, Htmlable, Stringable, ViewContract
     /**
      * Add validation errors to the view.
      *
-     * @param  \Illuminate\Contracts\Support\MessageProvider|array  $provider
+     * @param  \Illuminate\Contracts\Support\MessageProvider|array|string  $provider
      * @param  string  $bag
      * @return $this
      */
@@ -295,8 +295,8 @@ class View implements ArrayAccess, Htmlable, Stringable, ViewContract
     protected function formatErrors($provider)
     {
         return $provider instanceof MessageProvider
-                        ? $provider->getMessageBag()
-                        : new MessageBag((array) $provider);
+            ? $provider->getMessageBag()
+            : new MessageBag((array) $provider);
     }
 
     /**

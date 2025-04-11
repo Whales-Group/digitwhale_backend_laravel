@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\AuthenticationModules\Services;
+namespace App\Modules\AuthenticationModule\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

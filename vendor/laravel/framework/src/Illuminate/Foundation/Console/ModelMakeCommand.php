@@ -211,8 +211,8 @@ class ModelMakeCommand extends GeneratorCommand
     protected function resolveStubPath($stub)
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 
     /**
@@ -253,7 +253,7 @@ class ModelMakeCommand extends GeneratorCommand
         $replacements = [];
 
         if ($this->option('factory') || $this->option('all')) {
-            $modelPath = str($this->argument('name'))->studly()->replace('/', '\\')->toString();
+            $modelPath = Str::of($this->argument('name'))->studly()->replace('/', '\\')->toString();
 
             $factoryNamespace = '\\Database\\Factories\\'.$modelPath.'Factory';
 

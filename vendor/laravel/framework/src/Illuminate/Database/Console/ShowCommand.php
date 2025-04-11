@@ -79,9 +79,10 @@ class ShowCommand extends DatabaseInspectionCommand
         return (new Collection($schema->getTables()))->map(fn ($table) => [
             'table' => $table['name'],
             'schema' => $table['schema'],
+            'schema_qualified_name' => $table['schema_qualified_name'],
             'size' => $table['size'],
             'rows' => $this->option('counts')
-                ? ($connection->table($table['schema'] ? $table['schema'].'.'.$table['name'] : $table['name'])->count())
+                ? $connection->withoutTablePrefix(fn ($connection) => $connection->table($table['schema_qualified_name'])->count())
                 : null,
             'engine' => $table['engine'],
             'collation' => $table['collation'],
@@ -99,11 +100,10 @@ class ShowCommand extends DatabaseInspectionCommand
     protected function views(ConnectionInterface $connection, Builder $schema)
     {
         return (new Collection($schema->getViews()))
-            ->reject(fn ($view) => str($view['name'])->startsWith(['pg_catalog', 'information_schema', 'spt_']))
             ->map(fn ($view) => [
                 'view' => $view['name'],
                 'schema' => $view['schema'],
-                'rows' => $connection->table($view['schema'] ? $view['schema'].'.'.$view['name'] : $view['name'])->count(),
+                'rows' => $connection->withoutTablePrefix(fn ($connection) => $connection->table($view['schema_qualified_name'])->count()),
             ]);
     }
 

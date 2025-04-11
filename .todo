@@ -9,3 +9,8 @@
 - add all account settings endpoints
 - remove webhooks from api key middleware coverage 
 
+
+AI
+    - specific json for ai response
+    - 
+

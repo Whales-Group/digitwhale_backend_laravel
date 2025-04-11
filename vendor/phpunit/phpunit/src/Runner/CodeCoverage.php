@@ -105,16 +105,22 @@ final class CodeCoverage
 
         if ($codeCoverageFilterRegistry->get()->isEmpty()) {
             if (!$codeCoverageFilterRegistry->configured()) {
-                EventFacade::emitter()->testRunnerTriggeredWarning(
+                EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
                     'No filter is configured, code coverage will not be processed',
                 );
             } else {
-                EventFacade::emitter()->testRunnerTriggeredWarning(
+                EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
                     'Incorrect filter configuration, code coverage will not be processed',
                 );
             }
 
             $this->deactivate();
+        }
+
+        if (!$configuration->hasCoverageCacheDirectory()) {
+            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
+                'No cache directory configured, result of static analysis for code coverage will not be cached',
+            );
         }
     }
 
@@ -349,7 +355,7 @@ final class CodeCoverage
                 $filter,
             );
         } catch (CodeCoverageException $e) {
-            EventFacade::emitter()->testRunnerTriggeredWarning(
+            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
                 $e->getMessage(),
             );
         }

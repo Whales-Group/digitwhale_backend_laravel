@@ -3,6 +3,7 @@
 namespace Illuminate\Foundation;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Stringable;
 
 /*
                                                    .~))>>
@@ -55,9 +56,7 @@ class Inspiring
      */
     public static function quote()
     {
-        return static::quotes()
-            ->map(fn ($quote) => static::formatForConsole($quote))
-            ->random();
+        return static::formatForConsole(static::quotes()->random());
     }
 
     /**
@@ -107,6 +106,7 @@ class Inspiring
             'The biggest battle is the war against ignorance. - Mustafa Kemal Atatürk',
             'Always remember that you are absolutely unique. Just like everyone else. - Margaret Mead',
             'You must be the change you wish to see in the world. - Mahatma Gandhi',
+            'We must ship. - Taylor Otwell',
         ]);
     }
 
@@ -118,7 +118,7 @@ class Inspiring
      */
     protected static function formatForConsole($quote)
     {
-        [$text, $author] = str($quote)->explode('-');
+        [$text, $author] = (new Stringable($quote))->explode('-');
 
         return sprintf(
             "\n  <options=bold>“ %s ”</>\n  <fg=gray>— %s</>\n",

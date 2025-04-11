@@ -11,9 +11,11 @@ use App\Exceptions\CodedException;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
+use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
-use App\Modules\FincraModule\Services\FincraService;
-use App\Modules\PaystackModule\Services\PaystackService;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Gateways\Paystack\Services\PaystackService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,11 +25,14 @@ class TransferResourcesService
 {
     public FincraService $fincraService;
     public PaystackService $paystackService;
+    public FlutterWaveService $flutterWaveService;
 
     public function __construct()
     {
         $this->fincraService = FincraService::getInstance();
         $this->paystackService = PaystackService::getInstance();
+        $this->flutterWaveService = FlutterWaveService::getInstance();
+
     }
 
     public function getBanks(Request $request, string $account_id)
@@ -51,6 +56,8 @@ class TransferResourcesService
                     return ResponseHelper::success($this->fincraService->getBanks()['data']);
                 case ServiceProvider::PAYSTACK:
                     return ResponseHelper::success($this->paystackService->getBanks()['data']);
+                case ServiceProvider::FLUTTERWAVE;
+                    return ResponseHelper::success($this->flutterWaveService->getBanks()['data']);
                 default:
                     return ResponseHelper::unprocessableEntity("Invalid account service provider.");
             }
@@ -93,6 +100,13 @@ class TransferResourcesService
                     $paystack_res = $this->paystackService->resolveAccount($account_number, $bank_code);
                     $response['accountName'] = trim($paystack_res['data']['account_name']);
                     $response['accountNumber'] = trim($paystack_res['data']['account_number']);
+
+                    return ResponseHelper::success($response);
+                case ServiceProvider::FLUTTERWAVE:
+
+                    $flutter_wave_res = $this->handleBeneficiaryCreation($request);
+                    $response['accountName'] = trim($flutter_wave_res['data']['name']);
+                    $response['accountNumber'] = trim($flutter_wave_res['data']['account_number']);
 
                     return ResponseHelper::success($response);
                 default:
@@ -213,16 +227,18 @@ class TransferResourcesService
         $transferFee = match ($accountType) {
             ServiceProvider::FINCRA => 50,
             ServiceProvider::PAYSTACK => 10,
+            ServiceProvider::FLUTTERWAVE => $data['amount'] <= 5000 ? 10 : ($data['amount'] <= 50000 ? 25 : 50),
             default => throw new AppException("Invalid account service provider."),
         };
 
         $availableBalance = match ($accountType) {
             ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
             ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
+            ServiceProvider::FLUTTERWAVE => 0, // TODO: IMPL FLUTTERWAVE BALANCE CHECK
             default => throw new AppException("Invalid account service provider."),
         };
 
-        if ((float)$availableBalance - (float)$data['amount'] < 150) {
+        if ($transferType != TransferType::WHALE_TO_WHALE && (float) $availableBalance - (float) $data['amount'] < 150) {
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         }
 
@@ -248,5 +264,34 @@ class TransferResourcesService
 
         return ResponseHelper::success($response);
     }
+    private function handleBeneficiaryCreation(Request $request): Beneficiary
+    {
+        $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
+            ->where('account_number', $request->beneficiary_account_number)
+            ->first();
+
+        if ($existingBeneficiary) {
+            return $existingBeneficiary;
+        }
+
+        $this->flutterWaveService->createTransferRecipient([
+            "account_bank" => $request->bank_code,
+            "account_number" => $request->account_number,
+            "beneficiary_name" => "New Benefitiary",
+            "currency" => "NGN",
+            "bank_name" => "New Benefitiary Bank",
+        ]);
+
+        return Beneficiary::create([
+            'user_id' => auth()->id(),
+            'name' => $request->beneficiary_account_holder_name,
+            'type' => 'cash_transfer',
+            'account_number' => $request->beneficiary_account_number,
+            'bank_name' => $request->beneficiary_bank_name,
+            'bank_code' => $request->beneficiary_bank_code,
+            'is_favorite' => false,
+        ]);
+    }
+
 
 }

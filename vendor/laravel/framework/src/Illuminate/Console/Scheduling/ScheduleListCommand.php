@@ -5,7 +5,6 @@ namespace Illuminate\Console\Scheduling;
 use Closure;
 use Cron\CronExpression;
 use DateTimeZone;
-use Illuminate\Console\Application;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -86,7 +85,7 @@ class ScheduleListCommand extends Command
      */
     private function getCronExpressionSpacing($events)
     {
-        $rows = $events->map(fn ($event) => array_map('mb_strlen', preg_split("/\s+/", $event->expression)));
+        $rows = $events->map(fn ($event) => array_map(mb_strlen(...), preg_split("/\s+/", $event->expression)));
 
         return (new Collection($rows[0] ?? []))->keys()->map(fn ($key) => $rows->max($key))->all();
     }
@@ -123,10 +122,7 @@ class ScheduleListCommand extends Command
         $description = $event->description ?? '';
 
         if (! $this->output->isVerbose()) {
-            $command = str_replace([Application::phpBinary(), Application::artisanBinary()], [
-                'php',
-                preg_replace("#['\"]#", '', Application::artisanBinary()),
-            ], $command);
+            $command = $event->normalizeCommand($command);
         }
 
         if ($event instanceof CallbackEvent) {
@@ -194,8 +190,8 @@ class ScheduleListCommand extends Command
     private function sortEvents(\Illuminate\Support\Collection $events, DateTimeZone $timezone)
     {
         return $this->option('next')
-                    ? $events->sortBy(fn ($event) => $this->getNextDueDateForEvent($event, $timezone))
-                    : $events;
+            ? $events->sortBy(fn ($event) => $this->getNextDueDateForEvent($event, $timezone))
+            : $events;
     }
 
     /**

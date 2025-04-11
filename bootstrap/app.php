@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'VerifyApiKey' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'SetStructure' => \App\Http\Middleware\StructuralMiddleware::class,
             'BearerTokenEnforcer'=>\App\Http\Middleware\BTMiddleware::class,
-            'steril' => \App\Http\Middleware\EncryptResponseDecryptPayload::class,
+            // 'steril' => \App\Http\Middleware\EncryptResponseDecryptPayload::class,
         ]);
         $middleware->append(HandleCors::class);
     })
@@ -73,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return ResponseHelper::internalServerError(
                 message: 'An unexpected error occurred.',
-                error: config('app.debug') ? $exception->getMessage() : null
+                error:  $exception->getMessage()
             );
         });
     })

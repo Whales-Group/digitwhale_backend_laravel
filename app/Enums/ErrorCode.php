@@ -10,6 +10,8 @@ enum ErrorCode: int
     case VALIDATION_CODE_FAILED = 1004;
     case GENERAL_ERROR = 9999;
     case INSUFFICIENT_PROVIDER_BALANCE = 1192;
+    case FAILED_TO_CREATE_RECIPIENT = 1193;
+
 
     /**
      * Get the error message associated with the code.
@@ -25,7 +27,7 @@ enum ErrorCode: int
             self::VALIDATION_CODE_FAILED => 'Failed to generate validation code.',
             self::GENERAL_ERROR => 'An unexpected error occurred.',
             self::INSUFFICIENT_PROVIDER_BALANCE => 'Failed to perform transaction [' . $this->code() ."]",
-
+            self::FAILED_TO_CREATE_RECIPIENT => 'Failed to create transfer recipient or benefitiary'
         };
     }
 
