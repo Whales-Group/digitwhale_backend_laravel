@@ -32,11 +32,20 @@ class AiController extends Controller
     }
 
     /**
-     * Retrieve conversation history.
+     * Retrieve conversation messages.
      */
-    public function getConversationHistory(): JsonResponse
+    public function getConversationMessages(): JsonResponse
     {
-        return $this->aiModuleMain->getConversationHistory();
+        return $this->aiModuleMain->getConversationMessages();
+    }
+
+
+    /**
+     * Retrieve all conversation.
+     */
+    public function getAllConversation(): JsonResponse
+    {
+        return $this->aiModuleMain->getAllConversation();
     }
 
     /**

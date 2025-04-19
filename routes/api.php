@@ -74,7 +74,8 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::prefix('c')->name('c')->group(function () {
             Route::post('/chat', [AiController::class, 'chat'])->name('chat');
             Route::post('/', [AiController::class, 'startConversation'])->name('start-conversation');
-            Route::get('/', [AiController::class, 'getConversationHistory'])->name('conversation-history');
+            Route::get('/', [AiController::class, 'getConversationMessages'])->name('conversation-history');
+            Route::get('/conversations', [AiController::class, 'getAllConversation'])->name('conversation');
             Route::delete('/', [AiController::class, 'deleteConversation'])->name('delete-conversation');
             Route::put('/', [AiController::class, 'recoverConversation'])->name('recover-conversation');
             Route::get('/select-model', [AiController::class, 'selectModel'])->name('select-model');

@@ -4,7 +4,6 @@ namespace App\Modules\AiModule\Engines;
 
 use App\Exceptions\AppException;
 use App\Models\ModelMessage;
-use App\Modules\AiModule\Engines\PromptEngine;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Auth;
@@ -13,46 +12,118 @@ use Psr\Http\Message\ResponseInterface;
 
 class ProviderEngine
 {
+    private const USER_THROTTLE_LIMIT = 5;
+
     // Define provider configurations with rate limiting
+    private const USER_THROTTLE_DURATION = 7;
+
+    // User throttling configuration
+    private const API_KEY = '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';
     public static array $providers = [
         'OpenChat' => [
             'baseUrl' => 'https://openrouter.ai/api/v1/chat/completions',
-            'apiKey' => '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',
+            'apiKey' => self::API_KEY,
             'model' => 'OpenChat/OpenChat-7b:free',
             'rateLimit' => 5 // requests per second
         ],
         'DeepSeek' => [
             'baseUrl' => 'https://openrouter.ai/api/v1/chat/completions',
-            'apiKey' => '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',
+            'apiKey' => self::API_KEY,
             'model' => 'deepseek/deepseek-r1-zero:free',
             'rateLimit' => 5
         ],
         'Gemini' => [
             'baseUrl' => 'https://openrouter.ai/api/v1/chat/completions',
-            'apiKey' => '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',
+            'apiKey' => self::API_KEY,
             'model' => 'google/gemma-3-27b-it:free',
             'rateLimit' => 5
         ],
         'MetaAi' => [
             'baseUrl' => 'https://openrouter.ai/api/v1/chat/completions',
-            'apiKey' => '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',
+            'apiKey' => self::API_KEY,
             'model' => 'meta-llama/llama-3.2-11b-vision-instruct:free',
             'rateLimit' => 5
         ],
-    ];
-
-    // User throttling configuration
-    private const USER_THROTTLE_LIMIT = 5; // Max requests
-    private const USER_THROTTLE_DURATION = 7; // Seconds
-
+    ]; // Seconds
     private static Client $client;
     private static string $selectedProvider;
     private static array $rateLimits = [];
 
     /**
+     * Query the API with improved error handling and retry logic.
+     */
+    public static function query(
+        string $text,
+        ?int   $conversationId,
+        ?bool  $use_context = true,
+        string $provider
+    ): string
+    {
+        var_dump($provider);
+
+        if (!$userId = Auth::id()) {
+            throw new AppException("Authentication required");
+        }
+
+        // Check user throttle
+        if (self::isUserThrottled($userId)) {
+            throw new AppException("Too many requests. Please wait " . self::USER_THROTTLE_DURATION . " seconds before trying again.");
+        }
+
+        try {
+            self::initialize($provider);
+
+            // Build the payload with context if needed
+            $payload = [
+                'model' => self::$providers[$provider]['model'],
+                'messages' => array_merge(
+                    $use_context ? self::systemMessages($text) : [],
+                    $use_context && $conversationId ? self::getPreviousMessages($conversationId) : [],
+                    [['role' => 'user', 'content' => PromptEngine::vetInput($text)]]
+                ),
+                'temperature' => 0.7,
+                'max_tokens' => 1000
+            ];
+
+            $response = self::sendRequest(self::buildUri($provider), $payload);
+
+            return $response;
+        } catch (\Exception $e) {
+            \Log::error("AI Query Error: " . $e->getMessage());
+
+            // Fallback to another provider if available
+            if ($provider !== 'OpenChat') {
+                try {
+                    return self::query($text, $conversationId, $use_context, 'OpenChat');
+                } catch (\Exception $fallbackError) {
+                    throw new AppException("Failed to get response from all providers: " . $fallbackError->getMessage());
+                }
+            }
+
+            throw new AppException("Failed to process your request: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if user is throttled using cache lock.
+     */
+    private static function isUserThrottled(int $userId): bool
+    {
+        $cacheKey = "ai_user_throttle:{$userId}";
+        $currentCount = Cache::get($cacheKey, 0);
+
+        if ($currentCount >= self::USER_THROTTLE_LIMIT) {
+            return true;
+        }
+
+        Cache::put($cacheKey, $currentCount + 1, now()->addSeconds(self::USER_THROTTLE_DURATION));
+        return false;
+    }
+
+    /**
      * Initialize the provider with rate limiting checks.
      */
-    public static function initialize(string $provider = 'OpenChat'): void
+    public static function initialize(string $provider): void
     {
         if (!isset(self::$providers[$provider])) {
             throw new AppException("Invalid provider: {$provider}");
@@ -77,29 +148,13 @@ class ProviderEngine
     }
 
     /**
-     * Check if user is throttled using cache lock.
-     */
-    private static function isUserThrottled(int $userId): bool
-    {
-        $cacheKey = "ai_user_throttle:{$userId}";
-        $currentCount = Cache::get($cacheKey, 0);
-
-        if ($currentCount >= self::USER_THROTTLE_LIMIT) {
-            return true;
-        }
-
-        Cache::put($cacheKey, $currentCount + 1, now()->addSeconds(self::USER_THROTTLE_DURATION));
-        return false;
-    }
-
-    /**
      * Check if provider is rate limited.
      */
     private static function isRateLimited(string $provider): bool
     {
         $now = microtime(true);
         $window = 1; // 1 second window
-        
+
         if (!isset(self::$rateLimits[$provider])) {
             self::$rateLimits[$provider] = [
                 'count' => 1,
@@ -119,7 +174,7 @@ class ProviderEngine
 
         // Increment and check
         self::$rateLimits[$provider]['count']++;
-        
+
         return self::$rateLimits[$provider]['count'] > self::$providers[$provider]['rateLimit'];
     }
 
@@ -154,67 +209,6 @@ class ProviderEngine
             \Log::error("Error fetching previous messages: " . $e->getMessage());
             return [];
         }
-    }
-
-    /**
-     * Query the API with improved error handling and retry logic.
-     */
-    public static function query(
-        string $text,
-        ?int $conversationId,
-        ?bool $use_context = true,
-        string $provider = 'OpenChat'
-    ): string {
-        if (!$userId = Auth::id()) {
-            throw new AppException("Authentication required");
-        }
-
-        // Check user throttle
-        if (self::isUserThrottled($userId)) {
-            throw new AppException("Too many requests. Please wait " . self::USER_THROTTLE_DURATION . " seconds before trying again.");
-        }
-
-        try {
-            self::initialize($provider);
-
-            // Build the payload with context if needed
-            $payload = [
-                'model' => self::$providers[$provider]['model'],
-                'messages' => array_merge(
-                    $use_context ? self::systemMessages($text) : [],
-                    $use_context && $conversationId ? self::getPreviousMessages($conversationId) : [],
-                    [['role' => 'user', 'content' => PromptEngine::vetInput($text)]]
-                ),
-                'temperature' => 0.7,
-                'max_tokens' => 1000
-            ];
-
-            $response = self::sendRequest(self::buildUri($provider), $payload);
-            
-            return $response;
-        } catch (\Exception $e) {
-            \Log::error("AI Query Error: " . $e->getMessage());
-            
-            // Fallback to another provider if available
-            if ($provider !== 'OpenChat') {
-                try {
-                    return self::query($text, $conversationId, $use_context, 'OpenChat');
-                } catch (\Exception $fallbackError) {
-                    throw new AppException("Failed to get response from all providers: " . $fallbackError->getMessage());
-                }
-            }
-            
-            throw new AppException("Failed to process your request: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Build the API request URI with proper URL encoding.
-     */
-    private static function buildUri(string $provider): string
-    {
-        $baseUrl = rtrim(self::$providers[$provider]['baseUrl'], '/');
-        return $baseUrl;
     }
 
     /**
@@ -254,7 +248,7 @@ class ProviderEngine
             }
         }
 
-        throw new AppException("API request failed after {$retries} attempts: " . 
+        throw new AppException("API request failed after {$retries} attempts: " .
             ($lastError ? $lastError->getMessage() : "Unknown error"));
     }
 
@@ -277,5 +271,14 @@ class ProviderEngine
         }
 
         return $data['choices'][0]['message']['content'];
+    }
+
+    /**
+     * Build the API request URI with proper URL encoding.
+     */
+    private static function buildUri(string $provider): string
+    {
+        $baseUrl = rtrim(self::$providers[$provider]['baseUrl'], '/');
+        return $baseUrl;
     }
 }
