@@ -5,6 +5,7 @@ namespace App\Gateways\FlutterWave\Services;
 use App\Exceptions\AppException;
 use App\Helpers\CodeHelper;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Log;
 
 class FlutterWaveService
@@ -38,15 +39,7 @@ class FlutterWaveService
     }
 
     // Build authorization headers using the secret key
-    private function buildAuthHeader(): array
-    {
-        return [
-            'Authorization' => 'Bearer FLWSECK-eac55583f301c5579b19dc5c010c0f13-195fbe8d4cdvt-X',
-            'Content-Type' => 'application/json',
-        ];
-    }
 
-    // Fetch a list of banks from Fincra's API
     public function getBanks(): array
     {
         try {
@@ -58,15 +51,35 @@ class FlutterWaveService
         }
     }
 
+    // Fetch a list of banks from Fincra's API
+
+    private function buildAuthHeader(): array
+    {
+        return [
+            'Authorization' => 'Bearer FLWSECK-eac55583f301c5579b19dc5c010c0f13-195fbe8d4cdvt-X',
+            'Content-Type' => 'application/json',
+        ];
+    }
+
     // Resolve an account using Paystack's API
+
+    /**
+     * @throws AppException
+     * @throws GuzzleException
+     */
     public function resolveAccount(string $accountNumber, string $bankCode): array
     {
         try {
-            $query = http_build_query([
+            $payload = [
                 'account_number' => $accountNumber,
-                'bank_code' => $bankCode,
+                'account_bank' => $bankCode,
+            ];
+
+            $response = $this->httpClient->post("accounts/resolve", [
+                'headers' => $this->buildAuthHeader(),
+                'json' => $payload,
             ]);
-            $response = $this->httpClient->get("bank/resolve?$query", ['headers' => $this->buildAuthHeader()]);
+
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
@@ -81,9 +94,18 @@ class FlutterWaveService
     }
 
     // Create a transfer recipient using Paystack's API
-    public function createTransferRecipient(array $payload): array
+    public function createTransferRecipient($account_number, $bank_code): array
     {
         try {
+
+            $payload = [
+                "account_bank" => $bank_code,
+                "account_number" => $account_number,
+                "beneficiary_name" => "Whale Beneficiary",
+                "currency" => "NGN",
+                "bank_name" => "Whale Resolve",
+            ];
+
             $response = $this->httpClient->post('beneficiaries', [
                 'headers' => $this->buildAuthHeader(),
                 'json' => $payload,
@@ -122,17 +144,18 @@ class FlutterWaveService
     }
 
     // Create a Dedicated Virtual Account (DVA) using Paystack's API
-    public function createDVA(string $email, string $txRef, string $phoneNumber, string $firstName, string $lastName, string $narration, string $bvn, bool $isPermanent = true, ): array
+    public function createDVA(string $email, string $txRef, string $phoneNumber, string $firstName, string $lastName, string $narration, string $bvn, bool $isPermanent = true): array
     {
         $payload = [
             "email" => $email,
             "tx_ref" => $txRef,
             "phonenumber" => $phoneNumber,
-            "is_permanent" => $isPermanent,
             "firstname" => $firstName,
             "lastname" => $lastName,
-            "narration" => $narration,
+            "account_name" => $firstName . ' ' . $lastName,
+            "narration" => $firstName . ' ' . $lastName,
             "bvn" => $bvn,
+            "is_permanent" => true,
         ];
 
         try {
@@ -141,11 +164,11 @@ class FlutterWaveService
                 'json' => $payload,
             ]);
             $data = json_decode($response->getBody(), true);
-            
+
             if (!$data['status']) {
                 throw new AppException("Failed to create DVA: " . ($data['message'] ?? 'Unknown error'));
             }
-            
+
             return $data;
         } catch (AppException $e) {
             Log::info($e->getMessage());
@@ -222,10 +245,10 @@ class FlutterWaveService
         }
     }
 
-    public function verifyPayment(string $reference, ): array
+    public function verifyTransaction(string $reference): array
     {
         try {
-            $response = $this->httpClient->get("transaction/verify/$reference", [
+            $response = $this->httpClient->get("transactions/verify_by_reference?tx_ref=" . $reference, [
                 'headers' => $this->buildAuthHeader(),
             ]);
 
@@ -240,10 +263,14 @@ class FlutterWaveService
             throw new AppException("Failed to verify payment: " . $e->getMessage());
         }
     }
+
+    /**
+     * @throws AppException
+     */
     public function getWalletBalance(): array
     {
         try {
-            $response = $this->httpClient->get("/balance", [
+            $response = $this->httpClient->get("balances", [
                 'headers' => $this->buildAuthHeader(),
             ]);
 
@@ -251,19 +278,104 @@ class FlutterWaveService
             return $value['data'];
         } catch (AppException $e) {
             throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
         }
     }
+
     /// BILL PAYMENTS
-    public function getNetworkBillers()
+
+
+    public function getBillCategories(string $country = "NG"): mixed
     {
+        try {
+            $response = $this->httpClient->get("top-bill-categories?country=" . $country, [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
     }
-    public function getUtilityBillers()
+
+    public function getBillerByCategory(string $catagory, string $country = "NG"): mixed
     {
+        try {
+            $response = $this->httpClient->get("bills/" . $catagory . "/billers?country=" . $country, [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
     }
-    public function payNetworkBill()
+
+    public function getBillerItems(string $biller_code): mixed
     {
+        try {
+            $endpoint = "billers/" . $biller_code . "/items";
+
+            $response = $this->httpClient->get($endpoint, [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
     }
-    public function payUtilityBill()
+
+    public function validateUserInformation(string $item_id, string $biller_code, string $customer_id): mixed
     {
+        try {
+
+            $response = $this->httpClient->get("bill-items/" . $item_id . "/validate?code=" . $biller_code . "&customer=" . $customer_id, [
+                'headers' => $this->buildAuthHeader(),
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
     }
+
+    public function payUtilityBill(string $item_id, string $biller_code, string $amount, string $customer)
+    {
+        try {
+
+            $payload = [
+                "country" => "NG",
+                "customer_id" => $customer,
+                "amount" => $amount,
+                "reference" => CodeHelper::generateSecureReference()
+            ];
+
+            $response = $this->httpClient->post("billers/" . $biller_code . "/items/" . $item_id . "/payment", [
+                'headers' => $this->buildAuthHeader(),
+                'json' => $payload,
+            ]);
+
+            $value = json_decode($response->getBody(), true);
+            return $value['data'];
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        } catch (GuzzleException $e) {
+            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
+        }
+    }
+
 }

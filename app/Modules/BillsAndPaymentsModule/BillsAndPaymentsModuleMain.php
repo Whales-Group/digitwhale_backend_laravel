@@ -2,34 +2,50 @@
 
 namespace App\Modules\BillsAndPaymentsModule;
 
-use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Modules\BillsAndPaymentsModule\Services\BillService;
+use App\Modules\BillsAndPaymentsModule\Services\UtilityService;
 
 class BillsAndPaymentsModuleMain
 {
- public FlutterWaveService $flutterWaveService;
- public function __construct(
-  FlutterWaveService $flutterWaveService
- ) {
-  $this->flutterWaveService = $flutterWaveService;
- }
+    public BillService $billService;
 
- public function getNetworkBillers()
- {
-  $this->flutterWaveService->getNetworkBillers();
- }
- public function getUtilityBillers()
- {
-  $this->flutterWaveService->getUtilityBillers();
- }
- public function payNetworkBill()
- {
-  $this->flutterWaveService->payNetworkBill();
+    /**
+     * @param BillService $networkService
+     */
+    public function __construct(
+        BillService $billService,
+    )
+    {
+        $this->billService = $billService;
+    }
 
- }
- public function payUtilityBill()
- {
-  $this->flutterWaveService->payUtilityBill();
 
- }
+    public function getBillCategories()
+    {
+        return $this->billService->getBillCategories();
+    }
 
+
+    public function getBillerByCategory()
+    {
+        return $this->billService->getBillerByCategory();
+    }
+
+
+    public function getBillerItems()
+    {
+        return $this->billService->getBillerItems();
+    }
+
+
+    public function validateUserInformation()
+    {
+        return $this->billService->validateUserInformation();
+    }
+
+
+    public function purchaseBill()
+    {
+        return $this->billService->purchaseBill();
+    }
 }

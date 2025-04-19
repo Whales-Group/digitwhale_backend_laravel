@@ -2,34 +2,35 @@
 
 namespace App\Gateways\FlutterWave\Handlers;
 
+use App\Exceptions\AppException;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
-use App\Models\AppLog;
 use App\Models\TransactionEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class HandleCollection
 {
     public static function handle(array $eventData): ?JsonResponse
     {
-        AppLog::info('Processing card payment webhook', ['event' => $eventData['event'], 'data' => $eventData['data']]);
 
-        return $eventData['data']['status'] !== 'successful'
-            ? self::handleFailedPayment($eventData['data'])
-            : self::processSuccessfulPayment($eventData['data']);
+        return $eventData['status'] !== 'successful'
+            ? self::handleFailedPayment($eventData)
+            : self::processSuccessfulPayment($eventData);
     }
 
     private static function handleFailedPayment(array $paymentData): JsonResponse
     {
-        AppLog::warning('Failed card payment detected', [
-            'tx_ref' => $paymentData['tx_ref'],
-            'status' => $paymentData['status'],
-            'reason' => $paymentData['processor_response'] ?? 'Payment failed'
-        ]);
+        $account = Account::where('customer_code', $paymentData['flw_ref'])->get()->first();
+
+        $amountReceived = $paymentData['charged_amount'] - $paymentData['app_fee'];
+        $prevBalance = $account->balance;
+        $newBalance = $account->balance + $amountReceived;
 
         $transaction = TransactionEntry::firstOrCreate(
             ['transaction_reference' => $paymentData['tx_ref']],
-            self::buildTransactionData($paymentData, 'failed')
+            self::buildTransactionData($account, $paymentData, $prevBalance, $newBalance)
         );
 
         return ResponseHelper::error(
@@ -37,6 +38,45 @@ class HandleCollection
             400,
             ['transaction' => $transaction]
         );
+    }
+
+    private static function buildTransactionData(
+        Account $account,
+        array   $transactionData,
+        float   $prevBalance,
+        float   $newBalance
+    ): array
+    {
+
+        $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
+
+        return [
+            'transaction_reference' => $transactionData['tx_ref'],
+            'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
+            'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
+            'to_sys_account_id' => $account->id,
+            'to_user_name' => $account->user->profile_type == 'personal'
+                ? trim("{$account->user->first_name} {$account->user->last_name}")
+                : $account->user->business_name,
+            'to_bank_name' => "Sterling Bank PLC",
+            'to_bank_code' => "232",
+            'to_account_number' => $account->account_number,
+            'currency' => $transactionData['currency'],
+            'amount' => $transactionData['amount'],
+            'status' => strtolower($transactionData['status']),
+            'type' => 'credit',
+            'description' => "[Digitwhale/Transfer] | " . $transactionData['narration'] ?? 'Fund received',
+            'timestamp' => $transactionData['created_at'] ?? now(),
+            'entry_type' => 'credit',
+            'charge' => $transactionData['app_fee'],
+            'source_amount' => $transactionData['amount'],
+            'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
+            'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
+            'source_currency' => $transactionData['currency'],
+            'destination_currency' => $transactionData['currency'],
+            'previous_balance' => $prevBalance,
+            'new_balance' => $newBalance,
+        ];
     }
 
     private static function processSuccessfulPayment(array $paymentData): JsonResponse
@@ -48,13 +88,13 @@ class HandleCollection
 
     private static function handleDuplicatePayment(array $paymentData): JsonResponse
     {
-        AppLog::info('Duplicate payment detected', ['tx_ref' => $paymentData['tx_ref']]);
+        Log::info('Duplicate payment detected', ['tx_ref' => $paymentData['tx_ref']]);
         return ResponseHelper::error('Duplicate payment detected', 409);
     }
 
     private static function processNewPayment(array $paymentData): JsonResponse
     {
-        $account = Account::find($paymentData['account_id']);
+        $account = Account::where('customer_code', $paymentData['flw_ref'])->get()->first();
 
         return !$account
             ? self::handleMissingAccount($paymentData)
@@ -63,7 +103,7 @@ class HandleCollection
 
     private static function handleMissingAccount(array $paymentData): JsonResponse
     {
-        AppLog::error("Account not found", ['account_id' => $paymentData['account_id']]);
+        Log::error("Account not found", ['account_id' => $paymentData['account_id']]);
         return ResponseHelper::error('Account not found', 404);
     }
 
@@ -75,7 +115,7 @@ class HandleCollection
 
         try {
             $account->update(['balance' => $newBalance]);
-            AppLog::info("Account credited", [
+            Log::info("Account credited", [
                 'account_id' => $account->id,
                 'amount' => $amountReceived,
                 'new_balance' => $newBalance
@@ -88,59 +128,50 @@ class HandleCollection
             ]);
 
         } catch (\Exception $e) {
-            AppLog::error("Balance update failed", ['error' => $e->getMessage()]);
+            Log::error("Balance update failed", ['error' => $e->getMessage()]);
             return ResponseHelper::error('Failed to process payment', 500);
         }
     }
 
-    private static function buildTransactionData(array $paymentData, string $status): array
-    {
-        $card = $paymentData['card'] ?? [];
-        $customer = $paymentData['customer'] ?? [];
-
-        return [
-            'transaction_reference' => $paymentData['tx_ref'],
-            'flw_reference' => $paymentData['flw_ref'],
-            'from_user_name' => $customer['name'] ?? 'Card User',
-            'from_account' => $card['last_4digits'] ? '**** **** **** ' . $card['last_4digits'] : 'Unknown Card',
-            'to_sys_account_id' => $paymentData['account_id'],
-            'to_user_name' => $customer['name'] ?? 'Merchant',
-            'currency' => $paymentData['currency'],
-            'amount' => $paymentData['amount'],
-            'charged_amount' => $paymentData['charged_amount'],
-            'status' => $status,
-            'type' => 'card',
-            'description' => $paymentData['narration'] ?? 'Card payment',
-            'timestamp' => $paymentData['created_at'] ?? now(),
-            'entry_type' => 'credit',
-            'charge' => $paymentData['app_fee'],
-            'payment_type' => $paymentData['payment_type'],
-            'card_details' => json_encode($card),
-            'ip_address' => $paymentData['ip'],
-            'processor_response' => $paymentData['processor_response'],
-            'auth_model' => $paymentData['auth_model']
-        ];
-    }
-
+    /**
+     * @throws AppException
+     */
     private static function recordTransaction(
         Account $account,
-        array $paymentData,
-        float $prevBalance,
-        float $newBalance
-    ): TransactionEntry {
-        $transactionData = self::buildTransactionData($paymentData, 'successful');
-        
-        $transactionData = array_merge($transactionData, [
+        array   $transactionData,
+        float   $prevBalance,
+        float   $newBalance
+    ): TransactionEntry
+    {
+
+        $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
+
+        return TransactionEntry::create([
+            'transaction_reference' => $transactionData['tx_ref'],
+            'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
+            'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
             'to_sys_account_id' => $account->id,
             'to_user_name' => $account->user->profile_type == 'personal'
                 ? trim("{$account->user->first_name} {$account->user->last_name}")
                 : $account->user->business_name,
-            'to_user_email' => $account->user->email,
-            'amount_received' => $paymentData['charged_amount'] - $paymentData['app_fee'],
+            'to_bank_name' => "Sterling Bank PLC",
+            'to_bank_code' => "232",
+            'to_account_number' => $account->account_number,
+            'currency' => $transactionData['currency'],
+            'amount' => $transactionData['amount'],
+            'status' => strtolower($transactionData['status']),
+            'type' => 'credit',
+            'description' => "[Digitwhale/Transfer] | " . $transactionData['narration'] ?? 'Fund received',
+            'timestamp' => $transactionData['created_at'] ?? now(),
+            'entry_type' => 'credit',
+            'charge' => $transactionData['app_fee'],
+            'source_amount' => $transactionData['amount'],
+            'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
+            'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
+            'source_currency' => $transactionData['currency'],
+            'destination_currency' => $transactionData['currency'],
             'previous_balance' => $prevBalance,
-            'new_balance' => $newBalance
+            'new_balance' => $newBalance,
         ]);
-
-        return TransactionEntry::create($transactionData);
     }
 }

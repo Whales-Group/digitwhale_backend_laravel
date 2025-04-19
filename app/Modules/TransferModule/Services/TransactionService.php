@@ -3,16 +3,15 @@
 namespace App\Modules\TransferModule\Services;
 
 use App\Enums\TransferType;
-use App\Helpers\DateHelper;
-use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
-use App\Models\Account;
-use App\Models\TransactionEntry;
 use App\Gateways\Fincra\Services\FincraService;
 use App\Gateways\Paystack\Services\PaystackService;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
+use App\Models\Account;
+use App\Models\TransactionEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 
 class TransactionService
 {
@@ -151,8 +150,8 @@ class TransactionService
         }
 
         if ($queryParams['amount1'] && $queryParams['amount2']) {
-            $amount1 = (float) $queryParams['amount1'];
-            $amount2 = (float) $queryParams['amount2'];
+            $amount1 = (float)$queryParams['amount1'];
+            $amount2 = (float)$queryParams['amount2'];
             $query->whereBetween('amount', [$amount1, $amount2]);
         }
 

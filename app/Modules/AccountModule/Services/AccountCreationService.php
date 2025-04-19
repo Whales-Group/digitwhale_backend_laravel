@@ -7,14 +7,10 @@ use App\Enums\Currency;
 use App\Enums\ServiceBank;
 use App\Enums\ServiceProvider;
 use App\Helpers\CodeHelper;
-use App\Helpers\DateHelper;
 use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\User;
-use App\Gateways\Fincra\Services\FincraService;
-use App\Gateways\Paystack\Services\PaystackService;
-use App\Gateways\FlutterWave\Services\FlutterWaveService;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +19,10 @@ use ValueError;
 
 class AccountCreationService
 {
+
+
+
+
     /**
      * Create an account based on the selected currency and service provider.
      *
@@ -89,13 +89,14 @@ class AccountCreationService
      *
      * @param ServiceProvider $provider
      * @return array
+     * @throws AppException
      */
     public function getProviderResponse(ServiceProvider $provider, Currency $currency): array
     {
         return match ($provider) {
-            ServiceProvider::PAYSTACK => $this->getPaystackResponse($currency),
-            ServiceProvider::FINCRA => $this->getFincraResponse($currency),
-            ServiceProvider::FLUTTERWAVE => $this->getFlutterWaveResponse($currency),
+            ServiceProvider::PAYSTACK => GatewayResponseService::getPaystackResponse($currency),
+            ServiceProvider::FINCRA => GatewayResponseService::getFincraResponse($currency),
+            ServiceProvider::FLUTTERWAVE => GatewayResponseService::getFlutterWaveResponse($currency),
             default => throw new AppException("Invalid Service Provider."),
         };
     }

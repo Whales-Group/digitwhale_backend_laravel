@@ -8,15 +8,16 @@ use App\Enums\ServiceProvider;
 use App\Enums\TransferType;
 use App\Exceptions\AppException;
 use App\Exceptions\CodedException;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
-use App\Gateways\Fincra\Services\FincraService;
-use App\Gateways\FlutterWave\Services\FlutterWaveService;
-use App\Gateways\Paystack\Services\PaystackService;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ class TransferResourcesService
 
     }
 
-    public function getBanks(Request $request, string $account_id)
+    public function getBanks(Request $request, string $account_id): JsonResponse
     {
         try {
             $user = auth()->user();
@@ -66,7 +67,8 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity("Failed to get Banks");
         }
     }
-    public function resolveAccountNumber(Request $request, string $account_id)
+
+    public function resolveAccountNumber(Request $request, string $account_id): JsonResponse
     {
         $bank_code = trim($request->input('bank_code'));
         $account_number = substr(trim($request->input('account_number')), 0, 10);
@@ -74,7 +76,6 @@ class TransferResourcesService
             $user = auth()->user();
             $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
             $response = ['accountName' => "", 'accountNumber' => ""];
-
             if (strlen($account_number) > 10) {
                 throw new AppException("accountNumber length must be 10 characters long");
             }
@@ -94,32 +95,94 @@ class TransferResourcesService
                     $fincra_res = $this->fincraService->resolveAccount($account_number, $bank_code);
                     $response['accountName'] = trim($fincra_res['data']['accountName']);
                     $response['accountNumber'] = trim($fincra_res['data']['accountNumber']);
+                    break;
 
-                    return ResponseHelper::success($response);
                 case ServiceProvider::PAYSTACK:
                     $paystack_res = $this->paystackService->resolveAccount($account_number, $bank_code);
                     $response['accountName'] = trim($paystack_res['data']['account_name']);
                     $response['accountNumber'] = trim($paystack_res['data']['account_number']);
+                    break;
 
-                    return ResponseHelper::success($response);
                 case ServiceProvider::FLUTTERWAVE:
-
-                    $flutter_wave_res = $this->handleBeneficiaryCreation($request);
-                    $response['accountName'] = trim($flutter_wave_res['data']['name']);
+                    $flutter_wave_res = $this->flutterWaveService->resolveAccount($account_number, $bank_code);
+                    $response['accountName'] = trim($flutter_wave_res['data']['account_name']);
                     $response['accountNumber'] = trim($flutter_wave_res['data']['account_number']);
+                    break;
 
-                    return ResponseHelper::success($response);
                 default:
                     $response['message'] = "failed to verify account: check and try again.";
-                    return ResponseHelper::success($response);
 
             }
+
+            $this->createBeneficiary($response, $account);
+
+            return ResponseHelper::success($response);
 
         } catch (AppException $e) {
 
             return ResponseHelper::unprocessableEntity($e->getMessage());
+        } catch (GuzzleException $e) {
+
+            return ResponseHelper::unprocessableEntity($e->getMessage());
         }
     }
+
+    /**
+     * @throws AppException
+     */
+    public function createBeneficiary(array $response, Account $account): void
+    {
+        $serviceProviderResponse = [
+            "id" => 0,
+            "bank_name" => ""
+        ];
+
+        $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
+            ->where('account_number', $response["accountNumber"])
+            ->first();
+
+        if ($existingBeneficiary) {
+            return;
+        }
+
+        try {
+            $serviceProvider = ServiceProvider::tryFrom($account->service_provider);
+        } catch (AppException $e) {
+            throw new AppException("Invalid Account Type");
+        }
+
+        switch ($serviceProvider) {
+            case ServiceProvider::FINCRA:
+                throw  new AppException("failed to verify account: check and try again.");
+
+            case ServiceProvider::PAYSTACK:
+                throw  new AppException("failed to verify account: check and try again.");
+
+            case ServiceProvider::FLUTTERWAVE:
+                $res = $this->flutterWaveService->createTransferRecipient($response["accountNumber"], request()->bank_code);
+                $serviceProviderResponse = [
+                    "id" => $res["data"]["id"],
+                    "bank_name" => $res["data"]["bank_name"],
+                ];
+                break;
+
+            default:
+                throw  new AppException("failed to verify account: check and try again.");
+        }
+
+        Beneficiary::create([
+            'user_id' => auth()->id(),
+            'name' => $response["accountName"],
+            'type' => 'cash_transfer',
+            'account_number' => $response["accountNumber"],
+            'bank_name' => $serviceProviderResponse["bank_name"],
+            'bank_code' => request()->bank_code,
+            'is_favorite' => false,
+            'unique_id' => $serviceProviderResponse["id"],
+        ]);
+
+    }
+
     public function resolveAccountByIdentity(Request $request): JsonResponse
     {
         try {
@@ -154,7 +217,8 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity("Unable to resolve account.");
         }
     }
-    public function verifyTransferStatusBy($account_id)
+
+    public function verifyTransferStatusBy($account_id): JsonResponse
     {
         try {
             $user = auth()->user();
@@ -193,7 +257,6 @@ class TransferResourcesService
         }
     }
 
-
     /**
      * Validates a transfer request, calculates charges, and generates a validation code.
      *
@@ -203,6 +266,7 @@ class TransferResourcesService
     public function validateTransfer(?Request $request = null): JsonResponse
     {
         $user = auth()->user();
+
         $data = ($request ?? request())->validate([
             'transferType' => 'required|string',
             'amount' => 'required|numeric|min:0',
@@ -234,11 +298,12 @@ class TransferResourcesService
         $availableBalance = match ($accountType) {
             ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
             ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
-            ServiceProvider::FLUTTERWAVE => 0, // TODO: IMPL FLUTTERWAVE BALANCE CHECK
+            ServiceProvider::FLUTTERWAVE => collect($this->flutterWaveService->getWalletBalance())->firstWhere('currency', 'NGN')['ledger_balance'] / 100,
             default => throw new AppException("Invalid account service provider."),
         };
+        return ResponseHelper::success($availableBalance);
 
-        if ($transferType != TransferType::WHALE_TO_WHALE && (float) $availableBalance - (float) $data['amount'] < 150) {
+        if ($transferType != TransferType::WHALE_TO_WHALE && (float)$availableBalance - (float)$data['amount'] < 150) {
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         }
 
@@ -263,34 +328,6 @@ class TransferResourcesService
         ];
 
         return ResponseHelper::success($response);
-    }
-    private function handleBeneficiaryCreation(Request $request): Beneficiary
-    {
-        $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
-            ->where('account_number', $request->beneficiary_account_number)
-            ->first();
-
-        if ($existingBeneficiary) {
-            return $existingBeneficiary;
-        }
-
-        $this->flutterWaveService->createTransferRecipient([
-            "account_bank" => $request->bank_code,
-            "account_number" => $request->account_number,
-            "beneficiary_name" => "New Benefitiary",
-            "currency" => "NGN",
-            "bank_name" => "New Benefitiary Bank",
-        ]);
-
-        return Beneficiary::create([
-            'user_id' => auth()->id(),
-            'name' => $request->beneficiary_account_holder_name,
-            'type' => 'cash_transfer',
-            'account_number' => $request->beneficiary_account_number,
-            'bank_name' => $request->beneficiary_bank_name,
-            'bank_code' => $request->beneficiary_bank_code,
-            'is_favorite' => false,
-        ]);
     }
 
 

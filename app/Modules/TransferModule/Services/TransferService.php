@@ -5,18 +5,18 @@ namespace App\Modules\TransferModule\Services;
 use App\Enums\ServiceProvider;
 use App\Enums\TransferType;
 use App\Exceptions\AppException;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\User;
-use App\Gateways\Fincra\Services\FincraService;
-use App\Gateways\FlutterWave\Services\FlutterWaveService;
-use App\Gateways\Paystack\Services\PaystackService;
-use DB;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TransferService
 {
@@ -34,6 +34,7 @@ class TransferService
         $this->transactionService = new TransactionService();
         $this->transferResourse = new TransferResourcesService();
     }
+
     public function transfer(Request $request, string $account_id)
     {
         $validator = $this->validateRequest($request);
@@ -79,6 +80,7 @@ class TransferService
             $lock?->release();
         }
     }
+
     protected function validateRequest(Request $request)
     {
         return Validator::make($request->all(), [
@@ -88,13 +90,101 @@ class TransferService
             "recieving_account_id" => "sometimes|string|required_if:transfer_type,corporate",
         ]);
     }
+
     protected function validateTransferCode(string $email, string $code): bool
     {
         return DB::table('password_reset_tokens')
-            ->where('email', $email)
-            ->where('token', $code)
-            ->delete() > 0;
+                ->where('email', $email)
+                ->where('token', $code)
+                ->delete() > 0;
     }
+
+    public function validateSenderAccount(string $accountId, ?string $receiverId, int $amount): Account
+    {
+        $account = Account::where('user_id', auth()->id())
+            ->where('account_id', $accountId)
+            ->firstOrFail();
+
+        if ($account->enable || $account->pnd || $account->blacklisted) {
+            throw new AppException('Account is restricted from performing transfers.');
+        }
+
+        if ($account->daily_transaction_count >= $account->daily_transaction_limit) {
+            throw new AppException('Daily transaction limit exceeded.');
+        }
+
+        if ($receiverId === $account->account_id) {
+            throw new AppException('Self transfers are not allowed.');
+        }
+
+        if ($amount > $account->balance) {
+            throw new AppException('Insufficient funds.');
+        }
+
+        return $account;
+    }
+
+    private function handleInternalTransfer(Request $request, string $account_id): array
+    {
+        $receiverAccount = $this->validateReceiverAccount($request->recieving_account_id);
+        $senderAccount = $this->validateSenderAccount($account_id, $request->recieving_account_id, $request->amount);
+
+        if ($receiverAccount->currency !== $senderAccount->currency) {
+            throw new AppException("Currency mismatch between sender and receiver accounts.");
+        }
+
+        $this->updateBalances($senderAccount, $receiverAccount, $request->amount);
+
+        return $this->buildInternalTransactionData(
+            $senderAccount,
+            $receiverAccount,
+            $request->amount,
+            $request->note,
+            $request->type
+        );
+    }
+
+    private function validateReceiverAccount(string $accountId): Account
+    {
+        $account = Account::where('account_id', $accountId)
+            ->firstOrFail();
+
+        if ($account->pnc) {
+            throw new AppException('Recipient account cannot receive funds.');
+        }
+
+        return $account;
+    }
+
+    private function updateBalances(Account $sender, Account $receiver, int $amount): void
+    {
+        $sender->decrement('balance', $amount);
+        $receiver->increment('balance', $amount);
+    }
+
+    private function buildInternalTransactionData(Account $sender, Account $receiver, int $amount, string $note, string $type): array
+    {
+        $receiverUser = User::findOrFail($receiver->user_id);
+
+        return [
+            'currency' => $sender->currency,
+            'to_sys_account_id' => $receiver->id,
+            'to_user_name' => $receiverUser->profile_type === 'personal'
+                ? $receiver->validated_name
+                : $receiverUser->business_name,
+            'to_user_email' => $receiverUser->email,
+            'to_bank_name' => $receiver->service_bank,
+            'to_bank_code' => $receiver->service_bank,
+            'to_account_number' => $receiver->account_number,
+            'transaction_reference' => CodeHelper::generateSecureReference(),
+            'status' => 'successful',
+            'type' => $type,
+            'amount' => $amount,
+            'note' => "[Digitwhale/Transfer] | " . $note,
+            'entry_type' => 'debit',
+        ];
+    }
+
     protected function handleExternalTransfer(Request $request, Account $account, TransferType $transferType): array
     {
         return match ($account->service_provider) {
@@ -104,10 +194,11 @@ class TransferService
             default => $this->handleFlutterWaveTransfer($request, $account),
         };
     }
+
     private function handleFincraTransfer(Request $request, Account $account): array
     {
         $validatedData = $this->validateTransferData($request, $account);
-        $payload = $this->createFincraPayload($request, $account, $validatedData);
+        $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
 
         $transferResponse = $this->fincraService->runTransfer(
             TransferType::BANK_ACCOUNT_TRANSFER,
@@ -124,26 +215,7 @@ class TransferService
             $request->type
         );
     }
-    private function handleFlutterWaveTransfer(Request $request, Account $account): array
-    {
-        $validatedData = $this->validateTransferData($request, $account);
-        $transferResponse = $this->initiateFlutterWaveTransfer($request, $validatedData);
 
-        return $this->buildTransactionData(
-            $account,
-            $validatedData['amount'],
-            $validatedData['charge'],
-            $transferResponse['data']['status'],
-            $request->note,
-            [
-                'accountHolderName' => $request->beneficiary_account_holder_name,
-                'accountNumber' => $request->beneficiary_account_number,
-                'bankCode' => $request->beneficiary_bank_code,
-                'email' => $request->beneficiary_email
-            ],
-            $request->type
-        );
-    }
     private function validateTransferData(Request $request, Account $account): array
     {
         $validationResponse = $this->transferResourse->validateTransfer(new Request([
@@ -162,16 +234,18 @@ class TransferService
         return [
             'amount' => $request->amount,
             'charge' => $responseData['data']['charge'],
-            'sendable_amount' => (int) $request->amount - (int) $responseData['data']['charge']
+            'sendable_amount' => (int)$request->amount - (int)$responseData['data']['charge']
         ];
     }
+
     private function validateSendableAmount(int $amount, int $charge): void
     {
         if (($amount - $charge) < 100) {
             throw new AppException("Minimum destination amount should not be less than (NGN 100.00).");
         }
     }
-    private function createFincraPayload(Request $request, Account $account, array $validatedData): array
+
+    private function initiateFincraTransfer(Request $request, Account $account, array $validatedData): array
     {
         $user = auth()->user();
         $senderName = $user->profile_type === 'personal'
@@ -202,73 +276,17 @@ class TransferService
             ],
         ];
     }
-    private function initiateFlutterWaveTransfer(Request $request, array $validatedData): array
-    {
-        return $this->flutterWaveService->runTransfer([
-            "account_bank" => $request->beneficiary_bank_code,
-            "account_number" => $request->beneficiary_account_number,
-            "amount" => $validatedData['sendable_amount'],
-            "narration" => $request->note,
-            "currency" => "NGN",
-            "reference" => CodeHelper::generateSecureReference(),
-            "debit_currency" => "NGN"
-        ]);
-    }
-    private function handleInternalTransfer(Request $request, string $account_id): array
-    {
-        $receiverAccount = $this->validateReceiverAccount($request->recieving_account_id);
-        $senderAccount = $this->validateSenderAccount($account_id, $request->recieving_account_id, $request->amount);
 
-        if ($receiverAccount->currency !== $senderAccount->currency) {
-            throw new AppException("Currency mismatch between sender and receiver accounts.");
-        }
-
-        $this->updateBalances($senderAccount, $receiverAccount, $request->amount);
-
-        return $this->buildInternalTransactionData(
-            $senderAccount,
-            $receiverAccount,
-            $request->amount,
-            $request->note,
-            $request->type
-        );
-    }
-    private function updateBalances(Account $sender, Account $receiver, int $amount): void
-    {
-        $sender->decrement('balance', $amount);
-        $receiver->increment('balance', $amount);
-    }
-    private function buildInternalTransactionData(Account $sender, Account $receiver, int $amount, string $note, string $type): array
-    {
-        $receiverUser = User::findOrFail($receiver->user_id);
-
-        return [
-            'currency' => $sender->currency,
-            'to_sys_account_id' => $receiver->id,
-            'to_user_name' => $receiverUser->profile_type === 'personal'
-                ? $receiver->validated_name
-                : $receiverUser->business_name,
-            'to_user_email' => $receiverUser->email,
-            'to_bank_name' => $receiver->service_bank,
-            'to_bank_code' => $receiver->service_bank,
-            'to_account_number' => $receiver->account_number,
-            'transaction_reference' => CodeHelper::generateSecureReference(),
-            'status' => 'successful',
-            'type' => $type,
-            'amount' => $amount,
-            'note' => "[Digitwhale/Transfer] | " . $note,
-            'entry_type' => 'debit',
-        ];
-    }
     private function buildTransactionData(
         Account $account,
-        int $amount,
-        int $charge,
-        string $status,
-        string $note,
-        array $beneficiary,
-        string $type
-    ): array {
+        int     $amount,
+        int     $charge,
+        string  $status,
+        string  $note,
+        array   $beneficiary,
+        string  $type
+    ): array
+    {
         return [
             'currency' => $account->currency,
             'to_sys_account_id' => null,
@@ -286,39 +304,43 @@ class TransferService
             'charge' => $charge,
         ];
     }
-    private function validateSenderAccount(string $accountId, ?string $receiverId, int $amount): Account
+
+    private function handleFlutterWaveTransfer(Request $request, Account $account): array
     {
-        $account = Account::where('user_id', auth()->id())
-            ->where('account_id', $accountId)
-            ->firstOrFail();
+        $validatedData = $this->validateTransferData($request, $account);
+        $transferResponse = $this->initiateFlutterWaveTransfer($request, $validatedData);
 
-        if ($account->enable || $account->pnd || $account->blacklisted) {
-            throw new AppException('Account is restricted from performing transfers.');
-        }
-
-        if ($account->daily_transaction_count >= $account->daily_transaction_limit) {
-            throw new AppException('Daily transaction limit exceeded.');
-        }
-
-        if ($receiverId === $account->account_id) {
-            throw new AppException('Self transfers are not allowed.');
-        }
-
-        if ($amount > $account->balance) {
-            throw new AppException('Insufficient funds.');
-        }
-
-        return $account;
+        return $this->buildTransactionData(
+            $account,
+            $validatedData['amount'],
+            $validatedData['charge'],
+            $transferResponse['data']['status'],
+            $request->note,
+            [
+                'accountHolderName' => $request->beneficiary_account_holder_name,
+                'accountNumber' => $request->beneficiary_account_number,
+                'bankCode' => $request->beneficiary_bank_code,
+                'email' => $request->beneficiary_email
+            ],
+            $request->type
+        );
     }
-    private function validateReceiverAccount(string $accountId): Account
+
+    private function initiateFlutterWaveTransfer(Request $request, array $validatedData): array
     {
-        $account = Account::where('account_id', $accountId)
-            ->firstOrFail();
-
-        if ($account->pnc) {
-            throw new AppException('Recipient account cannot receive funds.');
-        }
-
-        return $account;
+        return $this->flutterWaveService->runTransfer([
+            [
+                "account_bank" => "044",
+                "account_number" => $request->beneficiary_account_number,
+                "amount" => 5500,
+                "currency" => "NGN",
+                "beneficiary" => 3768,
+                "beneficiary_name" => $request->beneficiary_account_holder_name,
+                "reference" => CodeHelper::generateSecureReference(),
+                "debit_currency" => "NGN",
+                "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
+                "narration" => "Payment for goods purchased"
+            ]
+        ]);
     }
 }

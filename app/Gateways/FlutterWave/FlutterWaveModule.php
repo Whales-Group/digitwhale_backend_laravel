@@ -14,7 +14,7 @@ class FlutterWaveModule
     ) {
         $this->baseHandler = $baseHandler;
     }
-    public function handleWebhook(Request $request)
+    public function handleWebhook(Request $request): ?\Illuminate\Http\JsonResponse
     {
         return $this->baseHandler->handle($request);
     }
