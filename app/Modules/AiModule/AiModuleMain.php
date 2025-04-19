@@ -23,20 +23,18 @@ class AiModuleMain
      */
     public function chat(): JsonResponse
     {
-        try {
-            $conversationId = request()->get('conversation_id');
-            $modelSlug = request()->get('model');
-            $userMessage = request()->get('message');
 
-            if (empty($conversationId) || empty($modelSlug) || empty($userMessage)) {
-                throw new \InvalidArgumentException("Missing required parameters: conversation_id, model, or message.");
-            }
+        $conversationId = request()->get('conversation_id');
+        $modelSlug = request()->get('model');
+        $userMessage = request()->get('message');
 
-            $response = $this->aiCoreEngine->chat((int)$conversationId, $modelSlug, $userMessage);
-            return ResponseHelper::success(data: $response);
-        } catch (\Throwable $e) {
-            throw new AppException($e->getMessage());
+        if (empty($conversationId) || empty($modelSlug) || empty($userMessage)) {
+            throw new \InvalidArgumentException("Missing required parameters: conversation_id, model, or message.");
         }
+
+        $response = $this->aiCoreEngine->chat((int)$conversationId, $modelSlug, $userMessage);
+
+        return ResponseHelper::success(data: $response);
     }
 
     /**

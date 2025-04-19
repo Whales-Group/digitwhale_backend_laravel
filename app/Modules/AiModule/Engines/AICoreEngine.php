@@ -179,6 +179,7 @@ class AICoreEngine
 
             $response = $this->ModelCall($modelSlug, $userMessage, $conversationId);
 
+
             $this->registerMessage($conversationId, $modelSlug, $userMessage, $userId);
             $this->registerMessage($conversationId, $modelSlug, $response, $userId, true);
 
@@ -187,6 +188,7 @@ class AICoreEngine
                 'user_message' => $userMessage,
                 'model_response' => $response,
             ];
+
         } catch (Exception $e) {
             Log::error("Processing failed: " . $e->getMessage());
             throw new Exception("Message processing error: " . $e->getMessage());

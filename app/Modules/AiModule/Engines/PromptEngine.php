@@ -2,7 +2,6 @@
 
 namespace App\Modules\AiModule\Engines;
 
-use App\Exceptions\AppException;
 use App\Models\Account;
 use App\Models\TransactionEntry;
 use App\Models\User;
@@ -36,9 +35,9 @@ class PromptEngine
             );
         }
 
-        if (preg_match('/(union|select|insert|delete|update|drop|alter|--|\/\*|\*\/|;|waitfor|delay|xp_|sp_|exec|execute)/i', $modifiedInput)) {
-            throw new AppException("Invalid input detected: Potential SQL injection attempt.");
-        }
+//        if (preg_match('/(union|select|insert|delete|update|drop|alter|--|\/\*|\*\/|;|waitfor|delay|xp_|sp_|exec|execute)/i', $modifiedInput)) {
+//            throw new AppException("Invalid input detected: Potential SQL injection attempt.");
+//        }
 
         return $modifiedInput;
     }

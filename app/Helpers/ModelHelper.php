@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Exceptions\AppException;
 use App\Modules\AiModule\Engines\ProviderEngine;
 
 class ModelHelper
@@ -29,6 +30,9 @@ class ModelHelper
     }
 
 
+    /**
+     * @throws AppException
+     */
     public static function DefaultProvider(string $message, string $modelSlug, int $conversationId = 0): string
     {
         ProviderEngine::initialize($modelSlug);
