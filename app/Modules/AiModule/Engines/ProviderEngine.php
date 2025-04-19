@@ -258,7 +258,7 @@ class ProviderEngine
         $providerResponse = $provider === 'GeminiRaw'
             ? $data['candidates'][0]['content']['parts'][0]['text']
             : ($data['choices'][0]['message']['content'] ?? throw new AppException("Unexpected API response format"));
-        var_dump($providerResponse);
+//        var_dump($providerResponse);
         return $providerResponse;
     }
 
