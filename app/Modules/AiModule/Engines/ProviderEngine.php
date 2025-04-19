@@ -59,7 +59,6 @@ class ProviderEngine
         string $provider
     ): string
     {
-        var_dump($provider);
 
         if (!$userId = Auth::id()) {
             throw new AppException("Authentication required");
