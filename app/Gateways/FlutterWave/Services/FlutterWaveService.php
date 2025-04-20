@@ -130,6 +130,7 @@ class FlutterWaveService
                 'headers' => $this->buildAuthHeader(),
                 'json' => $payload,
             ]);
+            
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
