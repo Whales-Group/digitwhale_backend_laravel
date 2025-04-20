@@ -195,26 +195,6 @@ class TransferService
         };
     }
 
-    private function handleFincraTransfer(Request $request, Account $account): array
-    {
-        $validatedData = $this->validateTransferData($request, $account);
-        $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
-
-        $transferResponse = $this->fincraService->runTransfer(
-            TransferType::BANK_ACCOUNT_TRANSFER,
-            $payload
-        );
-
-        return $this->buildTransactionData(
-            $account,
-            $validatedData['amount'],
-            $validatedData['charge'],
-            $transferResponse['data']['status'],
-            $request->note,
-            $payload['beneficiary'],
-            $request->type
-        );
-    }
 
     private function validateTransferData(Request $request, Account $account): array
     {
@@ -243,6 +223,55 @@ class TransferService
         if (($amount - $charge) < 100) {
             throw new AppException("Minimum destination amount should not be less than (NGN 100.00).");
         }
+    }
+
+    private function buildTransactionData(
+        Account $account,
+        int     $amount,
+        int     $charge,
+        string  $status,
+        string  $note,
+        array   $beneficiary,
+        string  $type
+    ): array
+    {
+        return [
+            'currency' => $account->currency,
+            'to_sys_account_id' => null,
+            'to_user_name' => $beneficiary['accountHolderName'] ?? '',
+            'to_user_email' => $beneficiary['email'] ?? '',
+            'to_bank_name' => request()->beneficiary_bank,
+            'to_bank_code' => $beneficiary['bankCode'] ?? '',
+            'to_account_number' => $beneficiary['accountNumber'] ?? '',
+            'transaction_reference' => CodeHelper::generateSecureReference(),
+            'status' => $status,
+            'type' => $type,
+            'amount' => $amount,
+            'note' => "[NIP/Transfer] | " . $note,
+            'entry_type' => 'debit',
+            'charge' => $charge,
+        ];
+    }
+
+    private function handleFincraTransfer(Request $request, Account $account): array
+    {
+        $validatedData = $this->validateTransferData($request, $account);
+        $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
+
+        $transferResponse = $this->fincraService->runTransfer(
+            TransferType::BANK_ACCOUNT_TRANSFER,
+            $payload
+        );
+
+        return $this->buildTransactionData(
+            $account,
+            $validatedData['amount'],
+            $validatedData['charge'],
+            $transferResponse['data']['status'],
+            $request->note,
+            $payload['beneficiary'],
+            $request->type
+        );
     }
 
     private function initiateFincraTransfer(Request $request, Account $account, array $validatedData): array
@@ -277,34 +306,6 @@ class TransferService
         ];
     }
 
-    private function buildTransactionData(
-        Account $account,
-        int     $amount,
-        int     $charge,
-        string  $status,
-        string  $note,
-        array   $beneficiary,
-        string  $type
-    ): array
-    {
-        return [
-            'currency' => $account->currency,
-            'to_sys_account_id' => null,
-            'to_user_name' => $beneficiary['accountHolderName'] ?? '',
-            'to_user_email' => $beneficiary['email'] ?? '',
-            'to_bank_name' => request()->beneficiary_bank,
-            'to_bank_code' => $beneficiary['bankCode'] ?? '',
-            'to_account_number' => $beneficiary['accountNumber'] ?? '',
-            'transaction_reference' => CodeHelper::generateSecureReference(),
-            'status' => $status,
-            'type' => $type,
-            'amount' => $amount,
-            'note' => "[NIP/Transfer] | " . $note,
-            'entry_type' => 'debit',
-            'charge' => $charge,
-        ];
-    }
-
     private function handleFlutterWaveTransfer(Request $request, Account $account): array
     {
         $validatedData = $this->validateTransferData($request, $account);
@@ -330,9 +331,9 @@ class TransferService
     {
         return $this->flutterWaveService->runTransfer([
             [
-                "account_bank" => "044",
+                "account_bank" => $request->beneficiary_bank_code,
                 "account_number" => $request->beneficiary_account_number,
-                "amount" => 5500,
+                "amount" =>  $validatedData['sendable_amount'],
                 "currency" => "NGN",
                 "beneficiary" => null,
                 "beneficiary_name" => $request->beneficiary_account_holder_name,
