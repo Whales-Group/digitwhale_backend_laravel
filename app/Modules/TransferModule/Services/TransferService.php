@@ -316,31 +316,31 @@ class TransferService
     private function initiateFlutterWaveTransfer(Request $request, array $validatedData): array
     {
         // Dummy instance for testing without actual API call
-        return [
-            'data' => [
-                'status' => 'successful',
-                'reference' => CodeHelper::generateSecureReference(),
-                'amount' => $validatedData['amount'],
-                'currency' => 'NGN',
-                'account_bank' => $request->beneficiary_bank_code,
-                'account_number' => $request->beneficiary_account_number,
-                'beneficiary_name' => $request->beneficiary_account_holder_name,
-                'narration' => $request->note,
-            ]
-        ];
+        // return [
+        //     'data' => [
+        //         'status' => 'successful',
+        //         'reference' => CodeHelper::generateSecureReference(),
+        //         'amount' => $validatedData['amount'],
+        //         'currency' => 'NGN',
+        //         'account_bank' => $request->beneficiary_bank_code,
+        //         'account_number' => $request->beneficiary_account_number,
+        //         'beneficiary_name' => $request->beneficiary_account_holder_name,
+        //         'narration' => $request->note,
+        //     ]
+        // ];
 
-    //     return $this->flutterWaveService->runTransfer([
-    //         "account_bank" => $request->beneficiary_bank_code,
-    //         "account_number" => $request->beneficiary_account_number,
-    //         "amount" =>  $validatedData['amount'],
-    //         "currency" => "NGN",
-    //         "beneficiary" => null,
-    //         "beneficiary_name" => $request->beneficiary_account_holder_name,
-    //         "reference" => CodeHelper::generateSecureReference(),
-    //         "debit_currency" => "NGN",
-    //         "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
-    //         "narration" =>  $request->note,
+        return $this->flutterWaveService->runTransfer([
+            "account_bank" => $request->beneficiary_bank_code,
+            "account_number" => $request->beneficiary_account_number,
+            "amount" =>  $validatedData['amount'],
+            "currency" => "NGN",
+            "beneficiary" => null,
+            "beneficiary_name" => $request->beneficiary_account_holder_name,
+            "reference" => CodeHelper::generateSecureReference(),
+            "debit_currency" => "NGN",
+            "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
+            "narration" =>  $request->note,
         
-    // ]);
+    ]);
     }
 }
