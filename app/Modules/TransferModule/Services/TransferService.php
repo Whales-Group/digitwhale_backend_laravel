@@ -332,7 +332,7 @@ class TransferService
         return $this->flutterWaveService->runTransfer([
                 "account_bank" => $request->beneficiary_bank_code,
                 "account_number" => $request->beneficiary_account_number,
-                "amount" =>  "110",
+                "amount" =>  $validatedData['sendable_amount'],
                 "currency" => "NGN",
                 "beneficiary" => null,
                 "beneficiary_name" => $request->beneficiary_account_holder_name,
