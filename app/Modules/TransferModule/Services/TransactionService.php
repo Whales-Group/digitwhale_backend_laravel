@@ -34,10 +34,14 @@ class TransactionService
         }
 
         // Calculate the transaction fee
-        $fee = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $this->calculateTransactionFee($data['amount'], $data['currency']);
+        $charge = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $data['charge'];
 
-        // Calculate new balance
-        $newBalance = $transferType == TransferType::WHALE_TO_WHALE ? $account->balance - $data['amount'] : $account->balance - ($data['amount'] - $fee);
+        // Resolve balances
+        $previousBalance = $account->balance;
+
+        $newBalance = $transferType == TransferType::WHALE_TO_WHALE
+            ? $account->balance - $data['amount']
+            : $account->balance - ($data['amount'] + $charge);
 
         $account->update([
             'balance' => $newBalance
@@ -64,13 +68,13 @@ class TransactionService
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
-            'charge' => $fee,
+            'charge' => $charge,
             'source_amount' => $data['amount'],
-            'amount_received' => $data['amount'] - $fee,
+            'amount_received' => $data['amount'],
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NAIRA',
-            'previous_balance' => $account->balance,
+            'previous_balance' => $previousBalance,
             'new_balance' => $newBalance,
         ];
 
@@ -79,15 +83,29 @@ class TransactionService
         return $transaction;
     }
 
-    public function calculateTransactionFee(float $amount, string $currency): float
-    {
-        if ($currency !== 'NGN') {
-            return 0.0;
-        }
+    // public function calculateTransactionFee(float $amount, string $currency, Account $account, TransferType $transferType): float
+    // {
+    //     if ($currency !== 'NGN') {
+    //         return 0.0;
+    //     }
 
-        $fee = $amount * 0.01; // 1% fee
-        return 50.0; // Cap at 50 NGN
-    }
+    //     if ($transferType == TransferType::WHALE_TO_WHALE) {
+    //         return 0.0;
+    //     }
+
+    //     $accountType = ServiceProvider::tryFrom($account->service_provider)
+    //         ?? throw new AppException("Invalid Service Provider");
+
+    //     // Calculate transfer fee based on provider
+    //     $transferFee = match ($accountType) {
+    //         ServiceProvider::FINCRA => 50,
+    //         ServiceProvider::PAYSTACK => 10,
+    //         ServiceProvider::FLUTTERWAVE =>$amount <= 5000 ? 10 : ($amount <= 50000 ? 25 : 50),
+    //         default => throw new AppException("Invalid account service provider."),
+    //     };
+
+    //     return $transferFee; 
+    // }
 
     /**
      * Get transactions based on query parameters or return all paginated.
@@ -150,8 +168,8 @@ class TransactionService
         }
 
         if ($queryParams['amount1'] && $queryParams['amount2']) {
-            $amount1 = (float)$queryParams['amount1'];
-            $amount2 = (float)$queryParams['amount2'];
+            $amount1 = (float) $queryParams['amount1'];
+            $amount2 = (float) $queryParams['amount2'];
             $query->whereBetween('amount', [$amount1, $amount2]);
         }
 

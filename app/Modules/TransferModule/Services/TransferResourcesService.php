@@ -260,10 +260,10 @@ class TransferResourcesService
     /**
      * Validates a transfer request, calculates charges, and generates a validation code.
      *
-     * @return JsonResponse
+     * @return JsonResponse | array
      * @throws AppException
      */
-    public function validateTransfer(?Request $request = null): JsonResponse
+    public function validateTransfer(?Request $request = null, bool $clearJson = false): JsonResponse | array
     {
         $user = auth()->user();
 
@@ -327,7 +327,12 @@ class TransferResourcesService
             },
         ];
 
-        return ResponseHelper::success($response);
+        if ($clearJson) {
+           return  $response;
+        }else{
+            return ResponseHelper::success($response);
+
+        }
     }
 
 

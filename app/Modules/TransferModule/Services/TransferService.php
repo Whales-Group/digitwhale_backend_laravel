@@ -69,10 +69,11 @@ class TransferService
                 default => $this->handleExternalTransfer($request, $account, $transferType)
             };
 
-            $this->transactionService->registerTransaction($response, $transferType);
+            $transaction  = $this->transactionService->registerTransaction($response, $transferType);
+
             DB::commit();
 
-            return ResponseHelper::success(message: "Transfer Successful", data: $response);
+            return ResponseHelper::success(message: "Transfer Successful", data: $transaction);
         } catch (Exception $e) {
             DB::rollBack();
             throw new AppException($e->getMessage());
@@ -202,27 +203,12 @@ class TransferService
             'transferType' => 'BANK_ACCOUNT_TRANSFER',
             'amount' => $request->amount,
             'account_id' => $account->account_id,
-        ]));
-
-        $responseData = json_decode($validationResponse->getContent(), true);
-        if (json_last_error() !== JSON_ERROR_NONE || !isset($responseData['data']['charge'])) {
-            throw new AppException('Invalid response from validateTransfer.');
-        }
-
-        $this->validateSendableAmount($request->amount, $responseData['data']['charge']);
+        ]), true);
 
         return [
             'amount' => $request->amount,
-            'charge' => $responseData['data']['charge'],
-            'sendable_amount' => (int)$request->amount - (int)$responseData['data']['charge']
+            'charge' => $validationResponse['charge'],
         ];
-    }
-
-    private function validateSendableAmount(int $amount, int $charge): void
-    {
-        if (($amount - $charge) < 100) {
-            throw new AppException("Minimum destination amount should not be less than (NGN 100.00).");
-        }
     }
 
     private function buildTransactionData(
@@ -282,7 +268,7 @@ class TransferService
             : $user->business_name;
 
         return [
-            'amount' => $validatedData['sendable_amount'],
+            'amount' => $validatedData['amount'],
             'beneficiary' => [
                 'accountHolderName' => $request->beneficiary_account_holder_name,
                 'accountNumber' => $request->beneficiary_account_number,
@@ -329,18 +315,32 @@ class TransferService
 
     private function initiateFlutterWaveTransfer(Request $request, array $validatedData): array
     {
-        return $this->flutterWaveService->runTransfer([
-                "account_bank" => $request->beneficiary_bank_code,
-                "account_number" => $request->beneficiary_account_number,
-                "amount" =>  $validatedData['sendable_amount'],
-                "currency" => "NGN",
-                "beneficiary" => null,
-                "beneficiary_name" => $request->beneficiary_account_holder_name,
-                "reference" => CodeHelper::generateSecureReference(),
-                "debit_currency" => "NGN",
-                "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
-                "narration" =>  $request->note,
-            
-        ]);
+        // Dummy instance for testing without actual API call
+        return [
+            'data' => [
+                'status' => 'successful',
+                'reference' => CodeHelper::generateSecureReference(),
+                'amount' => $validatedData['amount'],
+                'currency' => 'NGN',
+                'account_bank' => $request->beneficiary_bank_code,
+                'account_number' => $request->beneficiary_account_number,
+                'beneficiary_name' => $request->beneficiary_account_holder_name,
+                'narration' => $request->note,
+            ]
+        ];
+
+    //     return $this->flutterWaveService->runTransfer([
+    //         "account_bank" => $request->beneficiary_bank_code,
+    //         "account_number" => $request->beneficiary_account_number,
+    //         "amount" =>  $validatedData['amount'],
+    //         "currency" => "NGN",
+    //         "beneficiary" => null,
+    //         "beneficiary_name" => $request->beneficiary_account_holder_name,
+    //         "reference" => CodeHelper::generateSecureReference(),
+    //         "debit_currency" => "NGN",
+    //         "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
+    //         "narration" =>  $request->note,
+        
+    // ]);
     }
 }
