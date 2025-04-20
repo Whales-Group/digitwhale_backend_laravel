@@ -302,10 +302,10 @@ class TransferResourcesService
             default => throw new AppException("Invalid account service provider."),
         };
 
-        if ($transferType != TransferType::WHALE_TO_WHALE && (float)$availableBalance - (float)$data['amount'] < 10) {
-            //TODO: alert admin of insufficient balance
-            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
-        }
+        // if ($transferType != TransferType::WHALE_TO_WHALE && (float)$availableBalance - (float)$data['amount'] < 10) {
+        //     //TODO: alert admin of insufficient balance
+        //     throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+        // }
 
         $token = CodeHelper::generate(10);
         DB::table('password_reset_tokens')->insert([
