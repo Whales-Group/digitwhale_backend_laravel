@@ -298,7 +298,7 @@ class TransferResourcesService
         $availableBalance = match ($accountType) {
             ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
             ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
-            ServiceProvider::FLUTTERWAVE => collect($this->flutterWaveService->getWalletBalance())->firstWhere('currency', 'NGN')['ledger_balance'] / 100,
+            ServiceProvider::FLUTTERWAVE => collect($this->flutterWaveService->getWalletBalance())->firstWhere('currency', 'NGN')['available_balance'] / 100,
             default => throw new AppException("Invalid account service provider."),
         };
 
