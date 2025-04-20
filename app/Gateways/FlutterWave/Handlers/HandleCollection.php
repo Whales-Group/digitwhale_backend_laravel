@@ -115,6 +115,10 @@ class HandleCollection
     {
         $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
 
+        if (!$verifiedTransaction) {
+            throw new AppException("Failed to verify transaction");
+        }
+
         return TransactionEntry::create([
             'transaction_reference' => $transactionData['tx_ref'],
             'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
@@ -126,9 +130,9 @@ class HandleCollection
             'to_bank_name' => "Sterling Bank PLC",
             'to_bank_code' => "232",
             'to_account_number' => $account->account_number,
-            'currency' => $transactionData['currency'],
+            'currency' => "NAIRA",
             'amount' => $transactionData['amount'],
-            'status' => strtolower($transactionData['status']),
+            'status' => 'completed',
             'type' => 'credit',
             'description' => "[Digitwhale/Transfer] | " . ($transactionData['narration'] ?? 'Fund received'),
             'timestamp' => $transactionData['created_at'] ?? now(),
@@ -137,8 +141,8 @@ class HandleCollection
             'source_amount' => $transactionData['amount'],
             'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
             'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
-            'source_currency' => $transactionData['currency'],
-            'destination_currency' => $transactionData['currency'],
+            'source_currency' => "NAIRA",
+            'destination_currency' => "NAIRA",
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ]);
@@ -164,9 +168,9 @@ class HandleCollection
             'to_bank_name' => "Sterling Bank PLC",
             'to_bank_code' => "232",
             'to_account_number' => $account->account_number,
-            'currency' => $transactionData['currency'],
+            'currency' => "NAIRA",
             'amount' => $transactionData['amount'],
-            'status' => strtolower($transactionData['status']),
+            'status' => 'failed',
             'type' => 'credit',
             'description' => "[Digitwhale/Transfer] | " . ($transactionData['narration'] ?? 'Fund received'),
             'timestamp' => $transactionData['created_at'] ?? now(),
@@ -175,8 +179,8 @@ class HandleCollection
             'source_amount' => $transactionData['amount'],
             'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
             'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
-            'source_currency' => $transactionData['currency'],
-            'destination_currency' => $transactionData['currency'],
+            'source_currency' => "NAIRA",
+            'destination_currency' => "NAIRA",
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ];
