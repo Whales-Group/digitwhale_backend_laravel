@@ -187,10 +187,11 @@ class HandleCollection
      */
     private static function getAccountFromPayment(array $paymentData): ?Account
     {
+        $account_email = $paymentData['customer']['email'] ?? null;
         $flwRef = $paymentData['flw_ref'] ?? null;
         $accountId = $paymentData['account_id'] ?? null;
 
-        $account = Account::where('customer_code', $flwRef)->first();
+        $account = Account::where('email', $account_email)->first();
 
         if (!$account && $accountId) {
             $account = Account::find($accountId);
@@ -205,3 +206,7 @@ class HandleCollection
         return $account;
     }
 }
+
+// "flw_ref": "FLW-da93010f630240a7978e893af92fed62",
+// "order_ref": "URF_1613406439309_370935",
+// "account_number": "7824822527",
