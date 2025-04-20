@@ -59,11 +59,6 @@ class AICoreEngine
             // Add messages to each conversation
             $paginator->getCollection()->transform(function ($conversation) use ($userId) {
                 $this->checkUserOwnership($conversation->id, $userId);
-
-                $conversation->messages = ModelMessage::where('conversation_id', $conversation->id)
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
                 return $conversation;
             });
 
