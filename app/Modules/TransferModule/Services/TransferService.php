@@ -334,12 +334,12 @@ class TransferService
                 "account_number" => $request->beneficiary_account_number,
                 "amount" => 5500,
                 "currency" => "NGN",
-                "beneficiary" => 3768,
+                "beneficiary" => null,
                 "beneficiary_name" => $request->beneficiary_account_holder_name,
                 "reference" => CodeHelper::generateSecureReference(),
                 "debit_currency" => "NGN",
                 "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
-                "narration" => "Payment for goods purchased"
+                "narration" =>  $request->note,
             ]
         ]);
     }

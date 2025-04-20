@@ -301,7 +301,6 @@ class TransferResourcesService
             ServiceProvider::FLUTTERWAVE => collect($this->flutterWaveService->getWalletBalance())->firstWhere('currency', 'NGN')['ledger_balance'] / 100,
             default => throw new AppException("Invalid account service provider."),
         };
-        return ResponseHelper::success($availableBalance);
 
         if ($transferType != TransferType::WHALE_TO_WHALE && (float)$availableBalance - (float)$data['amount'] < 150) {
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);

@@ -40,7 +40,7 @@ class PromptEngine
 //            throw new AppException("Invalid input detected: Potential SQL injection attempt.");
             $modifiedInput = preg_replace(
                 '/(union|select|insert|delete|update|drop|alter|--|\/\*|\*\/|;|waitfor|delay|xp_|sp_|exec|execute)/i',
-                '[REDACTED]',
+                '[SECURE OMISSION]',
                 $modifiedInput,
             );
         }
