@@ -14,7 +14,6 @@ class HandleCollection
 {
     public static function handle(array $eventData): ?JsonResponse
     {
-
         return $eventData['status'] !== 'successful'
             ? self::handleFailedPayment($eventData)
             : self::processSuccessfulPayment($eventData);
@@ -22,7 +21,12 @@ class HandleCollection
 
     private static function handleFailedPayment(array $paymentData): JsonResponse
     {
-        $account = Account::where('customer_code', $paymentData['flw_ref'])->get()->first();
+        $account = self::getAccountFromPayment($paymentData);
+
+        if (!$account) {
+            Log::error("Failed Payment: Account not found", ['flw_ref' => $paymentData['flw_ref'], 'tx_ref' => $paymentData['tx_ref']]);
+            return ResponseHelper::error('Account not found for failed payment', 404);
+        }
 
         $amountReceived = $paymentData['charged_amount'] - $paymentData['app_fee'];
         $prevBalance = $account->balance;
@@ -40,45 +44,6 @@ class HandleCollection
         );
     }
 
-    private static function buildTransactionData(
-        Account $account,
-        array   $transactionData,
-        float   $prevBalance,
-        float   $newBalance
-    ): array
-    {
-
-        $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
-
-        return [
-            'transaction_reference' => $transactionData['tx_ref'],
-            'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
-            'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
-            'to_sys_account_id' => $account->id,
-            'to_user_name' => $account->user->profile_type == 'personal'
-                ? trim("{$account->user->first_name} {$account->user->last_name}")
-                : $account->user->business_name,
-            'to_bank_name' => "Sterling Bank PLC",
-            'to_bank_code' => "232",
-            'to_account_number' => $account->account_number,
-            'currency' => $transactionData['currency'],
-            'amount' => $transactionData['amount'],
-            'status' => strtolower($transactionData['status']),
-            'type' => 'credit',
-            'description' => "[Digitwhale/Transfer] | " . $transactionData['narration'] ?? 'Fund received',
-            'timestamp' => $transactionData['created_at'] ?? now(),
-            'entry_type' => 'credit',
-            'charge' => $transactionData['app_fee'],
-            'source_amount' => $transactionData['amount'],
-            'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
-            'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
-            'source_currency' => $transactionData['currency'],
-            'destination_currency' => $transactionData['currency'],
-            'previous_balance' => $prevBalance,
-            'new_balance' => $newBalance,
-        ];
-    }
-
     private static function processSuccessfulPayment(array $paymentData): JsonResponse
     {
         return TransactionEntry::where('transaction_reference', $paymentData['tx_ref'])->exists()
@@ -94,7 +59,7 @@ class HandleCollection
 
     private static function processNewPayment(array $paymentData): JsonResponse
     {
-        $account = Account::where('customer_code', $paymentData['flw_ref'])->get()->first();
+        $account = self::getAccountFromPayment($paymentData);
 
         return !$account
             ? self::handleMissingAccount($paymentData)
@@ -103,7 +68,12 @@ class HandleCollection
 
     private static function handleMissingAccount(array $paymentData): JsonResponse
     {
-        Log::error("Account not found", ['account_id' => $paymentData['account_id']]);
+        Log::error("Account not found", [
+            'flw_ref' => $paymentData['flw_ref'] ?? null,
+            'account_id' => $paymentData['account_id'] ?? null,
+            'tx_ref' => $paymentData['tx_ref'] ?? null
+        ]);
+
         return ResponseHelper::error('Account not found', 404);
     }
 
@@ -115,6 +85,7 @@ class HandleCollection
 
         try {
             $account->update(['balance' => $newBalance]);
+
             Log::info("Account credited", [
                 'account_id' => $account->id,
                 'amount' => $amountReceived,
@@ -126,7 +97,6 @@ class HandleCollection
                 'message' => $paymentData['processor_response'] ?? 'Payment successful',
                 'data' => $transaction
             ]);
-
         } catch (\Exception $e) {
             Log::error("Balance update failed", ['error' => $e->getMessage()]);
             return ResponseHelper::error('Failed to process payment', 500);
@@ -143,7 +113,6 @@ class HandleCollection
         float   $newBalance
     ): TransactionEntry
     {
-
         $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
 
         return TransactionEntry::create([
@@ -161,7 +130,7 @@ class HandleCollection
             'amount' => $transactionData['amount'],
             'status' => strtolower($transactionData['status']),
             'type' => 'credit',
-            'description' => "[Digitwhale/Transfer] | " . $transactionData['narration'] ?? 'Fund received',
+            'description' => "[Digitwhale/Transfer] | " . ($transactionData['narration'] ?? 'Fund received'),
             'timestamp' => $transactionData['created_at'] ?? now(),
             'entry_type' => 'credit',
             'charge' => $transactionData['app_fee'],
@@ -173,5 +142,66 @@ class HandleCollection
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ]);
+    }
+
+    private static function buildTransactionData(
+        Account $account,
+        array   $transactionData,
+        float   $prevBalance,
+        float   $newBalance
+    ): array
+    {
+        $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
+
+        return [
+            'transaction_reference' => $transactionData['tx_ref'],
+            'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
+            'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
+            'to_sys_account_id' => $account->id,
+            'to_user_name' => $account->user->profile_type == 'personal'
+                ? trim("{$account->user->first_name} {$account->user->last_name}")
+                : $account->user->business_name,
+            'to_bank_name' => "Sterling Bank PLC",
+            'to_bank_code' => "232",
+            'to_account_number' => $account->account_number,
+            'currency' => $transactionData['currency'],
+            'amount' => $transactionData['amount'],
+            'status' => strtolower($transactionData['status']),
+            'type' => 'credit',
+            'description' => "[Digitwhale/Transfer] | " . ($transactionData['narration'] ?? 'Fund received'),
+            'timestamp' => $transactionData['created_at'] ?? now(),
+            'entry_type' => 'credit',
+            'charge' => $transactionData['app_fee'],
+            'source_amount' => $transactionData['amount'],
+            'amount_received' => $transactionData['amount'] - $transactionData['app_fee'],
+            'from_bank' => $verifiedTransaction["meta"]["bankname"] ?? "****** Bank PLC",
+            'source_currency' => $transactionData['currency'],
+            'destination_currency' => $transactionData['currency'],
+            'previous_balance' => $prevBalance,
+            'new_balance' => $newBalance,
+        ];
+    }
+
+    /**
+     * Helper to safely get Account from payment payload
+     */
+    private static function getAccountFromPayment(array $paymentData): ?Account
+    {
+        $flwRef = $paymentData['flw_ref'] ?? null;
+        $accountId = $paymentData['account_id'] ?? null;
+
+        $account = Account::where('customer_code', $flwRef)->first();
+
+        if (!$account && $accountId) {
+            $account = Account::find($accountId);
+        }
+
+        Log::info("Account lookup result", [
+            'flw_ref' => $flwRef,
+            'account_id' => $accountId,
+            'account_found' => (bool) $account
+        ]);
+
+        return $account;
     }
 }
