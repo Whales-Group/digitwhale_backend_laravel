@@ -4,6 +4,7 @@ namespace App\Gateways\FlutterWave\Handlers;
 
 use App\Exceptions\AppException;
 use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
 use App\Models\TransactionEntry;
@@ -120,7 +121,7 @@ class HandleCollection
         }
 
         return TransactionEntry::create([
-            'transaction_reference' => $transactionData['tx_ref'],
+            'transaction_reference' => CodeHelper::generateSecureReference(),
             'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
             'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
             'to_sys_account_id' => $account->id,
@@ -158,7 +159,7 @@ class HandleCollection
         $verifiedTransaction = FlutterWaveService::getInstance()->verifyTransaction($transactionData['tx_ref']);
 
         return [
-            'transaction_reference' => $transactionData['tx_ref'],
+            'transaction_reference' => CodeHelper::generateSecureReference(),
             'from_user_name' => $verifiedTransaction["meta"]["originatorname"] ?? "***********",
             'from_account' => $verifiedTransaction["meta"]["originatoraccountnumber"],
             'to_sys_account_id' => $account->id,
