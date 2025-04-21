@@ -47,14 +47,14 @@ class HandleCollection
 
     private static function processSuccessfulPayment(array $paymentData): JsonResponse
     {
-        return TransactionEntry::where('transaction_reference', $paymentData['tx_ref'])->exists()
+        return TransactionEntry::where('transaction_reference', $paymentData['flw_ref'])->exists()
             ? self::handleDuplicatePayment($paymentData)
             : self::processNewPayment($paymentData);
     }
 
     private static function handleDuplicatePayment(array $paymentData): JsonResponse
     {
-        Log::info('Duplicate payment detected', ['tx_ref' => $paymentData['tx_ref']]);
+        Log::info('Duplicate payment detected', ['flw_ref' => $paymentData['flw_ref']]);
         return ResponseHelper::error('Duplicate payment detected', 409);
     }
 
