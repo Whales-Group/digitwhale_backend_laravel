@@ -69,7 +69,7 @@ class TransactionService
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
             'charge' => $charge,
-            'source_amount' => $data['amount'],
+            'source_amount' => $data['amount'] + $charge,
             'amount_received' => $data['amount'],
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
