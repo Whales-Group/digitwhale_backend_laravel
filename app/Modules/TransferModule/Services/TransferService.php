@@ -206,7 +206,7 @@ class TransferService
         ]), true);
 
         return [
-            'amount' => (int) $request->amount - (int) $validationResponse['charge'],
+            'amount' => $request->amount,
             'charge' => $validationResponse['charge'],
         ];
     }
