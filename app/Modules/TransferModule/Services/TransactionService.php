@@ -70,7 +70,7 @@ class TransactionService
             'entry_type' => $data['entry_type'] ?? 'debit',
             'charge' => $charge,
             'source_amount' => $data['amount'],
-            'amount_received' => $data['amount'] - $charge,
+            'amount_received' => $data['amount'],
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NAIRA',
