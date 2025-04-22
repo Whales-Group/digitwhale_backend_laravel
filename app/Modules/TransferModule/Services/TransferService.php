@@ -1,4 +1,4 @@
-<?php
+a<?php
 
 namespace App\Modules\TransferModule\Services;
 
@@ -206,7 +206,7 @@ class TransferService
         ]), true);
 
         return [
-            'amount' => $request->amount,
+            'amount' => $request->amount - $validationResponse['charge'],
             'charge' => $validationResponse['charge'],
         ];
     }
