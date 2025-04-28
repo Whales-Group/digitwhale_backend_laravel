@@ -4,8 +4,10 @@ namespace App\Gateways\FlutterWave\Services;
 
 use App\Exceptions\AppException;
 use App\Helpers\CodeHelper;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ClientException;
 use Log;
 
 class FlutterWaveService
@@ -13,45 +15,25 @@ class FlutterWaveService
     public static $sk = "";
     public static $pk = "";
 
-
     public static $state = 'development';
     private static $instance;
 
     private $baseUrl;
-
     private $httpClient;
 
-    // Private constructor for singleton pattern
     private function __construct()
     {
         $this->baseUrl = "https://api.flutterwave.com/v3/";
         $this->httpClient = new Client(['base_uri' => $this->baseUrl]);
     }
 
-    // Singleton instance getter
     public static function getInstance(): FlutterWaveService
     {
-
         if (!self::$instance) {
             self::$instance = new FlutterWaveService();
         }
         return self::$instance;
     }
-
-    // Build authorization headers using the secret key
-
-    public function getBanks(): array
-    {
-        try {
-            $response = $this->httpClient->get('banks/NG', ['headers' => $this->buildAuthHeader()]);
-            $data = json_decode($response->getBody(), true);
-            return $data;
-        } catch (AppException $e) {
-            throw new AppException("Failed to fetch banks: " . $e->getMessage());
-        }
-    }
-
-    // Fetch a list of banks from Fincra's API
 
     private function buildAuthHeader(): array
     {
@@ -61,12 +43,20 @@ class FlutterWaveService
         ];
     }
 
-    // Resolve an account using Paystack's API
+    public function getBanks(): array
+    {
+        try {
+            $response = $this->httpClient->get('banks/NG', ['headers' => $this->buildAuthHeader()]);
+            $data = json_decode($response->getBody(), true);
+            return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to fetch banks.');
+        } catch (AppException $e) {
+            throw new AppException("Failed to fetch banks: " . $e->getMessage());
+        }
+    }
 
-    /**
-     * @throws AppException
-     * @throws GuzzleException
-     */
     public function resolveAccount(string $accountNumber, string $bankCode): array
     {
         try {
@@ -87,17 +77,18 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to resolve account.');
         } catch (AppException $e) {
             $errorMessage = CodeHelper::extractErrorMessage($e);
             throw new AppException($errorMessage);
         }
     }
 
-    // Create a transfer recipient using Paystack's API
     public function createTransferRecipient($account_number, $bank_code): array
     {
         try {
-
             $payload = [
                 "account_bank" => $bank_code,
                 "account_number" => $account_number,
@@ -117,12 +108,14 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to create recipient.');
         } catch (AppException $e) {
             throw new AppException("Failed to create recipient: " . $e->getMessage());
         }
     }
 
-    // Run a transfer using Paystack's API
     public function runTransfer(array $payload): array
     {
         try {
@@ -130,7 +123,7 @@ class FlutterWaveService
                 'headers' => $this->buildAuthHeader(),
                 'json' => $payload,
             ]);
-            
+
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
@@ -138,13 +131,15 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to run transfer.');
         } catch (AppException $e) {
             Log::error($e);
             throw new AppException("Failed to run transfer: " . $e->getMessage());
         }
     }
 
-    // Create a Dedicated Virtual Account (DVA) using Paystack's API
     public function createDVA(string $email, string $txRef, string $phoneNumber, string $firstName, string $lastName, string $narration, string $bvn, bool $isPermanent = true): array
     {
         $payload = [
@@ -171,13 +166,15 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to create DVA.');
         } catch (AppException $e) {
             Log::info($e->getMessage());
             throw new AppException("Failed to create DVA: " . $e->getMessage());
         }
     }
 
-    // Create a customer using Paystack's API
     public function createCustomer(array $customer): array
     {
         $payload = [
@@ -199,18 +196,21 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to create customer.');
         } catch (AppException $e) {
             throw new AppException("Failed to create customer: " . $e->getMessage());
         }
     }
 
-    // Verify a transfer using Paystack's API
     public function verifyTransfer(string $reference): array
     {
         try {
-            $response = $this->httpClient->get("transfer/verify/$reference", [
+            $response = $this->httpClient->get("transactions/verify_by_reference?tx_ref=$reference", [
                 'headers' => $this->buildAuthHeader(),
             ]);
+
             $data = json_decode($response->getBody(), true);
 
             if (!$data['status']) {
@@ -218,6 +218,9 @@ class FlutterWaveService
             }
 
             return $data;
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to verify transfer.');
         } catch (AppException $e) {
             throw new AppException("Failed to verify transfer: " . $e->getMessage());
         }
@@ -241,6 +244,9 @@ class FlutterWaveService
             }
 
             return $data['data'];
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to generate link.');
         } catch (AppException $e) {
             throw new AppException("Failed to generate link: " . $e->getMessage());
         }
@@ -255,12 +261,15 @@ class FlutterWaveService
 
             $data = json_decode($response->getBody(), true);
 
-            if (!$data['status']) {
-                throw new AppException("Failed to verify payment: " . ($data['message'] ?? 'Unknown error'));
+            if (($data['status'] ?? '') === 'error') {
+                throw new AppException($data['message'] ?? 'Unknown error');
             }
 
             return $data['data'];
-        } catch (AppException $e) {
+        } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to verify payment.');
+        } catch (Exception $e) {
             throw new AppException("Failed to verify payment: " . $e->getMessage());
         }
     }
@@ -277,9 +286,10 @@ class FlutterWaveService
 
             $value = json_decode($response->getBody(), true);
             return $value['data'];
-        } catch (AppException $e) {
-            throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
-        } catch (GuzzleException $e) {
+         } catch (ClientException $e) {
+            $body = json_decode($e->getResponse()->getBody()->getContents(), true);
+            throw new AppException($body['message'] ?? 'Failed to verify payment.');
+       } catch (GuzzleException $e) {
             throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
         }
     }

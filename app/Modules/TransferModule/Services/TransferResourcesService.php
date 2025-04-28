@@ -153,10 +153,10 @@ class TransferResourcesService
 
         switch ($serviceProvider) {
             case ServiceProvider::FINCRA:
-                throw  new AppException("failed to verify account: check and try again.");
+                throw new AppException("failed to verify account: check and try again.");
 
             case ServiceProvider::PAYSTACK:
-                throw  new AppException("failed to verify account: check and try again.");
+                throw new AppException("failed to verify account: check and try again.");
 
             case ServiceProvider::FLUTTERWAVE:
                 $res = $this->flutterWaveService->createTransferRecipient($response["accountNumber"], request()->bank_code);
@@ -167,7 +167,7 @@ class TransferResourcesService
                 break;
 
             default:
-                throw  new AppException("failed to verify account: check and try again.");
+                throw new AppException("failed to verify account: check and try again.");
         }
 
         Beneficiary::create([
@@ -217,45 +217,53 @@ class TransferResourcesService
             return ResponseHelper::unprocessableEntity("Unable to resolve account.");
         }
     }
-
     public function verifyTransferStatusBy($account_id): JsonResponse
     {
         try {
             $user = auth()->user();
             $reference = request()->input('reference');
 
-            if (!$account_id || !$reference) {
-                throw new AppException("Account Id and Reference are required");
+            if (empty($account_id) || empty($reference)) {
+                throw new AppException("Account ID and Reference are required.");
             }
 
-            $account = Account::where("user_id", $user->id)->where("account_id", $account_id)->first();
+            $account = Account::where('user_id', $user->id)
+                ->where('account_id', $account_id)
+                ->first();
 
             if (!$account) {
-                return ResponseHelper::notFound("Account not found. Access is Invalid");
+                return ResponseHelper::notFound("Account not found or access is invalid.");
             }
 
-            $accountType = ServiceProvider::tryFrom($account->service_provider) ?? throw new AppException("Invalid Account Type");
+            $accountType = ServiceProvider::tryFrom($account->service_provider)
+                ?? throw new AppException("Invalid Account Type.");
 
-            $transaction_entry = TransactionEntry::where('transaction_reference', $reference)->first();
-            $status = $transaction_entry->status ?? 'pending';
+            $transactionEntry = TransactionEntry::where('transaction_reference', $reference)->first();
 
-            if ($transaction_entry->to_sys_account_id && $transaction_entry->from_sys_account_id) {
-                $status = $transaction_entry->status ?? $status;
-            } else {
-                $status = match ($accountType) {
+            if (!$transactionEntry) {
+                return ResponseHelper::notFound('Transaction not found.');
+            }
+
+            $currentStatus = $transactionEntry->status ?? 'pending';
+
+            if (empty($transactionEntry->to_sys_account_id) || empty($transactionEntry->from_sys_account_id)) {
+                // External transaction: Need to verify with provider
+                $currentStatus = match ($accountType) {
                     ServiceProvider::FINCRA => $this->fincraService->verifyTransfer($reference)['data']['status'],
                     ServiceProvider::PAYSTACK => $this->paystackService->verifyTransfer($reference)['data']['status'],
-                    default => throw new AppException("Invalid account service provider."),
+                    ServiceProvider::FLUTTERWAVE => $this->flutterWaveService->verifyTransaction($reference)['data']['status'],
+                    default => throw new AppException("Unsupported service provider for transaction verification."),
                 };
             }
 
-            $transaction_entry->update(['status' => $status]);
+            $transactionEntry->update(['status' => $currentStatus]);
 
-            return ResponseHelper::success($transaction_entry, "Transaction status verification successful.");
+            return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
         }
     }
+
 
     /**
      * Validates a transfer request, calculates charges, and generates a validation code.
@@ -263,7 +271,7 @@ class TransferResourcesService
      * @return JsonResponse | array
      * @throws AppException
      */
-    public function validateTransfer(?Request $request = null, bool $clearJson = false): JsonResponse | array
+    public function validateTransfer(?Request $request = null, bool $clearJson = false): JsonResponse|array
     {
         $user = auth()->user();
 
@@ -328,8 +336,8 @@ class TransferResourcesService
         ];
 
         if ($clearJson) {
-           return  $response;
-        }else{
+            return $response;
+        } else {
             return ResponseHelper::success($response);
 
         }

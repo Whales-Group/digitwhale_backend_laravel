@@ -69,7 +69,7 @@ class TransferService
                 default => $this->handleExternalTransfer($request, $account, $transferType)
             };
 
-            $transaction  = $this->transactionService->registerTransaction($response, $transferType);
+            $transaction = $this->transactionService->registerTransaction($response, $transferType);
 
             DB::commit();
 
@@ -95,9 +95,9 @@ class TransferService
     protected function validateTransferCode(string $email, string $code): bool
     {
         return DB::table('password_reset_tokens')
-                ->where('email', $email)
-                ->where('token', $code)
-                ->delete() > 0;
+            ->where('email', $email)
+            ->where('token', $code)
+            ->delete() > 0;
     }
 
     public function validateSenderAccount(string $accountId, ?string $receiverId, int $amount): Account
@@ -213,14 +213,13 @@ class TransferService
 
     private function buildTransactionData(
         Account $account,
-        int     $amount,
-        int     $charge,
-        string  $status,
-        string  $note,
-        array   $beneficiary,
-        string  $type
-    ): array
-    {
+        int $amount,
+        int $charge,
+        string $status,
+        string $note,
+        array $beneficiary,
+        string $type
+    ): array {
         return [
             'currency' => $account->currency,
             'to_sys_account_id' => null,
@@ -332,15 +331,15 @@ class TransferService
         return $this->flutterWaveService->runTransfer([
             "account_bank" => $request->beneficiary_bank_code,
             "account_number" => $request->beneficiary_account_number,
-            "amount" =>  $validatedData['amount'],
+            "amount" => $validatedData['amount'],
             "currency" => "NGN",
             "beneficiary" => null,
             "beneficiary_name" => $request->beneficiary_account_holder_name,
             "reference" => CodeHelper::generateSecureReference(),
             "debit_currency" => "NGN",
             "callback_url" => "https://webhook.site/5f9a659a-11a2-4925-89cf-8a59ea6a019a",
-            "narration" =>  $request->note,
-        
-    ]);
+            "narration" => $request->note,
+
+        ]);
     }
 }
