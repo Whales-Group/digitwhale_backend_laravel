@@ -34,7 +34,7 @@ class AccountCreationService
 
             $user = auth()->user();
             $currencyValue = request()->input('currency');
-            $provider = ServiceProvider::FLUTTERWAVE;
+            $provider = ServiceProvider::FINCRA;
             $providerBank = ServiceBank::WEMA_BANK;
 
             $completed = $user->profileIsCompleted($provider);

@@ -137,4 +137,20 @@ class User extends Authenticatable
         return $this->hasMany(Beneficiary::class);
     }
 
+    public function liveLocation()
+    {
+        return $this->hasOne(LiveLocation::class);
+    }
+
+    public function blockedLiveLocationUsers()
+    {
+        return $this->hasOne(BlockedLiveLocationUsers::class);
+    }
+
+    public function liveLocationPreference()
+    {
+        return $this->hasOne(LiveLocationPreference::class);
+    }
+
+
 }
