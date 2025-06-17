@@ -58,7 +58,7 @@ class AirtransferService
                 return [
                     'latitude' => (float) $loc->latitude,
                     'longitude' => (float) $loc->longitude,
-                    'name' => $loc->user->first_name . ' ' . $loc->user->last_name,
+                    'name' => $loc->profile_type == "corporate" ? $loc->business_name : $loc->user->first_name . ' ' . $loc->user->last_name,
                     'profile_url' => $loc->user->profile_url,
                     'reference_id' => $account?->account_id ?? '',
                 ];
