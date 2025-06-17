@@ -6,6 +6,7 @@ use App\Http\Controllers\AccountSettingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\AirTransferController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BeneficiaryController;
 use App\Http\Controllers\BillAndUtilsController;
@@ -118,6 +119,13 @@ Route::middleware($protectedMiddleware)->group(function () {
             Route::post('/{account_id}', [TransferController::class, 'transfer']);
             Route::put('/{account_id}', [TransferController::class, 'verifyTransferStatusBy']);
             Route::post('/', [TransferController::class, 'validateTransfer']);
+        });
+
+        Route::prefix('air-transfer')->group(function () {
+            Route::get('/nearest-users', [AirTransferController::class, 'getNearestUsers']);
+            Route::post('/update-location', [AirTransferController::class, 'updateLiveLocation']);
+            Route::get('/preference', [AirTransferController::class, 'getAirTransferPreference']);
+            Route::post('/preference', [AirTransferController::class, 'setAirTransferPreference']);
         });
 
         Route::get('/transaction', [TransferController::class, 'getTransactions']);

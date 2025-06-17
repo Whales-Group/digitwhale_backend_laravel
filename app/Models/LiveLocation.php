@@ -9,7 +9,7 @@ class LiveLocation extends Model
     protected $fillable = [
         'user_id',
         'latitude',
-        'logitude',
+        'longitude',
         
     ];
 

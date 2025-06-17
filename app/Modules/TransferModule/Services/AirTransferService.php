@@ -25,64 +25,48 @@ class AirtransferService
      */
     public function getNearestUsers(float $latitude, float $longitude, int $limit = 5): JsonResponse
     {
-
         $user = Auth::user();
 
-        // Cache the blocked user IDs for this user to avoid querying repeatedly
+        // Blocked users cache
         $excludedUserIds = Cache::remember("blocked_users_{$user->id}", 60, function () use ($user) {
+            $blocked = $user->blockedLiveLocationUsers()
+                ->where('status', 'active')
+                ->pluck('blocked_user_id')
+                ->toArray();
 
-            // Get user IDs the current user has blocked
-            $blockedUserIds = $user->blockedLiveLocationUsers()->where('status', 'active')->pluck('blocked_user_id')->toArray();
-
-            // Get user IDs that have blocked the current user
-            $blockedByUserIds = BlockedLiveLocationUsers::where('blocked_user_id', $user->id)
+            $blockedBy = BlockedLiveLocationUsers::where('blocked_user_id', $user->id)
                 ->where('status', 'active')
                 ->pluck('user_id')
                 ->toArray();
 
-            return array_merge($blockedUserIds, $blockedByUserIds);
+            return array_merge($blocked, $blockedBy);
         });
 
-        // TODO: ADD CHECK FOR EACH OF THE USER PREFERERENFECS LIKE VISIBILITY ETC
+        // ~5 meters ≈ 0.000045 degrees lat/lng range
+        $range = 0.000045;
 
-        // Use the Haversine formula to find users close to the given location
-        $nearbyUsers = LiveLocation::join('users', 'live_locations.user_id', '=', 'users.id')
-            ->join('accounts', 'users.account_id', '=', 'accounts.id')
-            ->whereNotIn('users.id', $excludedUserIds)
-            ->where('users.id', '!=', $user->id)
-            ->select(
-                'users.first_name',
-                'users.last_name',
-                'users.profile_url',
-                'live_locations.latitude',
-                'live_locations.longitude',
-                'accounts.account_id as reference_id',
-                DB::raw("(
-             6371 * acos(
-                 cos(radians(?)) *
-                 cos(radians(live_locations.latitude)) *
-                 cos(radians(live_locations.longitude) - radians(?)) +
-                 sin(radians(?)) *
-                 sin(radians(live_locations.latitude))
-             )
-         ) AS distance", [$latitude, $longitude, $latitude])
-            )
-            ->orderBy('distance')
+        $nearbyUsers = LiveLocation::with(['user.accounts']) // eager-load all accounts
+            ->whereNotIn('user_id', $excludedUserIds)
+            ->where('user_id', '!=', $user->id)
+            ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
+            ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
             ->limit($limit)
             ->get()
-            ->map(function ($liveLocation) {
+            ->map(function ($loc) {
+                $account = $loc->user->accounts->first(); // get the first linked account
+    
                 return [
-                    'latitude' => (float) $liveLocation->latitude,
-                    'longitude' => (float) $liveLocation->longitude,
-                    'name' => $liveLocation->user->first_name . " " . $liveLocation->user->last_name,
-                    'profile_url' => $liveLocation->user->profile_url,
-                    'reference_id' => $liveLocation->reference_id ?? '',
+                    'latitude' => (float) $loc->latitude,
+                    'longitude' => (float) $loc->longitude,
+                    'name' => $loc->user->first_name . ' ' . $loc->user->last_name,
+                    'profile_url' => $loc->user->profile_url,
+                    'reference_id' => $account?->account_id ?? '',
                 ];
-            })
-            ->toArray();
+            });
 
         return ResponseHelper::success(data: $nearbyUsers);
     }
+
 
     /**
      * Update current user's live location for AirTransfer visibility.
@@ -91,15 +75,15 @@ class AirtransferService
      * @param float $longitude
      * @return bool
      */
-    public function updateLiveLocation(float $latitude, float $longitude): bool
+    public function updateLiveLocation(float $latitude, float $longitude): JsonResponse
     {
         $user = Auth::user();
 
-        $liveLocation = $user->liveLocation()->updateOrCreate(
+        $liveLocation = LiveLocation::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'latitude' => $latitude,
-                'longitude' => $longitude
+                'longitude' => $longitude,
             ]
         );
 
@@ -108,8 +92,8 @@ class AirtransferService
         }
 
         return ResponseHelper::success(data: $liveLocation);
-
     }
+
 
     /**
      * Get the current AirTransfer preferences for the authenticated user.
@@ -140,10 +124,10 @@ class AirtransferService
      * @param int $visibilityTimeInMin
      * @return bool
      */
-    public function setAirTransferPreference(array $data):JsonResponse
+    public function setAirTransferPreference(array $data): JsonResponse
     {
         $userId = Auth::id();
-    
+
         return ResponseHelper::success(data: LiveLocationPreference::updateOrCreate(
             ['user_id' => $userId],
             $data
