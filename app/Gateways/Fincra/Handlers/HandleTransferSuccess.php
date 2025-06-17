@@ -78,7 +78,7 @@ class HandleTransferSuccess
 
     private static function creditAccount(Account $account, array $transactionData): JsonResponse
     {
-        $amountReceived = $transactionData['amount'] - $transactionData['fee'];
+        $amountReceived = $transactionData['amountReceived'];
         $prevBalance = $account->balance;
         $newBalance = $account->balance + $amountReceived;
 
