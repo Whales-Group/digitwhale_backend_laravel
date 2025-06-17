@@ -117,7 +117,7 @@ class HandleTransferSuccess
                 ? trim("{$account->user->first_name} {$account->user->last_name}")
                 : $account->user->business_name,
             'to_bank_name' => $account->service_bank,
-            'to_bank_code' => "032",
+            'to_bank_code' => "035",
             'to_account_number' => $account->account_number,
             'currency' => "NAIRA",
             'amount' => $transactionData['sourceAmount'],
