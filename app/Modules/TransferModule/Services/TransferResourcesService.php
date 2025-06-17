@@ -321,16 +321,9 @@ class TransferResourcesService
             default => throw new AppException("Invalid account service provider."),
         };
 
-        if ($transferType != TransferType::WHALE_TO_WHALE && (float) $availableBalance - (float) $data['amount'] < 10) {
-            $res = [
-                "availableBalance" => $availableBalance,
-                "amount" => $data['amount'],
-                "provider" => $provider,
-            ];
-
-
-            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
-        }
+        // if ($transferType != TransferType::WHALE_TO_WHALE && (float) $availableBalance - (float) $data['amount'] < 10) {
+        //     throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+        // }
 
 
         $token = CodeHelper::generate(10);
