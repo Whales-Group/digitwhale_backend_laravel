@@ -72,7 +72,7 @@ class HandleTransferSuccess
 
     private static function handleMissingAccount(array $transactionData): JsonResponse
     {
-        AppLog::error("Account not found", ['account_number' => $transactionData['account_number']]);
+        AppLog::error("Account not found", ['customer_id' => $transactionData['virtualAccount']]);
         return ResponseHelper::error('Account not found', 404);
     }
 
