@@ -84,7 +84,7 @@ class TransferService
             $errorData = json_decode($responseBody, true);
 
             if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
-                throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+                throw new CodedException(ErrorCode::FAILED_TO_CREATE_RECIPIENT);
             }
 
             DB::rollBack();
