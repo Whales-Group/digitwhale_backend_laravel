@@ -148,9 +148,9 @@ class TransferService
             throw new AppException('Self transfers are not allowed.');
         }
 
-        if ($amount > $account->balance) {
-            throw new AppException('Insufficient funds.');
-        }
+        // if ($amount > $account->balance) {
+        //     throw new AppException('Insufficient funds.');
+        // }
 
         return $account;
     }
