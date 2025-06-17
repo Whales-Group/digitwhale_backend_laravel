@@ -274,12 +274,13 @@ class TransferService
         $validatedData = $this->validateTransferData($request, $account);
         $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
 
-        $transferResponse = $this->fincraService->runTransfer(
-            TransferType::BANK_ACCOUNT_TRANSFER,
-            $payload
-        );
+        // $transferResponse = $this->fincraService->runTransfer(
+        //     TransferType::BANK_ACCOUNT_TRANSFER,
+        //     $payload
+        // );
 
-        // $transferResponse = ['data' => ['status' => 'successful']];
+        // TODO: comment this 
+        $transferResponse = ['data' => ['status' => 'successful']];
 
         return $this->buildTransactionData(
             $account,
