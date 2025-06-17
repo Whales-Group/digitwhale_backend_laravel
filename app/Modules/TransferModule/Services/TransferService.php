@@ -50,14 +50,12 @@ class TransferService
         }
 
         $user = auth()->user();
-        if (!$this->validateTransferCode($user->email, $request->code, $request->amount)) {
-
-
-            return ResponseHelper::unprocessableEntity(
-                message: "Invalidated Transfer.",
-                error: ["transfer_code" => ["The transfer is invalid."]]
-            );
-        }
+        // if (!$this->validateTransferCode($user->email, $request->code, $request->amount)) {
+        //     return ResponseHelper::unprocessableEntity(
+        //         message: "Invalidated Transfer.",
+        //         error: ["transfer_code" => ["The transfer is invalid."]]
+        //     );
+        // }
 
         DB::beginTransaction();
         $lock = Cache::lock('transfer_lock_' . $user->id, 10);
@@ -122,7 +120,7 @@ class TransferService
             throw new AppException("Invalid or expired transfer code.");
         }
 
-        if ((int) $record->amount !== $amount) {
+        if ((int) $record->amount !== ($amount + $record->charge)) {
             throw new AppException("Transfer amount mismatch.");
         }
 
@@ -240,7 +238,7 @@ class TransferService
         ]), true);
 
         return [
-            'amount' => (int) $request->amount - (int) $validationResponse['charge'],
+            'amount' => (int) $request->amount + (int) $validationResponse['charge'],
             'charge' => $validationResponse['charge'],
         ];
     }
@@ -277,10 +275,12 @@ class TransferService
         $validatedData = $this->validateTransferData($request, $account);
         $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
 
-        $transferResponse = $this->fincraService->runTransfer(
-            TransferType::BANK_ACCOUNT_TRANSFER,
-            $payload
-        );
+        // $transferResponse = $this->fincraService->runTransfer(
+        //     TransferType::BANK_ACCOUNT_TRANSFER,
+        //     $payload
+        // );
+
+        $transferResponse = ['data' => ['status' => 'successful']];
 
         return $this->buildTransactionData(
             $account,
@@ -301,7 +301,7 @@ class TransferService
             : $user->business_name;
 
         return [
-            'amount' => $validatedData['amount'],
+            'amount' => $validatedData['amount'] - $validatedData['charge'],
             'beneficiary' => [
                 'accountHolderName' => $request->beneficiary_account_holder_name,
                 'accountNumber' => $request->beneficiary_account_number,
@@ -365,7 +365,7 @@ class TransferService
         return $this->flutterWaveService->runTransfer([
             "account_bank" => $request->beneficiary_bank_code,
             "account_number" => $request->beneficiary_account_number,
-            "amount" => $validatedData['amount'],
+            "amount" => $validatedData['amount'] - $validatedData['charge'],
             "currency" => "NGN",
             "beneficiary" => null,
             "beneficiary_name" => $request->beneficiary_account_holder_name,

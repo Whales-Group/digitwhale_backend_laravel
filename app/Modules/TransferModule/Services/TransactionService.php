@@ -39,9 +39,7 @@ class TransactionService
         // Resolve balances
         $previousBalance = $account->balance;
 
-        $newBalance = $transferType == TransferType::WHALE_TO_WHALE
-            ? $account->balance - $data['amount']
-            : $account->balance - ($data['amount'] + $charge);
+        $newBalance = $account->balance - ($data['amount']);
 
         $account->update([
             'balance' => $newBalance
@@ -64,13 +62,13 @@ class TransactionService
             'transaction_reference' => $data['transaction_reference'],
             'status' => $data['status'],
             'type' => $data['type'],
-            'amount' => $data['amount'],
+            'amount' => $data['amount']  - $data['charge'],
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
             'charge' => $charge,
-            'source_amount' => $data['amount'] + $charge,
-            'amount_received' => $data['amount'],
+            'source_amount' => $data['amount'],
+            'amount_received' => $data['amount'] - $data['charge'],
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NAIRA',

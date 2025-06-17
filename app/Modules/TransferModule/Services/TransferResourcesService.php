@@ -339,7 +339,8 @@ class TransferResourcesService
         DB::table('password_reset_tokens')->insert([
             'email' => $user->email,
             'token' => $token,
-            'amount' => $data['amount'],
+            'amount' => $data['amount'] + $transferFee,
+            'charge' => $transferFee,
             'created_at' => now(),
         ]);
         $validationCode = $token;
@@ -348,7 +349,7 @@ class TransferResourcesService
             'charge' => $transferType === TransferType::BANK_ACCOUNT_TRANSFER ? $transferFee : 0,
             'transfer_type' => $transferType,
             'code' => $validationCode,
-            'validated_amount' => $data['amount'],
+            'validated_amount' => $data['amount'] + $transferFee,
             'message' => match ($transferType) {
                 TransferType::BANK_ACCOUNT_TRANSFER => 'Bank Account transfer validation successful.',
                 TransferType::WHALE_TO_WHALE => 'Whale to Whale transfer validation successful.',
