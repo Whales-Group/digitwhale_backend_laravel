@@ -35,6 +35,11 @@ class AppLog extends Model
         self::log('info', $message, $context);
     }
 
+     public static function warning($message, $context = [])
+    {
+        self::log('info', $message, $context);
+    }
+
     public static function debug($message, $context = [])
     {
         self::log('debug', $message, $context);
