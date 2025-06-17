@@ -14,7 +14,6 @@ use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
-use App\Models\AppLog;
 use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
 use Exception;
@@ -329,7 +328,6 @@ class TransferResourcesService
                 "provider" => $provider,
             ];
 
-            AppLog::error(context: $res, message: "availableBalance");
 
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         }

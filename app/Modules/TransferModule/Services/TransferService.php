@@ -13,7 +13,6 @@ use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
-use App\Models\AppLog;
 use App\Models\User;
 use Exception;
 use GuzzleHttp\Exception\ClientException;
@@ -85,7 +84,6 @@ class TransferService
             $errorData = json_decode($responseBody, true);
 
             if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
-                // AppLog::error(message: "Fincra Balance is Low ", context: $errorData);
                 throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
             }
 
