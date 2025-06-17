@@ -14,6 +14,7 @@ use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
+use App\Models\AppLog;
 use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
 use Exception;
@@ -303,22 +304,42 @@ class TransferResourcesService
             default => throw new AppException("Invalid account service provider."),
         };
 
-        $availableBalance = match ($accountType) {
-            ServiceProvider::FINCRA => $this->fincraService->getWalletBalance()["availableBalance"],
-            ServiceProvider::PAYSTACK => collect($this->paystackService->getWalletBalance())->firstWhere('currency', 'NGN')['balance'] / 100,
-            ServiceProvider::FLUTTERWAVE => collect($this->flutterWaveService->getWalletBalance())->firstWhere('currency', 'NGN')['available_balance'] / 100,
+        ["availableBalance" => $availableBalance, "provider" => $provider] = match ($accountType) {
+            ServiceProvider::FINCRA => [
+                "availableBalance" => $this->fincraService->getWalletBalance()["availableBalance"],
+                "provider" => ServiceProvider::FINCRA->value,
+            ],
+            ServiceProvider::PAYSTACK => [
+                "availableBalance" => collect($this->paystackService->getWalletBalance())
+                    ->firstWhere('currency', 'NGN')['balance'] / 100,
+                "provider" => ServiceProvider::PAYSTACK->value,
+            ],
+            ServiceProvider::FLUTTERWAVE => [
+                "availableBalance" => collect($this->flutterWaveService->getWalletBalance())
+                    ->firstWhere('currency', 'NGN')['available_balance'] / 100,
+                "provider" => ServiceProvider::FLUTTERWAVE->value,
+            ],
             default => throw new AppException("Invalid account service provider."),
         };
 
-        // if ($transferType != TransferType::WHALE_TO_WHALE && (float)$availableBalance - (float)$data['amount'] < 10) {
-        //     //TODO: alert admin of insufficient balance
-        //     throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
-        // }
+        if ($transferType != TransferType::WHALE_TO_WHALE && (float) $availableBalance - (float) $data['amount'] < 10) {
+            $res = [
+                "availableBalance" => $availableBalance,
+                "amount" => $data['amount'],
+                "provider" => $provider,
+            ];
+
+            AppLog::error($res);
+
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+        }
+
 
         $token = CodeHelper::generate(10);
         DB::table('password_reset_tokens')->insert([
             'email' => $user->email,
             'token' => $token,
+            'amount' => $data['amount'],
             'created_at' => now(),
         ]);
         $validationCode = $token;
@@ -327,6 +348,7 @@ class TransferResourcesService
             'charge' => $transferType === TransferType::BANK_ACCOUNT_TRANSFER ? $transferFee : 0,
             'transfer_type' => $transferType,
             'code' => $validationCode,
+            'validated_amount' => $data['amount'],
             'message' => match ($transferType) {
                 TransferType::BANK_ACCOUNT_TRANSFER => 'Bank Account transfer validation successful.',
                 TransferType::WHALE_TO_WHALE => 'Whale to Whale transfer validation successful.',

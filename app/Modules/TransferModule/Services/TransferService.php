@@ -50,12 +50,14 @@ class TransferService
         }
 
         $user = auth()->user();
-        // if (!$this->validateTransferCode($user->email, $request->code)) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: "Invalidated Transfer.",
-        //         error: ["transfer_code" => ["The transfer is invalid."]]
-        //     );
-        // }
+        if (!$this->validateTransferCode($user->email, $request->code, $request->amount)) {
+
+
+            return ResponseHelper::unprocessableEntity(
+                message: "Invalidated Transfer.",
+                error: ["transfer_code" => ["The transfer is invalid."]]
+            );
+        }
 
         DB::beginTransaction();
         $lock = Cache::lock('transfer_lock_' . $user->id, 10);
@@ -109,12 +111,27 @@ class TransferService
         ]);
     }
 
-    protected function validateTransferCode(string $email, string $code): bool
+    protected function validateTransferCode(string $email, string $code, int $amount): bool
     {
-        return DB::table('password_reset_tokens')
+        $record = DB::table('password_reset_tokens')
             ->where('email', $email)
             ->where('token', $code)
-            ->delete() > 0;
+            ->first();
+
+        if (!$record) {
+            throw new AppException("Invalid or expired transfer code.");
+        }
+
+        if ((int) $record->amount !== $amount) {
+            throw new AppException("Transfer amount mismatch.");
+        }
+
+        DB::table('password_reset_tokens')
+            ->where('email', $email)
+            ->where('token', $code)
+            ->delete();
+
+        return true;
     }
 
     public function validateSenderAccount(string $accountId, ?string $receiverId, int $amount): Account
