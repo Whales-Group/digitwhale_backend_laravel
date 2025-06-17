@@ -118,7 +118,7 @@ class TransferService
             throw new AppException("Invalid or expired transfer code.");
         }
 
-        if ((int) $record->amount !== ($amount)) {
+        if ((int) $record->amount !== ($amount + $record->charge)) {
             throw new AppException("Transfer amount mismatch.");
         }
 
@@ -148,6 +148,7 @@ class TransferService
             throw new AppException('Self transfers are not allowed.');
         }
 
+        //TODO: unncomment this.
         // if ($amount > $account->balance) {
         //     throw new AppException('Insufficient funds.');
         // }
