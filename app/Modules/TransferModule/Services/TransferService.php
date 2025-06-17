@@ -50,12 +50,12 @@ class TransferService
         }
 
         $user = auth()->user();
-        // if (!$this->validateTransferCode($user->email, $request->code, $request->amount)) {
-        //     return ResponseHelper::unprocessableEntity(
-        //         message: "Invalidated Transfer.",
-        //         error: ["transfer_code" => ["The transfer is invalid."]]
-        //     );
-        // }
+        if (!$this->validateTransferCode($user->email, $request->code, $request->amount)) {
+            return ResponseHelper::unprocessableEntity(
+                message: "Invalidated Transfer.",
+                error: ["transfer_code" => ["The transfer is invalid."]]
+            );
+        }
 
         DB::beginTransaction();
         $lock = Cache::lock('transfer_lock_' . $user->id, 10);
@@ -85,7 +85,7 @@ class TransferService
             $errorData = json_decode($responseBody, true);
 
             if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
-                AppLog::error(message: "Fincra Balance is Low ", context: $errorData);
+                // AppLog::error(message: "Fincra Balance is Low ", context: $errorData);
                 throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
             }
 
