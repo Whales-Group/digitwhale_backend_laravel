@@ -329,7 +329,7 @@ class TransferResourcesService
                 "provider" => $provider,
             ];
 
-            AppLog::error($res);
+            AppLog::error(context: $res, message: "availableBalance");
 
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         }
