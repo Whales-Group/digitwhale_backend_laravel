@@ -15,7 +15,7 @@ class HandleTransferSuccess
         AppLog::info('Processing transfer webhook', ['webhookData' => $transactionData]);
 
         // Immediately return if transfer failed
-        return $transactionData['status'] !== 'SUCCESSFUL'
+        return $transactionData['status'] !== 'successful'
             ? self::handleFailedTransfer($transactionData)
             : self::processSuccessfulTransfer($transactionData);
     }
@@ -33,10 +33,10 @@ class HandleTransferSuccess
             ['transaction_reference' => $transactionData['reference']],
             [
                 'status' => 'failed',
-                'description' => $transactionData['complete_message'] ?? 'Transfer failed',
-                'amount' => $transactionData['amount'],
-                'currency' => $transactionData['currency'],
-                'created_at' => $transactionData['created_at'] ?? now()
+                'description' =>  "[Digitwhale/Collection] | Failed " ,
+                'amount' => $transactionData['amountReceived'],
+                'currency' => $transactionData['sourceCurrency'],
+                'created_at' => $transactionData['initiatedAt'] ?? now()
             ]
         );
 
@@ -62,7 +62,7 @@ class HandleTransferSuccess
 
     private static function processNewTransaction(array $transactionData): JsonResponse
     {
-        $account = Account::where('account_number', 'like', substr($transactionData['account_number'], 0, 6) . '%')
+        $account = Account::where('customer_id', 'like', substr($transactionData['virtualAccount'], 0, 6) . '%')
             ->first();
 
         return !$account
