@@ -149,9 +149,9 @@ class TransferService
         }
 
         //TODO: unncomment this.
-        // if ($amount > $account->balance) {
-        //     throw new AppException('Insufficient funds.');
-        // }
+        if ($amount > $account->balance) {
+            throw new AppException('Insufficient funds.');
+        }
 
         return $account;
     }
@@ -275,13 +275,13 @@ class TransferService
         $validatedData = $this->validateTransferData($request, $account);
         $payload = $this->initiateFincraTransfer($request, $account, $validatedData);
 
-        // $transferResponse = $this->fincraService->runTransfer(
-        //     TransferType::BANK_ACCOUNT_TRANSFER,
-        //     $payload
-        // );
+        $transferResponse = $this->fincraService->runTransfer(
+            TransferType::BANK_ACCOUNT_TRANSFER,
+            $payload
+        );
 
         // TODO: comment this 
-        $transferResponse = ['data' => ['status' => 'successful']];
+        // $transferResponse = ['data' => ['status' => 'successful']];
 
         return $this->buildTransactionData(
             $account,
