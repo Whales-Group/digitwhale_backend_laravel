@@ -120,7 +120,7 @@ class TransferService
             throw new AppException("Invalid or expired transfer code.");
         }
 
-        if ((int) $record->amount !== ($amount + $record->charge)) {
+        if ((int) $record->amount !== ($amount)) {
             throw new AppException("Transfer amount mismatch.");
         }
 
