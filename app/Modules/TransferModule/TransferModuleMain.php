@@ -2,7 +2,7 @@
 
 namespace App\Modules\TransferModule;
 
-use App\Modules\TransferModule\Services\AirtransferService;
+use App\Modules\TransferModule\Services\AirTransferService;
 use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\TransferModule\Services\TransferResourcesService;
 use App\Modules\TransferModule\Services\TransferService;
@@ -15,13 +15,13 @@ class TransferModuleMain
     public TransferService $transferService;
     public TransferResourcesService $transferReourcesService;
     public TransactionService $transactionService;
-    public AirtransferService $airTransferService;
+    public AirTransferService $airTransferService;
 
     public function __construct(
         TransferService $transferService,
         TransferResourcesService $transferReourcesService,
         TransactionService $transactionService,
-        AirtransferService $airTransferService,
+        AirTransferService $airTransferService,
     ) {
         $this->transferService = $transferService;
         $this->transferReourcesService = $transferReourcesService;
