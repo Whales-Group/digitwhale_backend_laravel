@@ -130,8 +130,8 @@ class HandleTransferSuccess
             'source_amount' => $transactionData['sourceAmount'],
             'amount_received' => $transactionData['amountReceived'],
             'from_bank' => $transactionData['senderBankName'],
-            'source_currency' => $transactionData['sourceCurrency'],
-            'destination_currency' => $transactionData['destinationCurrency'],
+            'source_currency' => "NAIRA",
+            'destination_currency' => "NAIRA",
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ]);
