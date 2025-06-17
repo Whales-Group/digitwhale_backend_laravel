@@ -211,6 +211,7 @@ class TransferService
             'transaction_reference' => CodeHelper::generateSecureReference(),
             'status' => 'successful',
             'type' => $type,
+            'charge' => 0,
             'amount' => $amount,
             'note' => "[Digitwhale/Transfer] | " . $note,
             'entry_type' => 'debit',
