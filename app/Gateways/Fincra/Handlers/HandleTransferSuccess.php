@@ -33,7 +33,7 @@ class HandleTransferSuccess
             ['transaction_reference' => $transactionData['reference']],
             [
                 'status' => 'failed',
-                'description' =>  "[Digitwhale/Collection] | Failed " ,
+                'description' => "[Digitwhale/Collection] | Failed ",
                 'amount' => $transactionData['amountReceived'],
                 'currency' => $transactionData['sourceCurrency'],
                 'created_at' => $transactionData['initiatedAt'] ?? now()
@@ -90,10 +90,10 @@ class HandleTransferSuccess
                 'new_balance' => $newBalance
             ]);
 
-            // $transaction = self::recordTransaction($account, $transactionData, $prevBalance, $newBalance);
+            $transaction = self::recordTransaction($account, $transactionData, $prevBalance, $newBalance);
             return ResponseHelper::success([
                 'message' => $transactionData['complete_message'] ?? 'Transfer successful',
-                // 'data' => $transaction
+                'data' => $transaction
             ]);
 
         } catch (\Exception $e) {
@@ -110,28 +110,28 @@ class HandleTransferSuccess
     ): TransactionEntry {
         return TransactionEntry::create([
             'transaction_reference' => $transactionData['reference'],
-            'from_user_name' => $transactionData['fullname'],
-            'from_account' => $transactionData['account_number'],
+            'from_user_name' => $transactionData['senderAccountName'],
+            'from_account' => $transactionData['senderAccountNumber'],
             'to_sys_account_id' => $account->id,
             'to_user_name' => $account->user->profile_type == 'personal'
                 ? trim("{$account->user->first_name} {$account->user->last_name}")
                 : $account->user->business_name,
-            'to_bank_name' => $transactionData['bank_name'],
-            'to_bank_code' => $transactionData['bank_code'],
+            'to_bank_name' => $account->service_bank,
+            'to_bank_code' => "032",
             'to_account_number' => $account->account_number,
-            'currency' => $transactionData['currency'],
-            'amount' => $transactionData['amount'],
+            'currency' => $transactionData['sourceCurrency'],
+            'amount' => $transactionData['sourceAmount'],
             'status' => strtolower($transactionData['status']),
             'type' => 'credit',
-            'description' => $transactionData['narration'] ?? 'Fund received',
-            'timestamp' => $transactionData['created_at'] ?? now(),
+            'description' => "[Digitwhale/Collection] | Failed ",
+            'timestamp' => $transactionData['initiatedAt'] ?? now(),
             'entry_type' => 'credit',
             'charge' => $transactionData['fee'],
-            'source_amount' => $transactionData['amount'],
-            'amount_received' => $transactionData['amount'] - $transactionData['fee'],
-            'from_bank' => $transactionData['bank_name'],
-            'source_currency' => $transactionData['currency'],
-            'destination_currency' => $transactionData['currency'],
+            'source_amount' => $transactionData['sourceAmount'],
+            'amount_received' => $transactionData['amountReceived'],
+            'from_bank' => $transactionData['senderBankName'],
+            'source_currency' => $transactionData['sourceCurrency'],
+            'destination_currency' => $transactionData['destinationCurrency'],
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ]);
