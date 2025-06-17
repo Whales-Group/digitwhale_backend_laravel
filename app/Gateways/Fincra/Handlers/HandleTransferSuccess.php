@@ -123,7 +123,7 @@ class HandleTransferSuccess
             'amount' => $transactionData['sourceAmount'],
             'status' => strtolower($transactionData['status']),
             'type' => 'credit',
-            'description' => "[Digitwhale/Collection] | Failed ",
+            'description' => "[Digitwhale/Collection] | Successfull ",
             'timestamp' => $transactionData['initiatedAt'] ?? now(),
             'entry_type' => 'credit',
             'charge' => $transactionData['fee'],
