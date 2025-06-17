@@ -90,10 +90,10 @@ class HandleTransferSuccess
                 'new_balance' => $newBalance
             ]);
 
-            $transaction = self::recordTransaction($account, $transactionData, $prevBalance, $newBalance);
+            // $transaction = self::recordTransaction($account, $transactionData, $prevBalance, $newBalance);
             return ResponseHelper::success([
                 'message' => $transactionData['complete_message'] ?? 'Transfer successful',
-                'data' => $transaction
+                // 'data' => $transaction
             ]);
 
         } catch (\Exception $e) {
