@@ -190,7 +190,7 @@ class TransferService
 
     private function updateBalances(Account $sender, Account $receiver, int $amount): void
     {
-        $sender->decrement('balance', $amount);
+        // $sender->decrement('balance', $amount);
         $receiver->increment('balance', $amount);
     }
 
