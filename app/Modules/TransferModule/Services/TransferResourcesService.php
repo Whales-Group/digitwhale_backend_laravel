@@ -17,6 +17,7 @@ use App\Models\Account;
 use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
 use Exception;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -259,6 +260,19 @@ class TransferResourcesService
             $transactionEntry->update(['status' => $currentStatus]);
 
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
+        } catch (ClientException $e) {
+
+            $responseBody = $e->getResponse()->getBody()->getContents();
+
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData['errorType'] === "RESOURCE_NOT_FOUND") {
+                throw new AppException($errorData['message'] ?? "Transaction not found.");
+            }
+
+            DB::rollBack();
+            throw $e;
+
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
         }
