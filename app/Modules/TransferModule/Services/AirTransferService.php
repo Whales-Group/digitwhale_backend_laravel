@@ -58,9 +58,15 @@ class AirtransferService
                 return [
                     'latitude' => (float) $loc->latitude,
                     'longitude' => (float) $loc->longitude,
-                    'name' => $loc->profile_type == "corporate" ? $loc->business_name : $loc->user->first_name . ' ' . $loc->user->last_name,
+                    'account_name' => $loc->profile_type == "corporate" ? $loc->business_name : $loc->user->first_name . ' ' . $loc->user->last_name,
                     'profile_url' => $loc->user->profile_url,
                     'reference_id' => $account?->account_id ?? '',
+                    'reference_number' =>  $account?->account_number,
+                    'enabled' => $account?->enabled,
+                    'blacklisted' => $account?->blacklisted,
+                    'currency' => $account?->currency,
+                    'reference_type' => $account?->account_type,
+                    'email' => $account?->email,
                 ];
             });
 
