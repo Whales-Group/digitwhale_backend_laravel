@@ -296,7 +296,7 @@ class TransferResourcesService
             ?? throw new AppException("Invalid Service Provider");
 
         // Calculate transfer fee based on provider
-        $transferFee = match ($accountType) {
+        $transferFee = $transferType == TransferType::WHALE_TO_WHALE ? 0 : match ($accountType) {
             ServiceProvider::FINCRA => 50,
             ServiceProvider::PAYSTACK => 10,
             ServiceProvider::FLUTTERWAVE => $data['amount'] <= 5000 ? 10 : ($data['amount'] <= 50000 ? 25 : 50),
