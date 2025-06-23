@@ -43,13 +43,13 @@ class AirtransferService
         });
 
         // ~5 meters ≈ 0.000045 degrees lat/lng range
-        $range = 0.000045;
+        // $range = 0.000045;
 
         $nearbyUsers = LiveLocation::with(['user.accounts']) // eager-load all accounts
             ->whereNotIn('user_id', $excludedUserIds)
             ->where('user_id', '!=', $user->id)
-            ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
-            ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
+            // ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
+            // ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
             ->limit($limit)
             ->get()
             ->map(function ($loc) {
