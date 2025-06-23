@@ -42,14 +42,17 @@ class AirtransferService
             return array_merge($blocked, $blockedBy);
         });
 
-        // ~5 meters ≈ 0.000045 degrees lat/lng range
+        // // ~5 meters ≈ 0.000045 degrees lat/lng range
         // $range = 0.000045;
 
+        // ~100 centimeters ≈ 0.000009 degrees lat/lng range
+        $range = 0.000009;
+        
         $nearbyUsers = LiveLocation::with(['user.accounts']) // eager-load all accounts
             ->whereNotIn('user_id', $excludedUserIds)
             ->where('user_id', '!=', $user->id)
-            // ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
-            // ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
+            ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
+            ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
             ->limit($limit)
             ->get()
             ->map(function ($loc) {
@@ -61,7 +64,7 @@ class AirtransferService
                     'account_name' => $loc->profile_type == "corporate" ? $loc->business_name : $loc->user->first_name . ' ' . $loc->user->last_name,
                     'profile_url' => $loc->user->profile_url,
                     'reference_id' => $account?->account_id ?? '',
-                    'reference_number' =>  $account?->account_number,
+                    'reference_number' => $account?->account_number,
                     'enabled' => $account?->enabled,
                     'blacklisted' => $account?->blacklisted,
                     'currency' => $account?->currency,
