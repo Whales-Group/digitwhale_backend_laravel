@@ -367,8 +367,7 @@ class FlutterWaveService
     public function payUtilityBill(string $item_id, string $biller_code, string $amount, string $customer)
     {
         try {
-            // Uncomment this section when ready for real Flutterwave integration
-            /*
+            
             $payload = [
                 "country" => "NG",
                 "customer_id" => $customer,
@@ -383,25 +382,25 @@ class FlutterWaveService
 
             $value = json_decode($response->getBody()->getContents(), true);
             return $value;
-            */
+            
 
             // Mock response for testing
-            return [
-                'event' => 'singlebillpayment.status',
-                'event.type' => 'SingleBillPayment',
-                'data' => [
-                    'customer' => $customer,
-                    'amount' => (float) $amount,
-                    'network' => 'MTN',
-                    'tx_ref' => CodeHelper::generateSecureReference(),
-                    'flw_ref' => CodeHelper::generate(30, true),
-                    'batch_reference' => null,
-                    'customer_reference' => 'DigitWhale-' . substr(md5(uniqid()), 0, 14),
-                    'status' => 'success',
-                    'message' => 'Bill Payment was completed successfully',
-                    'reference' => null,
-                ],
-            ];
+            // return [
+            //     'event' => 'singlebillpayment.status',
+            //     'event.type' => 'SingleBillPayment',
+            //     'data' => [
+            //         'customer' => $customer,
+            //         'amount' => (float) $amount,
+            //         'network' => 'MTN',
+            //         'tx_ref' => CodeHelper::generateSecureReference(),
+            //         'flw_ref' => CodeHelper::generate(30, true),
+            //         'batch_reference' => null,
+            //         'customer_reference' => 'DigitWhale-' . substr(md5(uniqid()), 0, 14),
+            //         'status' => 'success',
+            //         'message' => 'Bill Payment was completed successfully',
+            //         'reference' => null,
+            //     ],
+            // ];
         } catch (AppException $e) {
             throw new AppException("Failed to pay utility bill: " . $e->getMessage());
         } catch (GuzzleException $e) {
