@@ -13,6 +13,7 @@ use App\Models\Beneficiary;
 use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\TransferModule\Services\TransferService;
 use DB;
+use Exception;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\JsonResponse;
 use Psr\Container\ContainerExceptionInterface;
@@ -200,11 +201,12 @@ class BillService
             $responseBody = $e->getResponse()->getBody()->getContents();
 
             $errorData = json_decode($responseBody, true);
+
             DB::rollBack();
 
             throw new AppException($errorData['message']);
 
-        } catch (\Throwable $th) {
+        } catch (Exception $e) {
             DB::rollBack();
             throw new AppException($e->getMessage());
         } finally {
