@@ -368,20 +368,20 @@ class FlutterWaveService
     {
         try {
 
-            $payload = [
-                "country" => "NG",
-                "customer_id" => $customer,
-                "amount" => $amount,
-                "reference" => CodeHelper::generateSecureReference()
-                //TODO: Add Webhook
-            ];
+            // $payload = [
+            //     "country" => "NG",
+            //     "customer_id" => $customer,
+            //     "amount" => $amount,
+            //     "reference" => CodeHelper::generateSecureReference()
+            //     //TODO: Add Webhook
+            // ];
 
-            $response = $this->httpClient->post("billers/" . $biller_code . "/items/" . $item_id . "/payment", [
-                'headers' => $this->buildAuthHeader(),
-                'json' => $payload,
-            ]);
+            // $response = $this->httpClient->post("billers/" . $biller_code . "/items/" . $item_id . "/payment", [
+            //     'headers' => $this->buildAuthHeader(),
+            //     'json' => $payload,
+            // ]);
 
-            // $value = $response->getBody();
+            // // $value = $response->getBody();
 
              $value = [
                 'event' => 'singlebillpayment.status',
