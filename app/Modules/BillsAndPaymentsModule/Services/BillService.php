@@ -101,7 +101,7 @@ class BillService
             DB::beginTransaction();
 
             // Validate response
-            if ($payedBillResponse['status'] !== 'success') {
+            if (!isset($payedBillResponse['data']) || $payedBillResponse['data']['status'] !== 'success') {
                 throw new AppException("Failed to process bill payment: Invalid or failed response.");
             }
 
