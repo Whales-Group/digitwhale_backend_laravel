@@ -116,7 +116,7 @@ class BillService
             $transactionData = [
                 'currency' => "NAIRA",
                 'to_sys_account_id' => null,
-                'to_user_name' => $billData["phone_number"] ?? "Unknown",
+                'to_user_name' => "Bills & Utility",
                 'to_user_email' => null,
                 'to_bank_name' => $billData["network"] ?? "Utility Provider",
                 'to_bank_code' => null,
