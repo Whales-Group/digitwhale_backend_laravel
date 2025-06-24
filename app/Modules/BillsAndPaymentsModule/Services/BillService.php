@@ -127,8 +127,7 @@ class BillService
                 'amount' => $amount,
                 'note' => "[Digitwhale/Transfer] | Bill Payment - "
                     . ($payedBillResponse["message"] ?? "Completed")
-                    . $billData["recharge_token"] == null ? "" : "Token: "
-                    . $billData["recharge_token"],
+                    . (($billData["recharge_token"] == null) ? "" : (" Token: " . $billData["recharge_token"])),
                 'entry_type' => 'debit',
                 'charge' => $billData["fee"] ?? 0
             ];
