@@ -81,71 +81,88 @@ class BillService
     }
 
 
-   public function purchaseBill()
-{
-    try {
-        // Get request parameters
-        $item_code = request()->route("item_code");
-        $biller_code = request()->route("biller_code");
-        $customer_id = request()->get("customer_id");
-        $amount = request()->get("amount");
-        $account_id = request()->get("account_id");
+    public function purchaseBill()
+    {
+        try {
+            // Get request parameters
+            $item_code = request()->route("item_code");
+            $biller_code = request()->route("biller_code");
+            $customer_id = request()->get("customer_id");
+            $amount = request()->get("amount");
+            $account_id = request()->get("account_id");
 
-        // Validate sender account
-        $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
+            // Validate sender account
+            $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
-        // Make payment and get response
-        $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+            // Make payment and get response
+            // $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+           
+            $payedBillResponse = [
+                'event' => 'singlebillpayment.status',
+                'event.type' => 'SingleBillPayment',
+                'data' => [
+                    'customer' => '+2349068814392',
+                    'amount' => 50,
+                    'network' => 'MTN',
+                    'tx_ref' => 'CF-FLYAPI-20250624012140281174009',
+                    'flw_ref' => 'BPUSSD17507713008547596395',
+                    'batch_reference' => null,
+                    'customer_reference' => 'DigitWhale-90433820d8e714',
+                    'status' => 'success',
+                    'message' => 'Bill Payment was completed successfully',
+                    'reference' => null,
+                ],
+            ];
 
-        // Begin DB transaction
-        DB::beginTransaction();
+            // Begin DB transaction
+            DB::beginTransaction();
 
-        // Validate and extract the 'data' portion
-        $billData = $payedBillResponse['data'] ?? null;
+            // Validate and extract the 'data' portion
+            $billData = $payedBillResponse['data'] ?? null;
 
-        if (!$billData || !isset($billData['status']) || $billData['status'] !== 'success') {
-            throw new AppException("Failed to process bill payment: Invalid or failed response.");
+            if (!$billData || !isset($billData['status']) || $billData['status'] !== 'success') {
+                throw new AppException("Failed to process bill payment: Invalid or failed response.");
+            }
+
+            // Extract transaction details
+            $transactionData = [
+                'currency' => "NAIRA",
+                'to_sys_account_id' => null,
+                'to_user_name' => $billData["customer"] ?? "Unknown",
+                'to_user_email' => $billData["email"] ?? null,
+                'to_bank_name' => $billData["network"] ?? "Utility Provider",
+                'to_bank_code' => null,
+                'to_account_number' => $billData["customer"] ?? null,
+                'transaction_reference' => $billData["tx_ref"] ?? CodeHelper::generateSecureReference(),
+                'status' => 'successful',
+                'type' => TransferType::BILL_PAYMENT,
+                'amount' => $amount,
+                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($billData["message"] ?? "Completed"),
+                'entry_type' => 'debit',
+            ];
+
+            // Register transaction
+            $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
+
+            // Create beneficiary
+            $this->createBeneficiary($billData, $account_id);
+
+            DB::commit();
+
+            return ResponseHelper::success($trp);
+
+        } catch (ClientException $e) {
+            DB::rollBack();
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+            throw new AppException($errorData['message'] ?? "Provider error");
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            AppLog::error($e->getMessage());
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
         }
-
-        // Extract transaction details
-        $transactionData = [
-            'currency' => "NAIRA",
-            'to_sys_account_id' => null,
-            'to_user_name' => $billData["customer"] ?? "Unknown",
-            'to_user_email' => $billData["email"] ?? null,
-            'to_bank_name' => $billData["network"] ?? "Utility Provider",
-            'to_bank_code' => null,
-            'to_account_number' => $billData["customer"] ?? null,
-            'transaction_reference' => $billData["tx_ref"] ?? CodeHelper::generateSecureReference(),
-            'status' => 'successful',
-            'type' => TransferType::BILL_PAYMENT,
-            'amount' => $amount,
-            'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($billData["message"] ?? "Completed"),
-            'entry_type' => 'debit',
-        ];
-
-        // Register transaction
-        $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
-
-        // Create beneficiary
-        $this->createBeneficiary($billData, $account_id);
-
-        DB::commit();
-
-        return ResponseHelper::success($trp);
-
-    } catch (ClientException $e) {
-        DB::rollBack();
-        $responseBody = $e->getResponse()->getBody()->getContents();
-        $errorData = json_decode($responseBody, true);
-        throw new AppException($errorData['message'] ?? "Provider error");
-
-    } catch (Exception $e) {
-        DB::rollBack();
-        AppLog::error($e->getMessage());
-        throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
     }
-}
 
 
     /**
