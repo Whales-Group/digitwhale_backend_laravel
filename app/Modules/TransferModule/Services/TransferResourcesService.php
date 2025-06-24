@@ -111,7 +111,7 @@ class TransferResourcesService
                     break;
 
                 default:
-                    $response['message'] = "failed to verify account: check and try again.";
+                    $response['message'] = "failed to verify account: check and try again. bank_code: $bank_code, account_number: $account_number";
 
             }
 
