@@ -4,6 +4,7 @@ namespace App\Gateways\FlutterWave\Services;
 
 use App\Exceptions\AppException;
 use App\Helpers\CodeHelper;
+use App\Models\AppLog;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -382,6 +383,7 @@ class FlutterWaveService
             ]);
 
             $value = json_decode($response->getBody()->getContents(), true);
+            AppLog::debug("payUtilityBill", $value);
             return $value;
 
 
