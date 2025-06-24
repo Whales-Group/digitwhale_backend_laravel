@@ -95,24 +95,24 @@ class BillService
             $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
             // Make payment and get response
-            // $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+            $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
 
-            $payedBillResponse = [
-                'event' => 'singlebillpayment.status',
-                'event.type' => 'SingleBillPayment',
-                'data' => [
-                    'customer' => '+2349068814392',
-                    'amount' => 50,
-                    'network' => 'MTN',
-                    'tx_ref' => 'CF-FLYAPI-20250624012140281174009',
-                    'flw_ref' => 'BPUSSD17507713008547596395',
-                    'batch_reference' => null,
-                    'customer_reference' => 'DigitWhale-90433820d8e714',
-                    'status' => 'success',
-                    'message' => 'Bill Payment was completed successfully',
-                    'reference' => null,
-                ],
-            ];
+            // $payedBillResponse = [
+            //     'event' => 'singlebillpayment.status',
+            //     'event.type' => 'SingleBillPayment',
+            //     'data' => [
+            //         'customer' => '+2349068814392',
+            //         'amount' => 50,
+            //         'network' => 'MTN',
+            //         'tx_ref' => 'CF-FLYAPI-20250624012140281174009',
+            //         'flw_ref' => 'BPUSSD17507713008547596395',
+            //         'batch_reference' => null,
+            //         'customer_reference' => 'DigitWhale-90433820d8e714',
+            //         'status' => 'success',
+            //         'message' => 'Bill Payment was completed successfully',
+            //         'reference' => null,
+            //     ],
+            // ];
 
             // Begin DB transaction
             DB::beginTransaction();
