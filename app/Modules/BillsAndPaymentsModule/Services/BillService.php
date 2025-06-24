@@ -171,51 +171,66 @@ class BillService
      */
     public function createBeneficiary(array $response, $account_id): void
     {
-        // Define the type based on biller_code or bill type
+        $network = strtolower($response['network'] ?? '');
+        $customer = $response['customer'] ?? null;
+
+        if (!$customer) {
+            return; // no customer number? skip
+        }
+
+        $fallbackName = $response['network'] ?? 'Utility';
+
+        // Smart type detection
         $type = match (true) {
-            str_contains(strtolower($response['name']), 'airtime') => 'airtime',
-            str_contains(strtolower($response['name']), 'prepaid') => 'prepaid_meter',
-            str_contains(strtolower($response['name']), 'dstv') || str_contains(strtolower($response['name']), 'gotv') => 'cable',
+            str_contains($network, 'airtime') || str_contains($response['tx_ref'] ?? '', 'airtime') => 'airtime',
+            str_contains($network, 'prepaid') => 'prepaid_meter',
+            str_contains($network, 'dstv') || str_contains($network, 'gotv') => 'cable',
             default => 'utility',
         };
 
-        $unique_id = $response['customer'] . '_' . $response['biller_code'];
+        // Use network name if name not present
+        $beneficiaryName = $response['name'] ?? $fallbackName;
 
-        // Check for existing beneficiary
+        // Generate unique ID
+        $unique_id = $customer . '_' . $response['network'];
+
+        // Avoid duplicates
         $existing = Beneficiary::where('user_id', auth()->id())
             ->where('unique_id', $unique_id)
             ->first();
 
-        if ($existing)
+        if ($existing) {
             return;
+        }
 
-        // Construct beneficiary data
+        // Prepare base data
         $beneficiaryData = [
             'user_id' => auth()->id(),
-            'name' => $response['name'],
+            'name' => $beneficiaryName,
             'type' => $type,
-            'account_number' => $response['customer'],
-            'bank_name' => $response['name'],
+            'account_number' => $customer,
+            'bank_name' => $beneficiaryName,
             'bank_code' => request()->get('bank_code'),
             'is_favorite' => false,
             'unique_id' => $unique_id,
             'amount' => request()->get('amount'),
         ];
 
-        // Add extras based on type
+        // Add type-specific details
         if ($type === 'airtime') {
-            $beneficiaryData['network_provider'] = $response['name'];
-            $beneficiaryData['phone_number'] = $response['customer'];
+            $beneficiaryData['network_provider'] = $response['network'];
+            $beneficiaryData['phone_number'] = $customer;
         }
 
         if ($type === 'prepaid_meter') {
-            $beneficiaryData['meter_number'] = $response['customer'];
+            $beneficiaryData['meter_number'] = $customer;
             $beneficiaryData['utility_type'] = 'electricity';
             $beneficiaryData['phone_number'] = request()->get('phone_number');
         }
 
         Beneficiary::create($beneficiaryData);
     }
+
 }
 
 //UTILITYBILLS
