@@ -125,7 +125,10 @@ class BillService
                 'status' => 'successful',
                 'type' => TransferType::BILL_PAYMENT,
                 'amount' => $amount,
-                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($payedBillResponse["message"] ?? "Completed"),
+                'note' => "[Digitwhale/Transfer] | Bill Payment - "
+                    . ($payedBillResponse["message"] ?? "Completed")
+                    . $billData["recharge_token"] == null ? "" : "Token: "
+                    . $billData["recharge_token"],
                 'entry_type' => 'debit',
                 'charge' => $billData["fee"] ?? 0
             ];
@@ -133,7 +136,7 @@ class BillService
             $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
 
             // Optional: Create Beneficiary (adjust to use phone_number + network)
-            $this->createBeneficiaryFromBill($billData, $account_id);
+            $this->createBeneficiary($billData, $account_id);
 
             DB::commit();
 
@@ -160,29 +163,29 @@ class BillService
     public function createBeneficiary(array $response, $account_id): void
     {
         $network = strtolower($response['network'] ?? '');
-        $customer = $response['customer'] ?? null;
+        $customer = $response['phone_number'] ?? null;
 
         if (!$customer) {
-            return; // no customer number? skip
+            return; // No phone number means we can't save the beneficiary
         }
 
-        $fallbackName = $response['network'] ?? 'Utility';
+        $fallbackName = strtoupper($response['network'] ?? 'Utility');
 
-        // Smart type detection
+        // Determine type based on network or tx_ref keywords
         $type = match (true) {
-            str_contains($network, 'airtime') || str_contains($response['tx_ref'] ?? '', 'airtime') => 'airtime',
-            str_contains($network, 'prepaid') => 'prepaid_meter',
+            str_contains($network, 'mtn') || str_contains($response['tx_ref'] ?? '', 'airtime') => 'airtime',
+            str_contains($network, 'prepaid') || str_contains($network, 'electric') => 'prepaid_meter',
             str_contains($network, 'dstv') || str_contains($network, 'gotv') => 'cable',
             default => 'utility',
         };
 
-        // Use network name if name not present
-        $beneficiaryName = $response['name'] ?? $fallbackName;
+        // Use network as display name if none present
+        $beneficiaryName = $response['network'] ?? $fallbackName;
 
-        // Generate unique ID
-        $unique_id = $customer . '_' . $response['network'];
+        // Unique per user to avoid duplicate entries
+        $unique_id = $customer . '_' . $beneficiaryName;
 
-        // Avoid duplicates
+        // Check for existing record
         $existing = Beneficiary::where('user_id', auth()->id())
             ->where('unique_id', $unique_id)
             ->first();
@@ -191,31 +194,32 @@ class BillService
             return;
         }
 
-        // Prepare base data
+        // Build base beneficiary structure
         $beneficiaryData = [
             'user_id' => auth()->id(),
             'name' => $beneficiaryName,
             'type' => $type,
             'account_number' => $customer,
             'bank_name' => $beneficiaryName,
-            'bank_code' => request()->get('bank_code'),
+            'bank_code' => request()->get('bank_code'), // optional, often null
             'is_favorite' => false,
             'unique_id' => $unique_id,
-            'amount' => request()->get('amount'),
+            'amount' => $response['amount'] ?? request()->get('amount'),
         ];
 
-        // Add type-specific details
+        // Add extra fields based on type
         if ($type === 'airtime') {
-            $beneficiaryData['network_provider'] = $response['network'];
+            $beneficiaryData['network_provider'] = $beneficiaryName;
             $beneficiaryData['phone_number'] = $customer;
         }
 
         if ($type === 'prepaid_meter') {
             $beneficiaryData['meter_number'] = $customer;
             $beneficiaryData['utility_type'] = 'electricity';
-            $beneficiaryData['phone_number'] = request()->get('phone_number');
+            $beneficiaryData['phone_number'] = request()->get('phone_number') ?? $customer;
         }
 
+        // Create the beneficiary record
         Beneficiary::create($beneficiaryData);
     }
 
