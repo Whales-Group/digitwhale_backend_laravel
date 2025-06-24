@@ -84,32 +84,29 @@ class BillService
     public function purchaseBill()
     {
         try {
-            // Get request parameters
             $item_code = request()->route("item_code");
             $biller_code = request()->route("biller_code");
             $customer_id = request()->get("customer_id");
             $amount = request()->get("amount");
             $account_id = request()->get("account_id");
 
-            // Validate sender account
             $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
-            // Make payment and get response
-            $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+            $payedBillResponse = $this->flutterWaveService->payUtilityBill(
+                $item_code,
+                $biller_code,
+                $amount,
+                $customer_id
+            );
 
-           
-
-            // Begin DB transaction
             DB::beginTransaction();
 
-            // Validate and extract the 'data' portion
             $billData = $payedBillResponse['data'] ?? null;
 
-            if (!$billData || !isset($billData['status']) || $billData['status'] !== 'success') {
+            if (!$billData || ($billData['status'] ?? null) !== 'success') {
                 throw new AppException("Failed to process bill payment: Invalid or failed response.");
             }
 
-            // Extract transaction details
             $transactionData = [
                 'currency' => "NAIRA",
                 'to_sys_account_id' => null,
@@ -127,10 +124,8 @@ class BillService
                 'charge' => 0
             ];
 
-            // Register transaction
             $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
 
-            // Create beneficiary
             $this->createBeneficiary($billData, $account_id);
 
             DB::commit();
@@ -149,6 +144,7 @@ class BillService
             throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
         }
     }
+
 
 
     /**
