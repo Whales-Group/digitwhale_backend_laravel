@@ -381,7 +381,25 @@ class FlutterWaveService
                 'json' => $payload,
             ]);
 
-            $value = $response->getBody();
+            // $value = $response->getBody();
+
+             $value = [
+                'event' => 'singlebillpayment.status',
+                'event.type' => 'SingleBillPayment',
+                'data' => [
+                    'customer' => '+2349068814392',
+                    'amount' => 50,
+                    'network' => 'MTN',
+                    'tx_ref' => 'CF-FLYAPI-20250624012140281174009',
+                    'flw_ref' => 'BPUSSD17507713008547596395',
+                    'batch_reference' => null,
+                    'customer_reference' => 'DigitWhale-90433820d8e714',
+                    'status' => 'success',
+                    'message' => 'Bill Payment was completed successfully',
+                    'reference' => null,
+                ],
+            ];
+
             return $value;
         } catch (AppException $e) {
             throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
