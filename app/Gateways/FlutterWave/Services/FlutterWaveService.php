@@ -378,7 +378,7 @@ class FlutterWaveService
             ];
 
             $response = $this->httpClient->post("billers/{$biller_code}/items/{$item_id}/payment", [
-                'headers' => $this->buildAuthHeader(),
+                 'headers' => $this->buildAuthHeader(),
                 'json' => $payload,
             ]);
 

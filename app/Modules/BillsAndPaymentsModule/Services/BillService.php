@@ -90,8 +90,10 @@ class BillService
             $amount = request()->get("amount");
             $account_id = request()->get("account_id");
 
+            // Validate sender account
             $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
+            // Make payment
             $payedBillResponse = $this->flutterWaveService->payUtilityBill(
                 $item_code,
                 $biller_code,
@@ -99,34 +101,39 @@ class BillService
                 $customer_id
             );
 
-            DB::beginTransaction();
-
-            $billData = $payedBillResponse['data'] ?? null;
-
-            if (!$billData || ($billData['status'] ?? null) !== 'success') {
-                throw new AppException("Failed to process bill payment: Invalid or failed response.");
+            if (($payedBillResponse['status'] ?? 'failed') !== 'success') {
+                throw new AppException("Bill payment failed: " . ($payedBillResponse['message'] ?? 'Unknown error'));
             }
 
+            $billData = $payedBillResponse['data'] ?? null;
+            if (!$billData || !isset($billData['reference'])) {
+                throw new AppException("Invalid response data from bill payment.");
+            }
+
+            DB::beginTransaction();
+
+            // Create transaction
             $transactionData = [
                 'currency' => "NAIRA",
                 'to_sys_account_id' => null,
-                'to_user_name' => $billData["customer"] ?? "Unknown",
-                'to_user_email' => $billData["email"] ?? null,
+                'to_user_name' => $billData["phone_number"] ?? "Unknown",
+                'to_user_email' => null,
                 'to_bank_name' => $billData["network"] ?? "Utility Provider",
                 'to_bank_code' => null,
-                'to_account_number' => $billData["customer"] ?? null,
+                'to_account_number' => $billData["phone_number"] ?? null,
                 'transaction_reference' => $billData["tx_ref"] ?? CodeHelper::generateSecureReference(),
                 'status' => 'successful',
                 'type' => TransferType::BILL_PAYMENT,
                 'amount' => $amount,
-                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($billData["message"] ?? "Completed"),
+                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($payedBillResponse["message"] ?? "Completed"),
                 'entry_type' => 'debit',
-                'charge' => 0
+                'charge' => $billData["fee"] ?? 0
             ];
 
             $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
 
-            $this->createBeneficiary($billData, $account_id);
+            // Optional: Create Beneficiary (adjust to use phone_number + network)
+            $this->createBeneficiaryFromBill($billData, $account_id);
 
             DB::commit();
 
