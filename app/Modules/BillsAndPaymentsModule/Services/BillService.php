@@ -9,6 +9,7 @@ use App\Exceptions\CodedException;
 use App\Gateways\FlutterWave\Services\FlutterWaveService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
+use App\Models\AppLog;
 use App\Models\Beneficiary;
 use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\TransferModule\Services\TransferService;
@@ -208,7 +209,8 @@ class BillService
 
         } catch (Exception $e) {
             DB::rollBack();
-            throw new AppException($e->getMessage());
+            AppLog::error($e->getMessage());
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
         } finally {
         }
 
