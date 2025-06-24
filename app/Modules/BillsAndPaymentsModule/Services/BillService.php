@@ -81,70 +81,72 @@ class BillService
     }
 
 
-    public function purchaseBill()
-    {
-        try {
-            // Get request parameters
-            $item_code = request()->route("item_code");
-            $biller_code = request()->route("biller_code");
-            $customer_id = request()->get("customer_id");
-            $amount = request()->get("amount");
-            $account_id = request()->get("account_id");
+   public function purchaseBill()
+{
+    try {
+        // Get request parameters
+        $item_code = request()->route("item_code");
+        $biller_code = request()->route("biller_code");
+        $customer_id = request()->get("customer_id");
+        $amount = request()->get("amount");
+        $account_id = request()->get("account_id");
 
-            // Validate sender account
-            $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
+        // Validate sender account
+        $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
-            // Make payment and get response
-            $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+        // Make payment and get response
+        $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
 
-            // Begin DB transaction
-            DB::beginTransaction();
+        // Begin DB transaction
+        DB::beginTransaction();
 
-            // Validate response
-            if (!isset($payedBillResponse['data']) || $payedBillResponse['data']['status'] !== 'success') {
-                throw new AppException("Failed to process bill payment: Invalid or failed response.");
-            }
+        // Validate and extract the 'data' portion
+        $billData = $payedBillResponse['data'] ?? null;
 
-            // Extract transaction details
-            $transactionData = [
-                'currency' => "NAIRA",
-                'to_sys_account_id' => null,
-                'to_user_name' => $payedBillResponse["customer"] ?? "Unknown",
-                'to_user_email' => $payedBillResponse["email"] ?? null,
-                'to_bank_name' => $payedBillResponse["network"] ?? "Utility Provider",
-                'to_bank_code' => null,
-                'to_account_number' => $payedBillResponse["customer"],
-                'transaction_reference' => $payedBillResponse["tx_ref"] ?? CodeHelper::generateSecureReference(),
-                'status' => 'successful',
-                'type' => TransferType::BILL_PAYMENT,
-                'amount' => $amount,
-                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($payedBillResponse["message"] ?? "Completed"),
-                'entry_type' => 'debit',
-            ];
-
-            // Register transaction
-            $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
-
-            // Create beneficiary
-            $this->createBeneficiary($payedBillResponse, $account_id);
-
-            // Commit DB transaction
-            DB::commit();
-
-            return ResponseHelper::success($trp);
-
-        } catch (ClientException $e) {
-            DB::rollBack();
-            $responseBody = $e->getResponse()->getBody()->getContents();
-            $errorData = json_decode($responseBody, true);
-            throw new AppException($errorData['message'] ?? "Flutterwave client error");
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            AppLog::error($e->getMessage());
-            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
+        if (!$billData || !isset($billData['status']) || $billData['status'] !== 'success') {
+            throw new AppException("Failed to process bill payment: Invalid or failed response.");
         }
+
+        // Extract transaction details
+        $transactionData = [
+            'currency' => "NAIRA",
+            'to_sys_account_id' => null,
+            'to_user_name' => $billData["customer"] ?? "Unknown",
+            'to_user_email' => $billData["email"] ?? null,
+            'to_bank_name' => $billData["network"] ?? "Utility Provider",
+            'to_bank_code' => null,
+            'to_account_number' => $billData["customer"] ?? null,
+            'transaction_reference' => $billData["tx_ref"] ?? CodeHelper::generateSecureReference(),
+            'status' => 'successful',
+            'type' => TransferType::BILL_PAYMENT,
+            'amount' => $amount,
+            'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($billData["message"] ?? "Completed"),
+            'entry_type' => 'debit',
+        ];
+
+        // Register transaction
+        $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
+
+        // Create beneficiary
+        $this->createBeneficiary($billData, $account_id);
+
+        DB::commit();
+
+        return ResponseHelper::success($trp);
+
+    } catch (ClientException $e) {
+        DB::rollBack();
+        $responseBody = $e->getResponse()->getBody()->getContents();
+        $errorData = json_decode($responseBody, true);
+        throw new AppException($errorData['message'] ?? "Provider error");
+
+    } catch (Exception $e) {
+        DB::rollBack();
+        AppLog::error($e->getMessage());
+        throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
     }
+}
+
 
     /**
      * @throws AppException
