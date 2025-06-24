@@ -81,14 +81,8 @@ class BillService
     }
 
 
-    /**
-     * @throws NotFoundExceptionInterface
-     * @throws ContainerExceptionInterface
-     * @throws AppException
-     */
     public function purchaseBill()
     {
-
         try {
             // Get request parameters
             $item_code = request()->route("item_code");
@@ -103,117 +97,53 @@ class BillService
             // Make payment and get response
             $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
 
-            //        $payedBillResponse = [
-//            'airtime' => [
-//                "response_code" => "00",
-//                "address" => null,
-//                "response_message" => "Successful",
-//                "name" => "MTN Airtime",
-//                "biller_code" => "BIL099",
-//                "customer" => "08038291822",
-//                "product_code" => "AT099",
-//                "email" => null,
-//                "fee" => 0,
-//                "maximum" => 0,
-//                "minimum" => 0
-//            ]];
-//        $payedBillResponse = [
-//
-//            'data' => [
-//                "response_code" => "00",
-//                "address" => null,
-//                "response_message" => "Successful",
-//                "name" => "MTN Data Bundle",
-//                "biller_code" => "BIL097",
-//                "customer" => "08031234567",
-//                "product_code" => "DB001",
-//                "email" => null,
-//                "fee" => 0,
-//                "maximum" => 0,
-//                "minimum" => 0
-//            ]];
-//        $payedBillResponse = [
-//            'utilities' => [
-//                "response_code" => "00",
-//                "address" => null,
-//                "response_message" => "Successful",
-//                "name" => "EKEDC PREPAID TOPUP",
-//                "biller_code" => "BIL057",
-//                "customer" => "123456789012",
-//                "product_code" => "ET001",
-//                "email" => null,
-//                "fee" => 0,
-//                "maximum" => 0,
-//                "minimum" => 0
-//            ]];
-//        $payedBillResponse = [
-//            'cable' => [
-//                "response_code" => "00",
-//                "address" => null,
-//                "response_message" => "Successful",
-//                "name" => "Test DSTV Account",
-//                "biller_code" => "BIL119",
-//                "customer" => "0025401100",
-//                "product_code" => "CB141",
-//                "email" => null,
-//                "fee" => 0,
-//                "maximum" => 0,
-//                "minimum" => 0
-//            ]
-//        ];
-
-
-            // Flatten the dynamic response format
-            $billData = collect($payedBillResponse)->first();
-
+            // Begin DB transaction
             DB::beginTransaction();
 
-
-            if (!$billData || !isset($billData['response_code'])) {
-                throw new AppException("Unknown response type");
+            // Validate response
+            if (!$payedBillResponse || !isset($payedBillResponse['status']) || $payedBillResponse['status'] !== 'success') {
+                throw new AppException("Failed to process bill payment: Invalid or failed response.");
             }
 
             // Extract transaction details
             $transactionData = [
                 'currency' => "NAIRA",
                 'to_sys_account_id' => null,
-                'to_user_name' => $billData["name"],
-                'to_user_email' => $billData["email"] ?? null,
-                'to_bank_name' => $billData["name"],
+                'to_user_name' => $payedBillResponse["customer"] ?? "Unknown",
+                'to_user_email' => $payedBillResponse["email"] ?? null,
+                'to_bank_name' => $payedBillResponse["network"] ?? "Utility Provider",
                 'to_bank_code' => null,
-                'to_account_number' => $billData["customer"],
-                'transaction_reference' => CodeHelper::generateSecureReference(),
+                'to_account_number' => $payedBillResponse["customer"],
+                'transaction_reference' => $payedBillResponse["tx_ref"] ?? CodeHelper::generateSecureReference(),
                 'status' => 'successful',
                 'type' => TransferType::BILL_PAYMENT,
                 'amount' => $amount,
-                'note' => "[Digitwhale/Transfer] | Bill Payment",
+                'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($payedBillResponse["message"] ?? "Completed"),
                 'entry_type' => 'debit',
             ];
 
             // Register transaction
             $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
 
-            // Create beneficiary (optional and based on bill type)
-            $this->createBeneficiary($billData, $account_id);
+            // Create beneficiary
+            $this->createBeneficiary($payedBillResponse, $account_id);
+
+            // Commit DB transaction
+            DB::commit();
 
             return ResponseHelper::success($trp);
+
         } catch (ClientException $e) {
-
-            $responseBody = $e->getResponse()->getBody()->getContents();
-
-            $errorData = json_decode($responseBody, true);
-
             DB::rollBack();
-
-            throw new AppException($errorData['message']);
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+            throw new AppException($errorData['message'] ?? "Flutterwave client error");
 
         } catch (Exception $e) {
             DB::rollBack();
             AppLog::error($e->getMessage());
-            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
-        } finally {
+            throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE, $e->getMessage());
         }
-
     }
 
     /**
