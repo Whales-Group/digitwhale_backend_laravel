@@ -2,14 +2,18 @@
 
 namespace App\Modules\BillsAndPaymentsModule\Services;
 
+use App\Enums\ErrorCode;
 use App\Enums\TransferType;
 use App\Exceptions\AppException;
+use App\Exceptions\CodedException;
 use App\Gateways\FlutterWave\Services\FlutterWaveService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Beneficiary;
 use App\Modules\TransferModule\Services\TransactionService;
 use App\Modules\TransferModule\Services\TransferService;
+use DB;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\JsonResponse;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -82,20 +86,22 @@ class BillService
      */
     public function purchaseBill()
     {
-        // Get request parameters
-        $item_code = request()->route("item_code");
-        $biller_code = request()->route("biller_code");
-        $customer_id = request()->get("customer_id");
-        $amount = request()->get("amount");
-        $account_id = request()->get("account_id");
 
-        // Validate sender account
-        $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
+        try {
+            // Get request parameters
+            $item_code = request()->route("item_code");
+            $biller_code = request()->route("biller_code");
+            $customer_id = request()->get("customer_id");
+            $amount = request()->get("amount");
+            $account_id = request()->get("account_id");
 
-        // Make payment and get response
-        $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+            // Validate sender account
+            $this->transferService->validateSenderAccount($account_id, "no_id", $amount);
 
-//        $payedBillResponse = [
+            // Make payment and get response
+            $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
+
+            //        $payedBillResponse = [
 //            'airtime' => [
 //                "response_code" => "00",
 //                "address" => null,
@@ -155,37 +161,55 @@ class BillService
 //        ];
 
 
-        // Flatten the dynamic response format
-        $billData = collect($payedBillResponse)->first();
+            // Flatten the dynamic response format
+            $billData = collect($payedBillResponse)->first();
 
-        if (!$billData || !isset($billData['response_code'])) {
-            throw new AppException("Unknown response type");
+            DB::beginTransaction();
+
+
+            if (!$billData || !isset($billData['response_code'])) {
+                throw new AppException("Unknown response type");
+            }
+
+            // Extract transaction details
+            $transactionData = [
+                'currency' => "NAIRA",
+                'to_sys_account_id' => null,
+                'to_user_name' => $billData["name"],
+                'to_user_email' => $billData["email"] ?? null,
+                'to_bank_name' => $billData["name"],
+                'to_bank_code' => null,
+                'to_account_number' => $billData["customer"],
+                'transaction_reference' => CodeHelper::generateSecureReference(),
+                'status' => 'successful',
+                'type' => TransferType::BILL_PAYMENT,
+                'amount' => $amount,
+                'note' => "[Digitwhale/Transfer] | Bill Payment",
+                'entry_type' => 'debit',
+            ];
+
+            // Register transaction
+            $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
+
+            // Create beneficiary (optional and based on bill type)
+            $this->createBeneficiary($billData, $account_id);
+
+            return ResponseHelper::success($trp);
+        } catch (ClientException $e) {
+
+            $responseBody = $e->getResponse()->getBody()->getContents();
+
+            $errorData = json_decode($responseBody, true);
+            DB::rollBack();
+
+            throw new AppException($errorData['message']);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw new AppException($e->getMessage());
+        } finally {
         }
 
-        // Extract transaction details
-        $transactionData = [
-            'currency' => "NAIRA",
-            'to_sys_account_id' => null,
-            'to_user_name' => $billData["name"],
-            'to_user_email' => $billData["email"] ?? null,
-            'to_bank_name' => $billData["name"],
-            'to_bank_code' => null,
-            'to_account_number' => $billData["customer"],
-            'transaction_reference' => CodeHelper::generateSecureReference(),
-            'status' => 'successful',
-            'type' => TransferType::BILL_PAYMENT,
-            'amount' => $amount,
-            'note' => "[Digitwhale/Transfer] | Bill Payment",
-            'entry_type' => 'debit',
-        ];
-
-        // Register transaction
-        $trp = $this->transactionService->registerTransaction($transactionData, TransferType::BILL_PAYMENT);
-
-        // Create beneficiary (optional and based on bill type)
-        $this->createBeneficiary($billData, $account_id);
-
-        return ResponseHelper::success($trp);
     }
 
     /**
@@ -208,7 +232,8 @@ class BillService
             ->where('unique_id', $unique_id)
             ->first();
 
-        if ($existing) return;
+        if ($existing)
+            return;
 
         // Construct beneficiary data
         $beneficiaryData = [
