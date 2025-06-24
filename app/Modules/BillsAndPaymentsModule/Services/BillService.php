@@ -96,7 +96,7 @@ class BillService
 
             // Make payment and get response
             // $payedBillResponse = $this->flutterWaveService->payUtilityBill($item_code, $biller_code, $amount, $customer_id);
-           
+
             $payedBillResponse = [
                 'event' => 'singlebillpayment.status',
                 'event.type' => 'SingleBillPayment',
@@ -139,6 +139,7 @@ class BillService
                 'amount' => $amount,
                 'note' => "[Digitwhale/Transfer] | Bill Payment - " . ($billData["message"] ?? "Completed"),
                 'entry_type' => 'debit',
+                'charge' => 0
             ];
 
             // Register transaction
