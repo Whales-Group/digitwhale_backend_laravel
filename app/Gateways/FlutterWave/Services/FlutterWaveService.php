@@ -382,7 +382,7 @@ class FlutterWaveService
             ]);
 
             $value = json_decode($response->getBody(), true);
-            return $value['data'];
+            return $value;
         } catch (AppException $e) {
             throw new AppException("Failed to fetch wallet balance: " . $e->getMessage());
         } catch (GuzzleException $e) {
