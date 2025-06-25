@@ -277,7 +277,7 @@ class TransferResourcesService
         //     throw $e;
 
         } catch (Exception $e) {
-            return ResponseHelper::error($e->getMessage());
+            return ResponseHelper::error($e->getMessage()."lksdlskldk");
         }finally{
             DB::commit();
         }
