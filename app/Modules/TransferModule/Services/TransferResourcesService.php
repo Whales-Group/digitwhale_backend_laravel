@@ -269,9 +269,9 @@ class TransferResourcesService
 
             $errorData = json_decode($responseBody, true);
 
-            if ($errorData['errorType'] === "RESOURCE_NOT_FOUND") {
-                throw new AppException($errorData['message'] ?? "Transaction not found.");
-            }
+            // if ($errorData['errorType'] === "RESOURCE_NOT_FOUND") {
+            //     throw new AppException($errorData['message'] ?? "Transaction not found.");
+            // }
 
             DB::rollBack();
             throw $e;
