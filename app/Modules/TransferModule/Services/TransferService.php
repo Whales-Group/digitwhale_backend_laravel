@@ -359,7 +359,7 @@ class TransferService
                 'email' => $request->beneficiary_email
             ],
             $request->type,
-            $transferResponse['data']['tx_ref'],
+            $transferResponse['data']['reference'],
         );
     }
 
