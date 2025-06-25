@@ -13,6 +13,7 @@ use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
+use App\Models\AppLog;
 use App\Models\User;
 use Exception;
 use GuzzleHttp\Exception\ClientException;
@@ -88,9 +89,11 @@ class TransferService
             }
 
             DB::rollBack();
+            AppLog::error("transfer error", $e->getMessage());
             throw $e;
         } catch (Exception $e) {
             DB::rollBack();
+            AppLog::error("transfer error", $e->getMessage());
             throw new AppException($e->getMessage());
         } finally {
             $lock?->release();
@@ -115,7 +118,7 @@ class TransferService
             ->first();
 
         if (!$record) {
-            throw new AppException("Invalid or expired transfer code.");
+            throw new AppException("Invalid or expired transfer session.");
         }
 
         if ((int) $record->amount !== ($amount + $record->charge)) {
