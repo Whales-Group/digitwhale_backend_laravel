@@ -253,7 +253,7 @@ class TransferResourcesService
                 $currentStatus = match ($accountType) {
                     ServiceProvider::FINCRA => $this->fincraService->verifyTransfer($reference)['data']['status'],
                     ServiceProvider::PAYSTACK => $this->paystackService->verifyTransfer($reference)['data']['status'],
-                    ServiceProvider::FLUTTERWAVE => $this->flutterWaveService->verifyTransaction($reference)['data']['status'],
+                    ServiceProvider::FLUTTERWAVE => $this->flutterWaveService->verifyTransaction($reference)['status'],
                     default => throw new AppException("Unsupported service provider for transaction verification."),
                 };
             }
@@ -261,7 +261,7 @@ class TransferResourcesService
             $transactionEntry->update(['status' => $currentStatus]);
 
             AppLog::info($transactionEntry);
-            
+
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
         } catch (ClientException $e) {
 
