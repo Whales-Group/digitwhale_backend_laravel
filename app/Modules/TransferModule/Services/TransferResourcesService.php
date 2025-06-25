@@ -261,7 +261,7 @@ class TransferResourcesService
             $transactionEntry->update(['status' => $currentStatus]);
 
             AppLog::info($transactionEntry);
-
+            
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
         } catch (ClientException $e) {
 
@@ -278,6 +278,8 @@ class TransferResourcesService
 
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
+        }finally{
+            DB::commit();
         }
     }
 
