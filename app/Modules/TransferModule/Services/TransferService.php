@@ -237,7 +237,7 @@ class TransferService
             ServiceProvider::FINCRA => $this->handleFincraTransfer($request, $account),
             ServiceProvider::FLUTTERWAVE => $this->handleFlutterWaveTransfer($request, $account),
             ServiceProvider::PAYSTACK => throw new AppException("Service Unavailable. Contact support to switch service provider."),
-            default => $this->handleFincraTransfer($request, $account),
+            default => $this->handleFlutterWaveTransfer($request, $account),
         };
     }
 

@@ -14,6 +14,7 @@ use App\Gateways\Paystack\Services\PaystackService;
 use App\Helpers\CodeHelper;
 use App\Helpers\ResponseHelper;
 use App\Models\Account;
+use App\Models\AppLog;
 use App\Models\Beneficiary;
 use App\Models\TransactionEntry;
 use Exception;
@@ -259,6 +260,8 @@ class TransferResourcesService
 
             $transactionEntry->update(['status' => $currentStatus]);
 
+            AppLog::info($transactionEntry);
+
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
         } catch (ClientException $e) {
 
@@ -305,7 +308,7 @@ class TransferResourcesService
         if (!$account) {
             throw new AppException("Invalid account id or account not found.");
         }
-        
+
         if ($data['amount'] < 100) {
             throw new AppException("Minimun transaction amount is 100.");
         }
