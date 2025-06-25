@@ -324,12 +324,12 @@ class TransferResourcesService
             ],
             ServiceProvider::PAYSTACK => [
                 "availableBalance" => collect($this->paystackService->getWalletBalance())
-                    ->firstWhere('currency', 'NGN')['balance'] / 100,
+                    ->firstWhere('currency', 'NGN')['balance'],
                 "provider" => ServiceProvider::PAYSTACK->value,
             ],
             ServiceProvider::FLUTTERWAVE => [
                 "availableBalance" => collect($this->flutterWaveService->getWalletBalance())
-                    ->firstWhere('currency', 'NGN')['available_balance'] / 100,
+                    ->firstWhere('currency', 'NGN')['available_balance'],
                 "provider" => ServiceProvider::FLUTTERWAVE->value,
             ],
             default => throw new AppException("Invalid account service provider."),
