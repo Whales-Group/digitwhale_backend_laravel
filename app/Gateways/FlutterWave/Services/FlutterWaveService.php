@@ -257,7 +257,7 @@ class FlutterWaveService
     public function verifyTransaction(string $reference): array
     {
         try {
-            $response = $this->httpClient->get("transactions/verify_by_reference?tx_ref=" . $reference, [
+            $response = $this->httpClient->get("transactions/verify_by_reference?tx_ref=DigitWhale-717a1d7652e17a", [
                 'headers' => $this->buildAuthHeader(),
             ]);
 
