@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Log;
 
 class TransferService
 {
@@ -89,12 +90,12 @@ class TransferService
             }
 
             DB::rollBack();
-            AppLog::error("transfer error", $e->getMessage());
+            Log::error($e->getMessage());
             DB::commit();
             throw $e;
         } catch (Exception $e) {
             DB::rollBack();
-            AppLog::error("transfer error", $e->getMessage());
+            Log::error($e->getMessage());
             DB::commit();
             throw new AppException($e->getMessage());
         } finally {
