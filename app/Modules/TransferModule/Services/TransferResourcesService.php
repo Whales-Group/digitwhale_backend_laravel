@@ -305,6 +305,10 @@ class TransferResourcesService
         if (!$account) {
             throw new AppException("Invalid account id or account not found.");
         }
+        
+        if ($data['amount'] < 100) {
+            throw new AppException("Minimun transaction amount is 100.");
+        }
 
         $accountType = ServiceProvider::tryFrom($account->service_provider)
             ?? throw new AppException("Invalid Service Provider");
