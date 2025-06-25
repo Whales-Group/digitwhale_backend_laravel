@@ -64,7 +64,7 @@ class FlutterWaveService
         try {
             $payload = [
                 'account_number' => $accountNumber,
-                'account_bank' => $bankCode,
+                'account_bank' => "044",
             ];
 
             $response = $this->httpClient->post("accounts/resolve", [
