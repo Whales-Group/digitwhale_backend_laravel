@@ -85,14 +85,21 @@ class TransferService
 
             $errorData = json_decode($responseBody, true);
 
-            if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
-                throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+            if ($account->service_provider == ServiceProvider::FINCRA->name) {
+                if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
+                    throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+                }
             }
 
-            DB::rollBack();
+            if ($account->service_provider == ServiceProvider::FLUTTERWAVE->name) {
+                Log::error($e->getMessage());
+                throw new AppException($e->getMessage());
+            }
+
             Log::error($e->getMessage());
-            DB::commit();
+            DB::rollBack();
             throw $e;
+
         } catch (Exception $e) {
             DB::rollBack();
             Log::error($e->getMessage());
