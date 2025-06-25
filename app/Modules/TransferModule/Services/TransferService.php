@@ -90,10 +90,12 @@ class TransferService
 
             DB::rollBack();
             AppLog::error("transfer error", $e->getMessage());
+            DB::commit();
             throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             AppLog::error("transfer error", $e->getMessage());
+            DB::commit();
             throw new AppException($e->getMessage());
         } finally {
             $lock?->release();
