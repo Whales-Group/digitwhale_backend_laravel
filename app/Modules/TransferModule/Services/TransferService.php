@@ -263,7 +263,8 @@ class TransferService
         string $status,
         string $note,
         array $beneficiary,
-        string $type
+        string $type,
+        string $transaction_reference = null
     ): array {
         return [
             'currency' => $account->currency,
@@ -273,7 +274,7 @@ class TransferService
             'to_bank_name' => request()->beneficiary_bank,
             'to_bank_code' => $beneficiary['bankCode'] ?? '',
             'to_account_number' => $beneficiary['accountNumber'] ?? '',
-            'transaction_reference' => CodeHelper::generateSecureReference(),
+            'transaction_reference' => $transaction_reference ?? CodeHelper::generateSecureReference(),
             'status' => $status,
             'type' => $type,
             'amount' => $amount,
@@ -303,7 +304,8 @@ class TransferService
             $transferResponse['data']['status'],
             $request->note,
             $payload['beneficiary'],
-            $request->type
+            $request->type,
+            $payload['customerReference'],
         );
     }
 
@@ -356,7 +358,8 @@ class TransferService
                 'bankCode' => $request->beneficiary_bank_code,
                 'email' => $request->beneficiary_email
             ],
-            $request->type
+            $request->type,
+            $transferResponse['data']['tx_ref'],
         );
     }
 
