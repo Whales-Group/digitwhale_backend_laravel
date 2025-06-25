@@ -92,8 +92,9 @@ class TransferService
             }
 
             if ($account->service_provider == ServiceProvider::FLUTTERWAVE->name) {
-                Log::error($e->getMessage());
-                throw new AppException($e->getMessage());
+                if ($errorData['errorType'] === "NO_ENOUGH_MONEY_IN_WALLET") {
+                    throw new CodedException(ErrorCode::INSUFFICIENT_PROVIDER_BALANCE);
+                }
             }
 
             Log::error($e->getMessage());
@@ -103,7 +104,6 @@ class TransferService
         } catch (Exception $e) {
             DB::rollBack();
             Log::error($e->getMessage());
-            DB::commit();
             throw new AppException($e->getMessage());
         } finally {
             $lock?->release();
@@ -233,7 +233,7 @@ class TransferService
 
     protected function handleExternalTransfer(Request $request, Account $account, TransferType $transferType): array
     {
-        return match ($account->service_provider) {
+        return match (ServiceProvider::tryFrom($account->service_provider)) {
             ServiceProvider::FINCRA => $this->handleFincraTransfer($request, $account),
             ServiceProvider::FLUTTERWAVE => $this->handleFlutterWaveTransfer($request, $account),
             ServiceProvider::PAYSTACK => throw new AppException("Service Unavailable. Contact support to switch service provider."),
