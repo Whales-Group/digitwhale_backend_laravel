@@ -390,7 +390,6 @@ class TransferService
             "debit_currency" => "NGN",
             "callback_url" => "https://vivian.whales.com.ng/api/v1/",
             "narration" => $request->note,
-
         ]);
     }
 }

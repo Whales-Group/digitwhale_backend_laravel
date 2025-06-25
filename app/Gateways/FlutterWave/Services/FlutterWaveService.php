@@ -64,7 +64,7 @@ class FlutterWaveService
         try {
             $payload = [
                 'account_number' => $accountNumber,
-                'account_bank' => "044",
+                'account_bank' => $bankCode,
             ];
 
             $response = $this->httpClient->post("accounts/resolve", [
@@ -215,7 +215,7 @@ class FlutterWaveService
 
             $data = json_decode($response->getBody(), true);
 
-            if (!$data['status']) {
+            if ($data['status'] == "error") {
                 throw new AppException("Failed to verify transfer: " . ($data['message'] ?? 'Unknown error'));
             }
 
