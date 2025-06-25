@@ -39,8 +39,8 @@ class FlutterWaveService
     private function buildAuthHeader(): array
     {
         return [
-            // 'Authorization' => 'Bearer FLWSECK-eac55583f301c5579b19dc5c010c0f13-195fbe8d4cdvt-X',
-            'Authorization' => 'Bearer FLWSECK_TEST-5caaa3ed7fae8c6cd7981c4fe910f63a-X',
+            'Authorization' => 'Bearer FLWSECK-eac55583f301c5579b19dc5c010c0f13-195fbe8d4cdvt-X',
+            // 'Authorization' => 'Bearer FLWSECK_TEST-5caaa3ed7fae8c6cd7981c4fe910f63a-X',
             'Content-Type' => 'application/json',
         ];
     }
