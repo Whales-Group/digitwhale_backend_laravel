@@ -263,18 +263,18 @@ class TransferResourcesService
             AppLog::info($transactionEntry);
 
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
-        } catch (ClientException $e) {
+        // } catch (ClientException $e) {
 
-            $responseBody = $e->getResponse()->getBody()->getContents();
+        //     $responseBody = $e->getResponse()->getBody()->getContents();
 
-            $errorData = json_decode($responseBody, true);
+        //     $errorData = json_decode($responseBody, true);
 
-            // if ($errorData['errorType'] === "RESOURCE_NOT_FOUND") {
-            //     throw new AppException($errorData['message'] ?? "Transaction not found.");
-            // }
+        //     // if ($errorData['errorType'] === "RESOURCE_NOT_FOUND") {
+        //     //     throw new AppException($errorData['message'] ?? "Transaction not found.");
+        //     // }
 
-            DB::rollBack();
-            throw $e;
+        //     DB::rollBack();
+        //     throw $e;
 
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
