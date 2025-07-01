@@ -10,38 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Laravel repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up PHP environment
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          extensions: mbstring, bcmath, ctype, fileinfo, json, openssl, pdo, tokenizer, xml, curl
-          tools: composer
-
-      # Step 3: Clean vendor folder and composer cache
-      - name: Clean environment
+      - name: Remove unneeded files before deploy
         run: |
           rm -rf vendor
-          composer clear-cache
-
-      # Step 4: Install only production dependencies
-      - name: Install Composer dependencies (no dev)
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
-
-      # Step 5: Prepare production files (optional cleanup)
-      - name: Remove dev & extra files
-        run: |
           rm -rf node_modules
           rm -rf tests
           rm -rf .git
-          rm -f README.md vite.config.js webpack.mix.js package.json package-lock.json yarn.lock phpunit.xml
+          rm -f .env.example README.md phpunit.xml composer.lock vite.config.js webpack.mix.js yarn.lock package.json package-lock.json
 
-      # Step 6: Deploy to cPanel shared hosting via FTP
-      - name: Upload Laravel app via FTP
+      - name: Upload Laravel app (excluding vendor) via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -49,3 +29,10 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
           server-dir: ${{ secrets.FTP_PATH }}
+          exclude: |
+            **/vendor/**
+            **/node_modules/**
+            **/tests/**
+            **/.git/**
+            **/README.md
+            **/phpunit.xml
