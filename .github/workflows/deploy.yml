@@ -10,18 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout Laravel repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Set up PHP environment
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
+          extensions: mbstring, bcmath, ctype, fileinfo, json, openssl, pdo, tokenizer, xml, curl
+          tools: composer
 
-      - name: Install Composer dependencies
+      # Step 3: Clean vendor folder and composer cache
+      - name: Clean environment
+        run: |
+          rm -rf vendor
+          composer clear-cache
+
+      # Step 4: Install only production dependencies
+      - name: Install Composer dependencies (no dev)
         run: composer install --no-dev --prefer-dist --optimize-autoloader
 
-      - name: Upload Laravel project via FTP
+      # Step 5: Prepare production files (optional cleanup)
+      - name: Remove dev & extra files
+        run: |
+          rm -rf node_modules
+          rm -rf tests
+          rm -rf .git
+          rm -f README.md vite.config.js webpack.mix.js package.json package-lock.json yarn.lock phpunit.xml
+
+      # Step 6: Deploy to cPanel shared hosting via FTP
+      - name: Upload Laravel app via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
