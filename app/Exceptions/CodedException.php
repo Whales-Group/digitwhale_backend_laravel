@@ -12,7 +12,7 @@ class CodedException extends Exception
     public function __construct(ErrorCode $errorCode, ?string $message = null)
     {
         $this->errorCode = $errorCode;
-        parent::__construct($message ?? $errorCode->message(), $errorCode->code());
+        parent::__construct(($message ?? $errorCode->message()), $errorCode->code());
     }
 
     public function getErrorCode(): ErrorCode

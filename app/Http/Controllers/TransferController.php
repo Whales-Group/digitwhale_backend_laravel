@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ResponseHelper;
 use App\Modules\TransferModule\TransferModuleMain;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class TransferController extends Controller
     public function verifyTransferStatusBy(string $account_id): ?JsonResponse
     {
         return $this->moduleMain->verifyTransferStatusBy($account_id);
+        // return ResponseHelper::error();
     }
 
     public function getBanks(Request $request, string $account_id): ?JsonResponse

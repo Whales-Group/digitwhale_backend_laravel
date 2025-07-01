@@ -8,9 +8,10 @@ enum ErrorCode: int
     case ACCOUNT_NOT_FOUND = 1002;
     case INVALID_SERVICE_PROVIDER = 1003;
     case VALIDATION_CODE_FAILED = 1004;
-    case GENERAL_ERROR = 9999;
-    case INSUFFICIENT_PROVIDER_BALANCE = 1192;
-    case FAILED_TO_CREATE_RECIPIENT = 1193;
+    case GENERAL_ERROR = 1005;
+    case INSUFFICIENT_PROVIDER_BALANCE = 1006;
+    case FAILED_TO_CREATE_RECIPIENT = 1007;
+    case PROVIDER_TRANSACTION_VERIFICATION_FAILED = 1008;
 
 
     /**
@@ -26,7 +27,7 @@ enum ErrorCode: int
             self::INVALID_SERVICE_PROVIDER => 'Invalid service provider.',
             self::VALIDATION_CODE_FAILED => 'Failed to generate validation code.',
             self::GENERAL_ERROR => 'An unexpected error occurred.',
-            self::INSUFFICIENT_PROVIDER_BALANCE => 'Failed to perform transaction [' . $this->code() ."]",
+            self::INSUFFICIENT_PROVIDER_BALANCE => 'Failed to perform transaction [' . $this->code() . "]",
             self::FAILED_TO_CREATE_RECIPIENT => 'Failed to create transfer recipient or benefitiary'
         };
     }

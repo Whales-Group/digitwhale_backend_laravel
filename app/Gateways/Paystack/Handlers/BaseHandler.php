@@ -4,7 +4,6 @@ namespace App\Gateways\Paystack\Handlers;
 
 use App\Enums\PaystackWebhookEvent;
 use App\Helpers\ResponseHelper;
-use App\Models\AppLog;
 use App\Gateways\Paystack\Handlers\HandleChargeSuccess;
 use App\Gateways\Paystack\Handlers\HandleCustomerIdentificationFailed;
 use App\Gateways\Paystack\Handlers\HandleCustomerIdentificationSuccess;
@@ -25,7 +24,6 @@ class BaseHandler
         try {
             $eventEnum = PaystackWebhookEvent::from($event);
         } catch (\ValueError $e) {
-            AppLog::warning("Unhandled webhook event", ["event" => $event]);
             return ResponseHelper::unprocessableEntity(
                 message: "Unhandled webhook event",
                 error: ["event" => $event]

@@ -3,16 +3,15 @@
 namespace App\Modules\TransferModule\Services;
 
 use App\Enums\TransferType;
-use App\Helpers\DateHelper;
-use App\Helpers\ResponseHelper;
 use App\Exceptions\AppException;
-use App\Models\Account;
-use App\Models\TransactionEntry;
 use App\Gateways\Fincra\Services\FincraService;
 use App\Gateways\Paystack\Services\PaystackService;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
+use App\Models\Account;
+use App\Models\TransactionEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 
 class TransactionService
 {
@@ -35,10 +34,12 @@ class TransactionService
         }
 
         // Calculate the transaction fee
-        $fee = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $this->calculateTransactionFee($data['amount'], $data['currency']);
+        $charge = $transferType == TransferType::WHALE_TO_WHALE ? 0 : $data['charge'];
 
-        // Calculate new balance
-        $newBalance = $transferType == TransferType::WHALE_TO_WHALE ? $account->balance - $data['amount'] : $account->balance - ($data['amount'] - $fee);
+        // Resolve balances
+        $previousBalance = $account->balance;
+
+        $newBalance = $account->balance - ($data['amount']);
 
         $account->update([
             'balance' => $newBalance
@@ -61,17 +62,17 @@ class TransactionService
             'transaction_reference' => $data['transaction_reference'],
             'status' => $data['status'],
             'type' => $data['type'],
-            'amount' => $data['amount'],
+            'amount' => $data['amount']  - $data['charge'],
             'timestamp' => DateHelper::now(),
             'description' => $data['note'],
             'entry_type' => $data['entry_type'] ?? 'debit',
-            'charge' => $fee,
+            'charge' => $charge,
             'source_amount' => $data['amount'],
-            'amount_received' => $data['amount'] - $fee,
+            'amount_received' => $data['amount'] - $data['charge'],
             'from_bank' => $account->service_bank,
             'source_currency' => $account->currency,
             'destination_currency' => 'NAIRA',
-            'previous_balance' => $account->balance,
+            'previous_balance' => $previousBalance,
             'new_balance' => $newBalance,
         ];
 
@@ -80,15 +81,29 @@ class TransactionService
         return $transaction;
     }
 
-    public function calculateTransactionFee(float $amount, string $currency): float
-    {
-        if ($currency !== 'NGN') {
-            return 0.0;
-        }
+    // public function calculateTransactionFee(float $amount, string $currency, Account $account, TransferType $transferType): float
+    // {
+    //     if ($currency !== 'NGN') {
+    //         return 0.0;
+    //     }
 
-        $fee = $amount * 0.01; // 1% fee
-        return 50.0; // Cap at 50 NGN
-    }
+    //     if ($transferType == TransferType::WHALE_TO_WHALE) {
+    //         return 0.0;
+    //     }
+
+    //     $accountType = ServiceProvider::tryFrom($account->service_provider)
+    //         ?? throw new AppException("Invalid Service Provider");
+
+    //     // Calculate transfer fee based on provider
+    //     $transferFee = match ($accountType) {
+    //         ServiceProvider::FINCRA => 50,
+    //         ServiceProvider::PAYSTACK => 10,
+    //         ServiceProvider::FLUTTERWAVE =>$amount <= 5000 ? 10 : ($amount <= 50000 ? 25 : 50),
+    //         default => throw new AppException("Invalid account service provider."),
+    //     };
+
+    //     return $transferFee; 
+    // }
 
     /**
      * Get transactions based on query parameters or return all paginated.

@@ -23,11 +23,11 @@ class BaseHandler
         //     return ResponseHelper::unauthorized("Invalid webhook signature");
         // }
 
-        $event = $data['event'] ?? null;
+        $event = $data["event"] ?? null;
         $transactionData = $data['data'] ?? [];
 
         try {
-            $eventEnum = FlutterWaveWebhookEvent::from($event);
+            $eventEnum = FlutterWaveWebhookEvent::tryFrom($event);
         } catch (\ValueError $e) {
             Log::warning("Unhandled webhook event", ["event" => $event]);
             return ResponseHelper::unprocessableEntity(

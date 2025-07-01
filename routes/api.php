@@ -6,8 +6,10 @@ use App\Http\Controllers\AccountSettingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminRolePermissionController;
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\AirTransferController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BeneficiaryController;
+use App\Http\Controllers\BillAndUtilsController;
 use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\MiscellaneousController;
 use App\Http\Controllers\TransferController;
@@ -73,7 +75,8 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::prefix('c')->name('c')->group(function () {
             Route::post('/chat', [AiController::class, 'chat'])->name('chat');
             Route::post('/', [AiController::class, 'startConversation'])->name('start-conversation');
-            Route::get('/', [AiController::class, 'getConversationHistory'])->name('conversation-history');
+            Route::get('/', [AiController::class, 'getConversationMessages'])->name('conversation-history');
+            Route::get('/conversations', [AiController::class, 'getAllConversation'])->name('conversation');
             Route::delete('/', [AiController::class, 'deleteConversation'])->name('delete-conversation');
             Route::put('/', [AiController::class, 'recoverConversation'])->name('recover-conversation');
             Route::get('/select-model', [AiController::class, 'selectModel'])->name('select-model');
@@ -111,11 +114,18 @@ Route::middleware($protectedMiddleware)->group(function () {
             Route::delete('/{beneficiary_id}/favorite', [BeneficiaryController::class, 'unmarkAsFavorite']);
             Route::get('/favorites', [BeneficiaryController::class, 'getFavoriteBeneficiaries']);
         });
-        
+
         Route::prefix('transfer')->group(function () {
             Route::post('/{account_id}', [TransferController::class, 'transfer']);
             Route::put('/{account_id}', [TransferController::class, 'verifyTransferStatusBy']);
             Route::post('/', [TransferController::class, 'validateTransfer']);
+        });
+
+        Route::prefix('air-transfer')->group(function () {
+            Route::get('/nearest-users', [AirTransferController::class, 'getNearestUsers']);
+            Route::post('/update-location', [AirTransferController::class, 'updateLiveLocation']);
+            Route::get('/preference', [AirTransferController::class, 'getAirTransferPreference']);
+            Route::post('/preference', [AirTransferController::class, 'setAirTransferPreference']);
         });
 
         Route::get('/transaction', [TransferController::class, 'getTransactions']);
@@ -132,6 +142,15 @@ Route::middleware($protectedMiddleware)->group(function () {
         Route::post('/resolve-account/{account_id}', [TransferController::class, 'resolveAccount']);
         Route::get('/get-banks/{account_id}', [TransferController::class, 'getBanks']);
         Route::post('/resolve-internal-account', [TransferController::class, 'resolveAccountByIdentity']);
+    });
+
+    // Bills And Utilities Services
+    Route::prefix('bills')->group(function () {
+        Route::get('/', [BillAndUtilsController::class, "getBillCategories"]);
+        Route::get('/{category}/billers', [BillAndUtilsController::class, "getBillerByCategory"]);
+        Route::get('/{biller_code}/items', [BillAndUtilsController::class, "getBillerItems"]);
+        Route::get('/{category_id}/billers/{biller_code}/validate', [BillAndUtilsController::class, "validateUserInformation"]);
+        Route::post('/{biller_code}/billers/{item_code}', [BillAndUtilsController::class, "purchaseBill"]);
     });
 });
 
@@ -211,6 +230,8 @@ Route::group(['prefix' => 'utils'], function () {
         Artisan::call('cache:clear');
         Artisan::call('config:cache');
         Artisan::call('route:clear');
+        Artisan::call('view:clear');
+
         return 'Cache cleared and config cached.';
     });
 

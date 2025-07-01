@@ -26,6 +26,7 @@ class AICoreEngine
     {
         $this->packageService = $packageService;
     }
+
     public function startConversation(int $userId, ?string $title = null): ModelConversation
     {
         try {
@@ -42,7 +43,41 @@ class AICoreEngine
             throw new Exception("Unable to start conversation: " . $e->getMessage());
         }
     }
-    public function getConversationHistory(int $conversationId, int $perPage = 10)
+
+    public function getAllConversation(): mixed
+    {
+        try {
+            $userId = auth()->id();
+            $perPage = request('per_page', 10);
+            $page = request('page', 1);
+
+            // Paginate the user's conversations
+            $paginator = ModelConversation::where('user_id', $userId)
+                ->orderBy('updated_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            // Add messages to each conversation
+            $paginator->getCollection()->transform(function ($conversation) use ($userId) {
+                $this->checkUserOwnership($conversation->id, $userId);
+                return $conversation;
+            });
+
+            return $paginator;
+        } catch (Exception $e) {
+            Log::error("Failed to retrieve paginated conversations: " . $e->getMessage());
+            throw new Exception("Unable to retrieve conversations.");
+        }
+    }
+
+    private function checkUserOwnership(int $conversationId, int $userId): void
+    {
+        $conversation = ModelConversation::find($conversationId);
+        if ($conversation->user_id !== $userId) {
+            throw new Exception("User $userId does not own conversation $conversationId.");
+        }
+    }
+
+    public function getUserConversationsWithMessages(int $conversationId, int $perPage = 10)
     {
         $this->validateConversationExists($conversationId);
         try {
@@ -54,6 +89,14 @@ class AICoreEngine
             throw new Exception("Unable to retrieve conversation history.");
         }
     }
+
+    private function validateConversationExists(int $conversationId): void
+    {
+        if (!ModelConversation::where('id', $conversationId)->exists()) {
+            throw new InvalidArgumentException("Conversation $conversationId does not exist.");
+        }
+    }
+
     public function deleteConversation(int $conversationId, int $userId): bool
     {
         $this->validateConversationExists($conversationId);
@@ -70,6 +113,7 @@ class AICoreEngine
             throw new Exception("Unable to delete conversation.");
         }
     }
+
     public function recoverConversation(int $conversationId, int $userId): ModelConversation
     {
         $conversation = ModelConversation::withTrashed()->find($conversationId);
@@ -89,6 +133,68 @@ class AICoreEngine
             throw new Exception("Unable to recover conversation.");
         }
     }
+
+    public function selectModel(int $userId, ?string $preferredModel = null): string
+    {
+        $accessibleModels = $this->getAccessibleModels($userId);
+
+        if ($preferredModel && in_array($preferredModel, $accessibleModels)) {
+            return $preferredModel;
+        }
+
+        // Use the default model if no preferred model is specified
+        return ModelHelper::$defaultModel;
+    }
+
+    protected function getAccessibleModels(int $userId): array
+    {
+        $packageTier = $this->getUserPackageTier($userId);
+        return ModelHelper::$tierMap[$packageTier] ?? ModelHelper::tierMap()['basic'];
+    }
+
+    protected function getUserPackageTier(int $userId): string
+    {
+        $subscription = Subscription::where('user_id', $userId)
+            ->where('is_active', true)
+            ->with('package')
+            ->first();
+
+        if (!$subscription || !$subscription->package) {
+            return 'basic'; // Default to basic tier if no active subscription
+        }
+
+        return strtolower($subscription->package->type);
+    }
+
+    public function chat(int $conversationId, string $modelSlug, string $userMessage): mixed
+    {
+        $userId = auth()->user()->id;
+
+        try {
+
+            $response = $this->ModelCall($modelSlug, $userMessage, $conversationId);
+
+
+            $this->registerMessage($conversationId, $modelSlug, $userMessage, $userId);
+            $this->registerMessage($conversationId, $modelSlug, $response, $userId, true);
+
+
+            return [
+                'user_message' => $userMessage,
+                'model_response' => $response,
+            ];
+
+        } catch (Exception $e) {
+            Log::error("Processing failed: " . $e->getMessage());
+            throw new Exception("Message processing error: " . $e->getMessage());
+        }
+    }
+
+    protected function ModelCall(string $modelSlug, string $message, int $conversationId): mixed
+    {
+        return ModelHelper::DefaultProvider($message, $modelSlug, $conversationId);
+    }
+
     protected function registerMessage(int $conversationId, string $modelSlug, string $message, ?int $userId = null, ?bool $is_model = false): ModelMessage
     {
         $this->validateConversationExists($conversationId);
@@ -111,67 +217,7 @@ class AICoreEngine
             throw new Exception("Unable to add message: " . $e->getMessage());
         }
     }
-    public function selectModel(int $userId, ?string $preferredModel = null): string
-    {
-        $accessibleModels = $this->getAccessibleModels($userId);
 
-        if ($preferredModel && in_array($preferredModel, $accessibleModels)) {
-            return $preferredModel;
-        }
-
-        // Use the default model if no preferred model is specified
-        return ModelHelper::$defaultModel;
-    }
-    protected function getAccessibleModels(int $userId): array
-    {
-        $packageTier = $this->getUserPackageTier($userId);
-        return ModelHelper::$tierMap[$packageTier] ?? ModelHelper::tierMap()['basic'];
-    }
-    protected function getUserPackageTier(int $userId): string
-    {
-        $subscription = Subscription::where('user_id', $userId)
-            ->where('is_active', true)
-            ->with('package')
-            ->first();
-
-        if (!$subscription || !$subscription->package) {
-            return 'basic'; // Default to basic tier if no active subscription
-        }
-
-        return strtolower($subscription->package->type);
-    }
-    public function chat(int $conversationId, string $modelSlug, string $userMessage): mixed
-    {
-        $userId = auth()->user()->id;
-
-        try {
-            $modelSlug = $modelSlug ?? ModelHelper::$defaultModel;
-
-            $response = $this->ModelCall($modelSlug, $userMessage, $conversationId);
-
-            $this->registerMessage($conversationId, $modelSlug, $userMessage, $userId);
-            $this->registerMessage($conversationId, $modelSlug, $response, $userId, true);
-
-
-            return [
-                'user_message' => $userMessage,
-                'model_response' => $response,
-            ];
-        } catch (Exception $e) {
-            Log::error("Processing failed: " . $e->getMessage());
-            throw new Exception("Message processing error: " . $e->getMessage());
-        }
-    }
-    protected function ModelCall(string $modelSlug, string $message, int $conversationId): mixed
-    {
-        return ModelHelper::DefaultProvider($message, $modelSlug, $conversationId);
-    }
-    private function validateConversationExists(int $conversationId): void
-    {
-        if (!ModelConversation::where('id', $conversationId)->exists()) {
-            throw new InvalidArgumentException("Conversation $conversationId does not exist.");
-        }
-    }
     private function checkConversationStatus(int $conversationId): void
     {
         $conversation = ModelConversation::find($conversationId);
@@ -179,13 +225,7 @@ class AICoreEngine
             throw new Exception("Cannot modify conversation $conversationId: it is {$conversation->status}.");
         }
     }
-    private function checkUserOwnership(int $conversationId, int $userId): void
-    {
-        $conversation = ModelConversation::find($conversationId);
-        if ($conversation->user_id !== $userId) {
-            throw new Exception("User $userId does not own conversation $conversationId.");
-        }
-    }
+
     private function validateModelAccess(string $modelSlug, int $userId): void
     {
         $accessibleModels = $this->getAccessibleModels($userId);

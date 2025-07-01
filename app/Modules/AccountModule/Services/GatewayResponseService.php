@@ -2,6 +2,16 @@
 
 namespace App\Modules\AccountModule\Services;
 
+use App\Enums\Currency;
+use App\Enums\ServiceProvider;
+use App\Exceptions\AppException;
+use App\Gateways\Fincra\Services\FincraService;
+use App\Gateways\FlutterWave\Services\FlutterWaveService;
+use App\Gateways\Paystack\Services\PaystackService;
+use App\Helpers\CodeHelper;
+use App\Helpers\DateHelper;
+use App\Helpers\ResponseHelper;
+
 class GatewayResponseService
 {
 
@@ -11,7 +21,7 @@ class GatewayResponseService
      *
      * @return array
      */
-    private function getPaystackResponse(Currency $currency): array
+    static  public function getPaystackResponse(Currency $currency): array
     {
         $user = request()->user();
 
@@ -44,7 +54,7 @@ class GatewayResponseService
      *
      * @return array
      */
-    private function getFincraResponse(Currency $currency): array
+    static  public function getFincraResponse(Currency $currency): array
     {
         $user = request()->user();
 
@@ -91,8 +101,9 @@ class GatewayResponseService
      * Get FlutterWaveService-specific response.
      *
      * @return array
+     * @throws AppException
      */
-    private function getFlutterWaveResponse(Currency $currency): array
+    static public function getFlutterWaveResponse(Currency $currency): mixed
     {
         $user = request()->user();
 
@@ -102,42 +113,37 @@ class GatewayResponseService
             throw new AppException("BVN not found. Update bvn and try again.");
         }
 
-        $currencyValue = "";
+        $currencyValue = match ($currency) {
+            Currency::NAIRA => "NGN",
+            default => throw new AppException("Selected Currency Not Supported for Provider FLUTTERWAVE"),
+        };
 
-        switch ($currency) {
-            case Currency::NAIRA:
-                $currencyValue = "NGN";
-                break;
-            default:
-                throw new AppException("Selected Currency Not Supported for Provider FLUTTERWAVE");
-        }
+//         $flutter_dva = $flutterWave->createDVA(
+//             email: "abraham@flutterwavego.com",
+//             txRef: "apex_tx_ref-002201",
+//             phoneNumber: "08100000000",
+//             firstName: "John",
+//             lastName: "Doe",
+//             narration: "Kids Foundation",
+//             bvn: "12345678901",
+//             isPermanent: true
+//         );
 
-        // $flutter_dva = $flutterWave->createDVA(
-        //     email: "abraham@flutterwavego.com",
-        //     txRef: "apex_tx_ref-002201",
-        //     phoneNumber: "08100000000",
-        //     firstName: "John",
-        //     lastName: "Doe",
-        //     narration: "Kids Foundation",
-        //     bvn: "1234567890",
-        //     isPermanent: true
-        // );
 
         $flutter_dva = $flutterWave->createDVA(
             email: $user->email,
             txRef: CodeHelper::generateSecureReference(),
             phoneNumber: $user->phone_number ?? '',
-            firstName: $user->first_name,
-            lastName: $user->last_name,
+            firstName: $user->profile_type === 'personal' ? $user->first_name : $user->business_name,
+            lastName: $user->profile_type === 'personal' ? $user->last_name : "",
             narration: ($user->profile_type === 'personal' ? "{$user->first_name} {$user->last_name}" : $user->business_name),
-            bvn: $user->bvn,
-            isPermanent: true
+            bvn: $user->bvn
         );
 
         return [
             "service_provider" => ServiceProvider::FLUTTERWAVE,
             "bank" => $flutter_dva['data']['bank_name'],
-            "account_name" => $user->profile_type === 'personal' ? "{$user->first_name} {$user->last_name}" : $user->business_name,
+            "account_name" => $user->profile_type === 'personal' ? "{$user->first_name} {$user->last_name} FLW" : $user->business_name . " FLW",
             "account_number" => $flutter_dva['data']['account_number'],
             "currency" => $currencyValue,
             "customer_code" => $flutter_dva['data']['flw_ref'],
@@ -146,5 +152,4 @@ class GatewayResponseService
             "phone" => $user->phone_number
         ];
     }
-
 }

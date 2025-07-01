@@ -9,23 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('logs', function (Blueprint $table) {
+        Schema::create('live_locations', function (Blueprint $table) {
             $table->id();
-            $table->string('channel');
-            $table->text('message');
-            $table->text('context')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->unsignedBigInteger('user_id');
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
+            $table->timestamps();
         });
     }
-    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('logs');
+        Schema::dropIfExists('live_locations');
     }
 };

@@ -15,7 +15,7 @@ class HandleTransferSuccess
         AppLog::info('Processing transfer webhook', ['webhookData' => $transactionData]);
 
         // Immediately return if transfer failed
-        return $transactionData['status'] !== 'SUCCESSFUL'
+        return $transactionData['status'] !== 'successful'
             ? self::handleFailedTransfer($transactionData)
             : self::processSuccessfulTransfer($transactionData);
     }
@@ -33,10 +33,10 @@ class HandleTransferSuccess
             ['transaction_reference' => $transactionData['reference']],
             [
                 'status' => 'failed',
-                'description' => $transactionData['complete_message'] ?? 'Transfer failed',
-                'amount' => $transactionData['amount'],
-                'currency' => $transactionData['currency'],
-                'created_at' => $transactionData['created_at'] ?? now()
+                'description' => "[Digitwhale/Collection] | Failed ",
+                'amount' => $transactionData['amountReceived'],
+                'currency' => $transactionData['sourceCurrency'],
+                'created_at' => $transactionData['initiatedAt'] ?? now()
             ]
         );
 
@@ -62,7 +62,7 @@ class HandleTransferSuccess
 
     private static function processNewTransaction(array $transactionData): JsonResponse
     {
-        $account = Account::where('account_number', 'like', substr($transactionData['account_number'], 0, 6) . '%')
+        $account = Account::where('customer_id', 'like', substr($transactionData['virtualAccount'], 0, 6) . '%')
             ->first();
 
         return !$account
@@ -72,13 +72,13 @@ class HandleTransferSuccess
 
     private static function handleMissingAccount(array $transactionData): JsonResponse
     {
-        AppLog::error("Account not found", ['account_number' => $transactionData['account_number']]);
+        AppLog::error("Account not found", ['customer_id' => $transactionData['virtualAccount']]);
         return ResponseHelper::error('Account not found', 404);
     }
 
     private static function creditAccount(Account $account, array $transactionData): JsonResponse
     {
-        $amountReceived = $transactionData['amount'] - $transactionData['fee'];
+        $amountReceived = $transactionData['amountReceived'];
         $prevBalance = $account->balance;
         $newBalance = $account->balance + $amountReceived;
 
@@ -110,28 +110,28 @@ class HandleTransferSuccess
     ): TransactionEntry {
         return TransactionEntry::create([
             'transaction_reference' => $transactionData['reference'],
-            'from_user_name' => $transactionData['fullname'],
-            'from_account' => $transactionData['account_number'],
+            'from_user_name' => $transactionData['senderAccountName'],
+            'from_account' => $transactionData['senderAccountNumber'],
             'to_sys_account_id' => $account->id,
             'to_user_name' => $account->user->profile_type == 'personal'
                 ? trim("{$account->user->first_name} {$account->user->last_name}")
                 : $account->user->business_name,
-            'to_bank_name' => $transactionData['bank_name'],
-            'to_bank_code' => $transactionData['bank_code'],
+            'to_bank_name' => $account->service_bank,
+            'to_bank_code' => "035",
             'to_account_number' => $account->account_number,
-            'currency' => $transactionData['currency'],
-            'amount' => $transactionData['amount'],
+            'currency' => "NAIRA",
+            'amount' => $transactionData['sourceAmount'],
             'status' => strtolower($transactionData['status']),
             'type' => 'credit',
-            'description' => $transactionData['narration'] ?? 'Fund received',
-            'timestamp' => $transactionData['created_at'] ?? now(),
+            'description' => "[Digitwhale/Collection] | Successfull ",
+            'timestamp' => $transactionData['initiatedAt'] ?? now(),
             'entry_type' => 'credit',
             'charge' => $transactionData['fee'],
-            'source_amount' => $transactionData['amount'],
-            'amount_received' => $transactionData['amount'] - $transactionData['fee'],
-            'from_bank' => $transactionData['bank_name'],
-            'source_currency' => $transactionData['currency'],
-            'destination_currency' => $transactionData['currency'],
+            'source_amount' => $transactionData['sourceAmount'],
+            'amount_received' => $transactionData['amountReceived'],
+            'from_bank' => $transactionData['senderBankName'],
+            'source_currency' => "NAIRA",
+            'destination_currency' => "NAIRA",
             'previous_balance' => $prevBalance,
             'new_balance' => $newBalance,
         ]);

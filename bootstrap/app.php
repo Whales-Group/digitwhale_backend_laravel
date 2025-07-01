@@ -4,6 +4,7 @@ use App\Exceptions\AppException;
 use App\Exceptions\CodedException;
 use App\Helpers\ResponseHelper;
 use App\Http\Middleware\HandleCors;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
@@ -22,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'VerifyApiKey' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'SetStructure' => \App\Http\Middleware\StructuralMiddleware::class,
-            'BearerTokenEnforcer'=>\App\Http\Middleware\BTMiddleware::class,
+            'BearerTokenEnforcer' => \App\Http\Middleware\BTMiddleware::class,
             // 'steril' => \App\Http\Middleware\EncryptResponseDecryptPayload::class,
         ]);
         $middleware->append(HandleCors::class);
@@ -35,6 +36,14 @@ return Application::configure(basePath: dirname(__DIR__))
         //     );
         // });
     
+        $exceptions->render(function (ClientException $e, $request) {
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            return ResponseHelper::error(error: $e->getMessage(), message: $errorData['error'] ?? $errorData['message']);
+
+        });
+
         $exceptions->render(function (InvalidParameterException $exception, $request) {
             return ResponseHelper::unprocessableEntity(
                 message: 'Invalid parameters provided.',
@@ -46,13 +55,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 message: $exception->getMessage(),
             );
         });
-        
+
         $exceptions->render(function (CodedException $exception, $request) {
             return ResponseHelper::error(
                 message: $exception->getMessage(),
             );
         });
-        
+
         $exceptions->render(function (AuthenticationException $exception, $request) {
             return ResponseHelper::error(
                 message: 'Please provide a valid bearer token.',
@@ -73,7 +82,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return ResponseHelper::internalServerError(
                 message: 'An unexpected error occurred.',
-                error:  $exception->getMessage()
+                error: $exception->getMessage()
             );
         });
     })

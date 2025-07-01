@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Modules\AiModule\AiModuleMain;
-use App\Gateways\Paystack\Services\PaystackService;
 use App\Gateways\Paystack\PaystackModuleMain;
 use App\Modules\UtilsModule\UtilsModuleMain;
 
@@ -15,13 +13,15 @@ class UtilsController extends Controller
 
     public function __construct(
         PaystackModuleMain $paystackModuleMain,
-        UtilsModuleMain $utilsModuleMain,
+        UtilsModuleMain    $utilsModuleMain,
 
-    ) {
+    )
+    {
         $this->paystackModuleMain = $paystackModuleMain;
         $this->utilsModuleMain = $utilsModuleMain;
 
     }
+
     public function generatePaymentLink()
     {
         return $this->paystackModuleMain->generatePaymentLink();
@@ -62,4 +62,6 @@ class UtilsController extends Controller
     {
         return $this->utilsModuleMain->downgrade($newPackageType);
     }
+
+
 }
