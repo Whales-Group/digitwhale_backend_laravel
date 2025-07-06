@@ -34,9 +34,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           password: ${{ secrets.SERVER_KEY }}
-          source: |
-            .env.prod
-            docker-compose.yml
+          source: ".env.prod,docker-compose.yml"
           target: "/home/root/digitwhale_pva_backend"
 
 
