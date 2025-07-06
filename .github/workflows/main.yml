@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: digitwhale_pva_backend
+  IMAGE_NAME: whales-group/digitwhale_pva_backend
 
 jobs:
   build-and-deploy:
