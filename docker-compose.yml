@@ -1,6 +1,6 @@
   services:
     digitwhale_pva_backend:
-      image: ghcr.io/whales-group/digitwhale_pva_backend:latest
+      image: ghcr.io/whales-group/digitwhale_pva_backend:main
       container_name: digitwhale_pva_backend
       expose:
         - "8080"

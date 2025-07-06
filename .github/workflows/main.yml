@@ -24,8 +24,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t $REGISTRY/${IMAGE_NAME}:latest .
-          docker push $REGISTRY/${IMAGE_NAME}:latest
+          docker build -t $REGISTRY/${IMAGE_NAME}:main .
+          docker push $REGISTRY/${IMAGE_NAME}:main
 
 
       - name: Copy deployment files to server
