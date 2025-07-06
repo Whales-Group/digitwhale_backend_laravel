@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  digitwhale_pva_backend:
+    image: ghcr.io/your/repo:latest
+    container_name: digitwhale_pva_backend
+    expose:
+      - "8080"
+    restart: always
+    env_file:
+      - ./.env.prod
