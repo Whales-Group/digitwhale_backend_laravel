@@ -15,4 +15,4 @@ RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progr
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage
 
-EXPOSE 8080
+EXPOSE 80
