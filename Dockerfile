@@ -1,18 +1,25 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
-RUN a2enmod rewrite
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libzip-dev unzip zip curl git \
+    git curl zip unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /var/www
+
+# Copy application
 COPY . .
 
-RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
+# Install Laravel dependencies
+RUN composer install --optimize-autoloader --no-dev
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+# Permissions
+RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www/storage
 
-EXPOSE 80
+EXPOSE 9000
+
+CMD ["php-fpm"]
