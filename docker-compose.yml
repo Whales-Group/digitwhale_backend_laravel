@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   digitwhale_pva_backend:
-    image: ghcr.io/your/repo:latest
+    image: ghcr.io/digitwhale_pva_backend:latest
     container_name: digitwhale_pva_backend
     expose:
       - "8080"
