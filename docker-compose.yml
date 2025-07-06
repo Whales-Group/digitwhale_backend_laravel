@@ -1,4 +1,3 @@
-
 services:
   digitwhale_pva_backend:
     image: ghcr.io/whales-group/digitwhale_pva_backend:latest
