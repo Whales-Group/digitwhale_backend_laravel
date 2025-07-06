@@ -17,4 +17,4 @@ RUN chown -R www-data:www-data /var/www/html \
 # Overwrite the default Apache config
 COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-EXPOSE 8080
+EXPOSE 80
