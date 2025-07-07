@@ -13,7 +13,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install dependencies and PHP
 RUN apt-get update \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git libcap2-bin libpng-dev python2 dnsutils librsvg2-bin netcat iputils-ping telnet vim \
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git libcap2-bin libpng-dev python2 dnsutils librsvg2-bin netcat iputils-ping telnet vim default-mysql-client \
     && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
     && apt-get update \
