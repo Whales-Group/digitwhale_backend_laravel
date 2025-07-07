@@ -53,13 +53,13 @@ jobs:
             cd /home/root/digitwhale_pva_backend
 
             # Pull the latest changes and restart the Docker containers
-            docker-compose pull
+            docker-compose pull digitwhale_pva_backend
 
             # Stop and remove the existing containers, then start new ones
             docker-compose down --remove-orphans
 
             # Remove any orphaned containers that are no longer defined in the docker-compose file
-            docker-compose up -d
+            docker-compose up -d digitwhale_pva_backend
 
             # Run database migrations
             # docker-compose exec -T digitwhale_pva_backend php artisan migrate --force
