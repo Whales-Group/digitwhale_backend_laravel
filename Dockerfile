@@ -29,17 +29,21 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
-# Expose port
-EXPOSE 8000
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
 
-# Copy application source
+# Copy application files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install dependencies
+RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
-# Set storage & bootstrap permissions
-RUN chmod -R 777 storage bootstrap
+# Change the permission for the storage folder to allow logging
+RUN chmod -R 777 storage
+
+# Change the permission for the bootstrap folder to allow caching of configuration
+RUN chmod -R 777 bootstrap
+
+EXPOSE 8000
 
 # Default command to serve Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
