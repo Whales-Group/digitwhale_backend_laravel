@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # 👇 Set the correct working directory (your real Laravel path)
-WORKDIR /home/root/deployments/digitwhale_pva_backend
+WORKDIR /home/root/digitwhale_pva_backend
 
 # Copy your app into the container
 COPY . .
@@ -18,8 +18,8 @@ COPY . .
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
 # Set proper permissions for Laravel to work
-RUN chown -R www-data:www-data /home/root/deployments/digitwhale_pva_backend \
-    && chmod -R 755 /home/root/deployments/digitwhale_pva_backend/storage
+RUN chown -R www-data:www-data /home/root/digitwhale_pva_backend \
+    && chmod -R 755 /home/root/digitwhale_pva_backend/storage
 
 # PHP-FPM runs on port 9000
 EXPOSE 9000
