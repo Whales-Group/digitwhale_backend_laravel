@@ -36,6 +36,8 @@ RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
 # Copy application files
 COPY . .
 
+RUN cp .env.prod .env
+
 # Install dependencies
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
