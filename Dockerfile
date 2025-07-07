@@ -13,10 +13,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Add PHP repo and install required packages
 RUN apt-get update && apt-get install -y \
-    curl gnupg git unzip zip ca-certificates software-properties-common \
+    curl gnupg2 gpg git unzip zip ca-certificates software-properties-common \
     && curl -fsSL https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c | gpg --dearmor -o /etc/apt/keyrings/php.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/php.list \
     && apt-get update
+
 
 # Install PHP extensions (minimal required for Laravel + MySQL)
 RUN apt-get install -y \
@@ -24,9 +25,6 @@ RUN apt-get install -y \
     php8.2-mysql php8.2-zip \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Create user (for Laravel Sail compatibility if needed)
-RUN groupadd --gid $WWWGROUP sail && useradd --uid 1337 --gid $WWWGROUP -m sail
 
 # Expose port
 EXPOSE 8000
