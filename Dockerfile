@@ -37,11 +37,6 @@ RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
 COPY . .
 
 # Install dependencies
-RUN composer dump-autoload -o
-
-# if broken
-RUN rm -rf vendor composer.lock
-
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
 # Change the permission for the storage folder to allow logging
