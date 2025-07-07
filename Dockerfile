@@ -1,28 +1,44 @@
-FROM php:8.2-fpm
+FROM ubuntu:22.04
 
-# Install required PHP extensions and tools
+LABEL maintainer="Taylor Otwell"
+
+ARG WWWGROUP=1000
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+WORKDIR /var/www/html/digitwhale_pva_backend
+
+# Set timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Add PHP repo and install required packages
 RUN apt-get update && apt-get install -y \
-    libzip-dev unzip zip curl git \
-    && docker-php-ext-install pdo pdo_mysql zip
+    curl gnupg git unzip zip ca-certificates software-properties-common \
+    && curl -fsSL https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c | gpg --dearmor -o /etc/apt/keyrings/php.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/php.list \
+    && apt-get update
 
-# Copy Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install PHP extensions (minimal required for Laravel + MySQL)
+RUN apt-get install -y \
+    php8.2 php8.2-cli php8.2-mbstring php8.2-xml php8.2-bcmath php8.2-curl \
+    php8.2-mysql php8.2-zip \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+    && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 👇 Set the correct working directory (your real Laravel path)
-WORKDIR /home/root/digitwhale_pva_backend
+# Create user (for Laravel Sail compatibility if needed)
+RUN groupadd --gid $WWWGROUP sail && useradd --uid 1337 --gid $WWWGROUP -m sail
 
-# Copy your app into the container
+# Expose port
+EXPOSE 8000
+
+# Copy application source
 COPY . .
 
-# Install dependencies
-RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set proper permissions for Laravel to work
-RUN chown -R www-data:www-data /home/root/digitwhale_pva_backend \
-    && chmod -R 755 /home/root/digitwhale_pva_backend/storage
+# Set storage & bootstrap permissions
+RUN chmod -R 777 storage bootstrap
 
-# PHP-FPM runs on port 9000
-EXPOSE 9000
-
-# Start PHP-FPM
-CMD ["php-fpm"]
+# Default command to serve Laravel
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

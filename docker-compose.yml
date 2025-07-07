@@ -4,21 +4,28 @@ services:
   digitwhale_pva_backend:
     image: ghcr.io/whales-group/digitwhale_pva_backend:main
     restart: always
-    env_file:
-      - .env.prod
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "./.env.prod:/var/www/html/digitwhale_pva_backend/.env.prod"
     networks:
       - digitwhale_network
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.25.1-alpine
+    restart: always
     ports:
-      - "8080:80"
+      - 80:80
+      # - 443:443
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # - /data/certbot/www/:/var/www/certbot/
+      # - /data/certbot/letsencrypt/:/etc/letsencrypt/
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - digitwhale_pva_backend
     networks:
       - digitwhale_network
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 
 networks:
   digitwhale_network:

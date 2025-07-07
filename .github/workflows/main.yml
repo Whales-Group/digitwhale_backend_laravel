@@ -34,7 +34,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           password: ${{ secrets.SERVER_KEY }}
-          source: ".env.prod,docker-compose.yml,nginx.conf"
+          source: ".env.prod,docker-compose.yml,nginx"
           target: "/home/root/digitwhale_pva_backend"
 
 
@@ -59,7 +59,7 @@ jobs:
             docker-compose down --remove-orphans
 
             # Remove any orphaned containers that are no longer defined in the docker-compose file
-            docker-compose up -d digitwhale_pva_backend
+            docker-compose up -d
 
             # Run database migrations
             # docker-compose exec -T digitwhale_pva_backend php artisan migrate --force
