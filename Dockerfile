@@ -11,6 +11,7 @@ WORKDIR /var/www/html/digitwhale_pva_backend
 # Set timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Install dependencies and PHP
 RUN apt-get update \
     && apt-get install -y gnupg gosu curl ca-certificates zip unzip git libcap2-bin libpng-dev python2 dnsutils librsvg2-bin \
     && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
@@ -29,12 +30,18 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
+# setcap for binding to low ports
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2 
 
 # Copy application files
 COPY . .
 
 # Install dependencies
+RUN composer dump-autoload -o
+
+# if broken
+RUN rm -rf vendor composer.lock
+
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
 # Change the permission for the storage folder to allow logging

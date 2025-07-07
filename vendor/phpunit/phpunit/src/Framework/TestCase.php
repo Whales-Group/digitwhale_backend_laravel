@@ -1800,6 +1800,10 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
                 return true;
             }
 
+            if (!$passedTests->hasReturnValue($dependencyTarget)) {
+                return true;
+            }
+
             $returnValue = $passedTests->returnValue($dependencyTarget);
 
             if ($dependency->deepClone()) {
@@ -2445,7 +2449,7 @@ abstract class TestCase extends Assert implements Reorderable, SelfDescribing, T
 
             $methodsInvoked[] = $methodInvoked;
 
-            if (isset($t)) {
+            if (isset($t) && !$t instanceof SkippedTest) {
                 $emitter->{$erroredMethod}(
                     static::class,
                     $methodInvoked,
