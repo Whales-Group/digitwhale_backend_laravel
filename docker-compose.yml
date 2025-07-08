@@ -16,6 +16,7 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
     volumes:
+      - .:/var/www/html
       - "./.env.prod:/var/www/html/digitwhale_pva_backend/.env.prod"
       - ./storage:/var/www/html/digitwhale_pva_backend/storage
     expose:
