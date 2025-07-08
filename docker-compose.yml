@@ -7,16 +7,27 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    env_file:
+      - .env.prod
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
       - "./.env.prod:/var/www/html/digitwhale_pva_backend/.env.prod"
+      - ./storage:/var/www/html/digitwhale_pva_backend/storage
     networks:
       - digitwhale_network
+    healthcheck:
+      test: ["CMD", "php", "artisan", "queue:work", "--once"]
 
   nginx:
     image: nginx:1.25.1-alpine
     restart: always
     ports:
-      - 80:80
+      - 80:8000
       # - 443:443
     volumes:
       # - /data/certbot/www/:/var/www/certbot/
