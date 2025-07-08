@@ -36,7 +36,7 @@ RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
 # Copy application files
 COPY . .
 
-RUN cp .env.prod .env
+# RUN cp .env.prod .env
 
 # Install dependencies
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
@@ -47,7 +47,7 @@ RUN chmod -R 777 storage
 # Change the permission for the bootstrap folder to allow caching of configuration
 RUN chmod -R 777 bootstrap
 
-EXPOSE 8000
+EXPOSE 9000
 
 # Default command to serve Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php-fpm8.2", "-F"]
