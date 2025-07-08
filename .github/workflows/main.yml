@@ -73,9 +73,6 @@ jobs:
             # Clear the config cache
             docker-compose exec -T digitwhale_pva_backend php artisan config:clear
 
-            # Clear the view cache
-            docker-compose exec -T digitwhale_pva_backend php artisan view:clear
-
 
 
             
