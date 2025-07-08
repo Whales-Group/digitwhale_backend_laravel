@@ -39,6 +39,10 @@ COPY . .
 
 # RUN cp .env.prod .env
 
+RUN sed -i 's|listen = .*|listen = 0.0.0.0:9000|' /etc/php/8.2/fpm/pool.d/www.conf \
+ && echo "listen.allowed_clients = 0.0.0.0" >> /etc/php/8.2/fpm/pool.d/www.conf
+
+
 # Install dependencies
 RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
 
