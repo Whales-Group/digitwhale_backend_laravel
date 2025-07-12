@@ -55,7 +55,6 @@ jobs:
             **/tests/**
             **/storage/**
             **/vendor/**
-            .env
             .github/
           dry-run: false
           dangerous-clean-slate: false
