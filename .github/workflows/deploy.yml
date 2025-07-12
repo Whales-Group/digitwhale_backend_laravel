@@ -1,4 +1,4 @@
-name: Deploy Laravel App via FTP
+name: Deploy Laravel App via FTP to SERVER
 
 on:
   push:
