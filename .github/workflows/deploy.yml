@@ -20,10 +20,28 @@ jobs:
           extensions: mbstring, bcmath, curl, xml, tokenizer, pdo, pdo_mysql
           coverage: none
 
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
       - name: Install Composer Dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Upload Laravel App via FTP
+      - name: Check if composer.lock has changed
+        id: check_lock
+        run: |
+          git fetch origin main
+          if git diff --name-only HEAD^ HEAD | grep -q "composer.lock"; then
+            echo "composer_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "composer_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Laravel App via FTP (excluding vendor/)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -39,8 +57,11 @@ jobs:
             **/vendor/**
             .env
             .github/
+          dry-run: false
+          dangerous-clean-slate: false
 
-      - name: Upload Laravel Vendor Directory
+      - name: Upload Laravel Vendor Directory if composer.lock changed
+        if: steps.check_lock.outputs.composer_changed == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -48,3 +69,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: vendor/
           server-dir: ${{ secrets.FTP_PATH }}/vendor/
+          dry-run: false
+          dangerous-clean-slate: false
