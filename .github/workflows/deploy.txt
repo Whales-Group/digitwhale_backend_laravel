@@ -1,38 +1,79 @@
-name: Deploy Laravel App via FTP
+name: DigitWhale PVA Backend Image
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: whales-group/digitwhale_pva_backend
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Remove unneeded files before deploy
-        run: |
-          rm -rf vendor
-          rm -rf node_modules
-          rm -rf tests
-          rm -rf .git
-          rm -f .env.example README.md phpunit.xml composer.lock vite.config.js webpack.mix.js yarn.lock package.json package-lock.json
 
-      - name: Upload Laravel app (excluding vendor) via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t $REGISTRY/${IMAGE_NAME}:main .
+          docker push $REGISTRY/${IMAGE_NAME}:main
+
+
+      - name: Copy deployment files to server
+        uses: appleboy/scp-action@v0.1.4
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: ${{ secrets.FTP_PATH }}
-          exclude: |
-            **/vendor/**
-            **/node_modules/**
-            **/tests/**
-            **/.git/**
-            **/README.md
-            **/phpunit.xml
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_KEY }}
+          source: ".env.prod,docker-compose.yml,nginx"
+          target: "/home/root/digitwhale_pva_backend"
+
+
+
+      - name: SSH and Deploy on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_KEY }}
+          script: |
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Navigate to your project directory
+            cd /home/root/digitwhale_pva_backend
+
+            # Pull the latest changes and restart the Docker containers
+            docker-compose pull digitwhale_pva_backend
+
+            # Stop and remove the existing containers, then start new ones
+            docker-compose down --remove-orphans
+
+            # Remove any orphaned containers that are no longer defined in the docker-compose file
+            docker-compose up -d
+
+            # Run database migrations
+            # docker-compose exec -T digitwhale_pva_backend php artisan migrate --force
+
+            # Clear the application cache
+            docker-compose exec -T digitwhale_pva_backend php artisan cache:clear
+
+            # Clear the route cache
+            docker-compose exec -T digitwhale_pva_backend php artisan route:clear
+
+            # Clear the config cache
+            docker-compose exec -T digitwhale_pva_backend php artisan config:clear
+
+
+
+            
+

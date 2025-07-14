@@ -1,0 +1,51 @@
+name: Deploy DigitWhale PVA Backend
+
+on:
+  push:
+    branches: [prod]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Copy full repo to the server (not just a few files)
+      - name: Copy project to server via SCP
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_KEY }}
+          source: "."  # Copy everything including Dockerfile, .env.prod, etc.
+          target: "/home/root/digitwhale_pva_backend"
+          strip_components: 0
+
+      - name: SSH into server and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_KEY }}
+          script: |
+            cd /home/root/digitwhale_pva_backend
+
+            echo "✅ Pulling latest code (just in case)..."
+            git pull origin prod || true
+
+            # Ensure shared network exists (run only once)
+            docker network inspect digitwhale-network >/dev/null 2>&1 || \
+              docker network create digitwhale-network
+
+            echo "✅ Rebuilding containers..."
+            docker-compose down --remove-orphans
+            docker-compose build --no-cache
+            docker-compose up -d
+
+            echo "✅ Running Laravel commands..."
+            docker-compose exec -T app php artisan migrate --force || true
+            docker-compose exec -T app php artisan config:clear
+            docker-compose exec -T app php artisan route:clear
+            docker-compose exec -T app php artisan cache:clear

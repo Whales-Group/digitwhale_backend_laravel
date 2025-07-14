@@ -1,58 +1,41 @@
 FROM ubuntu:22.04
 
-LABEL maintainer="Taylor Otwell"
-
-ARG WWWGROUP=1000
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+ENV PHP_VERSION=8.2
 
-WORKDIR /var/www/html/digitwhale_pva_backend
+# Install PHP + minimal required extensions
+RUN apt-get update && apt-get install -y \
+    software-properties-common curl gnupg unzip git ca-certificates libzip-dev libpng-dev libonig-dev libxml2-dev libssl-dev pkg-config libicu-dev build-essential autoconf \
+    && add-apt-repository ppa:ondrej/php -y \
+    && apt-get update && apt-get install -y \
+    php${PHP_VERSION}-cli php${PHP_VERSION}-common php${PHP_VERSION}-dev \
+    php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-bcmath \
+    php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-zip \
+    php${PHP_VERSION}-intl php${PHP_VERSION}-readline php${PHP_VERSION}-swoole \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set timezone
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Allow PHP to bind to ports < 1024
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php${PHP_VERSION}
 
-# Install dependencies and PHP
-RUN apt-get update \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git libcap2-bin libpng-dev python2 dnsutils librsvg2-bin netcat iputils-ping telnet vim default-mysql-client \
-    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && apt-get update \
-    && apt-get install -y php8.2-cli php8.2-dev \
-    php8.2-curl \
-    php8.2-fpm \
-    php8.2-mysql php8.2-mbstring \
-    php8.2-xml php8.2-zip php8.2-bcmath \
-    php8.2-msgpack php8.2-igbinary\
-    php8.2-memcached php8.2-pcov php8.2-xdebug \
-    && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
-    && apt-get update \
-    && apt-get -y autoremove \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Set working directory
+WORKDIR /var/www
 
-
-# setcap for binding to low ports
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2 
-
-# Copy application files
+# Copy application code
 COPY . .
 
-# RUN cp .env.prod .env
+# Copy env file
+RUN cp .env.prod .env
 
-RUN sed -i 's|listen = .*|listen = 0.0.0.0:9000|' /etc/php/8.2/fpm/pool.d/www.conf \
- && echo "listen.allowed_clients = 0.0.0.0" >> /etc/php/8.2/fpm/pool.d/www.conf
+# Set permissions
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 storage bootstrap/cache
 
+# Install Composer dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Install dependencies
-RUN composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader
+# Expose Laravel Octane port
+EXPOSE 8000
 
-# Change the permission for the storage folder to allow logging
-RUN chmod -R 777 storage
-
-# Change the permission for the bootstrap folder to allow caching of configuration
-RUN chmod -R 777 bootstrap
-
-EXPOSE 9000
-
-# Default command to serve Laravel
-CMD ["php-fpm8.2", "-F"]
+# Run Octane server
+CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000"]

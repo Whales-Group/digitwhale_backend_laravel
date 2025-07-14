@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.3",
+        "laravel/octane": "^2.11",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "orhanerday/open-ai": "^5.3"
