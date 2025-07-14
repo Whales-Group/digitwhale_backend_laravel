@@ -4,8 +4,8 @@ services:
     env_file:
       - .env.prod
     restart: always
-    # volumes:
-      # - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    volumes:
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
     ports:
       - "8000:8000"
     depends_on:
