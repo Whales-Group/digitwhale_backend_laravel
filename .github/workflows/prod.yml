@@ -45,7 +45,7 @@ jobs:
             docker-compose up -d
 
             echo "✅ Running Laravel commands..."
-            docker-compose exec -T app php artisan migrate --force || true
-            docker-compose exec -T app php artisan config:clear
-            docker-compose exec -T app php artisan route:clear
-            docker-compose exec -T app php artisan cache:clear
+            docker-compose exec -T digitwhale_pva_backend php artisan migrate --force || true
+            docker-compose exec -T digitwhale_pva_backend php artisan config:clear
+            docker-compose exec -T digitwhale_pva_backend php artisan route:clear
+            docker-compose exec -T digitwhale_pva_backend php artisan cache:clear
