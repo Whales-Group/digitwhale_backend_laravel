@@ -25,7 +25,7 @@ WORKDIR /var/www
 COPY . .
 
 # Copy env file
-RUN cp .env.prod .env
+RUN cp /var/www/.env.prod /var/www/.env
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
