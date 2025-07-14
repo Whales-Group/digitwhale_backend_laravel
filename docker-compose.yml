@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: digitwhale_octane_app
+    env_file:
+      - .env.prod
     restart: always
     working_dir: /var/www
     volumes:
