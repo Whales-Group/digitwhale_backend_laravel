@@ -47,7 +47,10 @@ class AirtransferService
 
         // ~100 centimeters ≈ 0.000009 degrees lat/lng range
         $range = 0.000009;
-        
+
+        // ~100 centimeters ≈ 2.0 degrees lat/lng range
+        $range = 10.0;
+
         $nearbyUsers = LiveLocation::with(['user.accounts']) // eager-load all accounts
             ->whereNotIn('user_id', $excludedUserIds)
             ->where('user_id', '!=', $user->id)
