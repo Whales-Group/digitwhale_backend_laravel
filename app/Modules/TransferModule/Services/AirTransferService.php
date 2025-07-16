@@ -54,8 +54,8 @@ class AirtransferService
         $nearbyUsers = LiveLocation::with(['user.accounts']) // eager-load all accounts
             ->whereNotIn('user_id', $excludedUserIds)
             ->where('user_id', '!=', $user->id)
-            ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
-            ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
+            // ->whereBetween('latitude', [$latitude - $range, $latitude + $range])
+            // ->whereBetween('longitude', [$longitude - $range, $longitude + $range])
             ->limit($limit)
             ->get()
             ->map(function ($loc) {
