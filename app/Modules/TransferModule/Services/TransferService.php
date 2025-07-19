@@ -149,10 +149,10 @@ class TransferService
             ->where('account_id', $accountId)
             ->firstOrFail();
 
-        if (!$account->enable) {
+        if ($account->enable != true) {
             throw new AppException('Cannot perform operation. Account is Disabled.');
         }
-        
+
         if ($account->pnd) {
             throw new AppException('Cannot perform operation. Account has been placed on PND.');
         }
