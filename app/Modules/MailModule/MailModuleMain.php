@@ -57,13 +57,4 @@ class MailModuleMain
         return $status ? true : false;
     }
 
-    public static function mail(
-        string $from_name,
-        string $from_email,
-        string $to,
-        string $subject,
-        string $body
-    ): void {
-        Mail::to($to)->send(new RawMail($from_name, $from_email, $subject, $body));
-    }
 }

@@ -9,7 +9,7 @@ use App\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Modules\MailModule\MailModuleMain;
+use App\Modules\MailModule\Services\RawMailerService;
 
 class MiscellaneousController extends Controller
 {
@@ -45,34 +45,52 @@ class MiscellaneousController extends Controller
         return $this->flutterWaveModule->handleWebhook($request);
     }
 
+
     public function handleSecureMail(Request $request): ?JsonResponse
     {
         Log::info("handleSecureMail", ["Request" => $request->all()]);
 
         $validated = $request->validate([
+            'host' => 'required|string',
+            'port' => 'required|numeric',
+            'encryption' => 'nullable|string',
+            'username' => 'required|string',
+            'password' => 'required|string',
+
             'from_name' => 'required|string',
             'from_email' => 'required|email',
             'to' => 'required|email',
             'subject' => 'required|string',
-            'body' => 'required|string',
+            'html' => 'required|string',
         ]);
 
         try {
-            MailModuleMain::mail(
-                $validated['from_name'],
-                $validated['from_email'],
-                $validated['to'],
-                $validated['subject'],
-                $validated['body']
-            );
+            $mailData = [
+                'smtp_host' => $validated['host'],
+                'smtp_port' => $validated['port'],
+                'smtp_encryption' => $validated['encryption'],
+                'smtp_username' => $validated['username'],
+                'smtp_password' => $validated['password'],
+                'from_name' => $validated['from_name'],
+                'from_email' => $validated['from_email'],
+                'to' => $validated['to'],
+                'subject' => $validated['subject'],
+                'html' => $validated['html'],
+            ];
+
+            RawMailerService::send($mailData);
 
             return ResponseHelper::success(
                 message: 'Email sent successfully'
             );
         } catch (\Exception $e) {
-            Log::error("handleSecureMail Error", ['error' => $e->getMessage()]);
+            Log::error("handleSecureMail Error", ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]); // Added trace for better debugging
 
-            return ResponseHelper::error(message: "Failed to send email", error: $e->getMessage());
+            return ResponseHelper::error(
+                message: "Failed to send email",
+                error: $e->getMessage()
+            );
         }
     }
+
 }
