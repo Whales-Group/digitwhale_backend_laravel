@@ -150,7 +150,7 @@ class TransferService
             ->firstOrFail();
 
         if ($account->enable != true) {
-            throw new AppException('Cannot perform operation. Account is Disabled.');
+            throw new AppException('Cannot perform operation. Account is Disabled. ['.$account->enable.']');
         }
 
         if ($account->pnd) {
