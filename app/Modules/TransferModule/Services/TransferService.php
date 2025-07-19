@@ -149,17 +149,17 @@ class TransferService
             ->where('account_id', $accountId)
             ->firstOrFail();
 
-        if ($account->enable != true) {
-            throw new AppException('Cannot perform operation. Account is Disabled. ['.$account->enable.']');
-        }
+        // if ($account->enable != true) {
+        //     throw new AppException('Cannot perform operation. Account is Disabled. ['.$account->enable.']');
+        // }
 
-        if ($account->pnd) {
-            throw new AppException('Cannot perform operation. Account has been placed on PND.');
-        }
+        // if ($account->pnd) {
+        //     throw new AppException('Cannot perform operation. Account has been placed on PND.');
+        // }
 
-        if ($account->blacklisted) {
-            throw new AppException('Account is restricted from performing transfers. Contact Support at this time.');
-        }
+        // if ($account->blacklisted) {
+        //     throw new AppException('Account is restricted from performing transfers. Contact Support at this time.');
+        // }
 
         if ($account->daily_transaction_count >= $account->daily_transaction_limit) {
             throw new AppException('Daily transaction limit exceeded.');
