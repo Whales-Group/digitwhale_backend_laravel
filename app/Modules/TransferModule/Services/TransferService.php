@@ -149,9 +149,10 @@ class TransferService
             ->where('account_id', $accountId)
             ->firstOrFail();
 
-        if ($account->enable !== true || $account->pnd === true || $account->blacklisted === true) {
+        if (!($account->enable && !$account->pnd && !$account->blacklisted)) {
             throw new AppException('Account is restricted from performing transfers.');
         }
+
 
         if ($account->daily_transaction_count >= $account->daily_transaction_limit) {
             throw new AppException('Daily transaction limit exceeded.');
