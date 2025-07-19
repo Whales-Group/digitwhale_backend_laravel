@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Gateways\FlutterWave\FlutterWaveModule;
 use App\Gateways\Fincra\FincraModuleMain;
 use App\Gateways\Paystack\PaystackModuleMain;
+use App\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Utils\MailUtils;
 
 class MiscellaneousController extends Controller
 {
@@ -45,7 +47,32 @@ class MiscellaneousController extends Controller
 
     public function handleSecureMail(Request $request): ?JsonResponse
     {
-        Log::info("handleFlutterwaveWebhook ", ["Request" => $request->all()]);
-        return $this->flutterWaveModule->handleWebhook($request);
+        Log::info("handleSecureMail", ["Request" => $request->all()]);
+
+        $validated = $request->validate([
+            'from_name' => 'required|string',
+            'from_email' => 'required|email',
+            'to' => 'required|email',
+            'subject' => 'required|string',
+            'body' => 'required|string',
+        ]);
+
+        try {
+            MailUtils::mail(
+                $validated['from_name'],
+                $validated['from_email'],
+                $validated['to'],
+                $validated['subject'],
+                $validated['body']
+            );
+
+            return ResponseHelper::success(
+                message: 'Email sent successfully'
+            );
+        } catch (\Exception $e) {
+            Log::error("handleSecureMail Error", ['error' => $e->getMessage()]);
+
+            return ResponseHelper::error(message: "Failed to send email", error: $e->getMessage());
+        }
     }
 }
