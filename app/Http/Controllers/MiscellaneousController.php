@@ -9,7 +9,7 @@ use App\Helpers\ResponseHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Utils\MailUtils;
+use App\Modules\MailModule\MailModuleMain;
 
 class MiscellaneousController extends Controller
 {
@@ -58,7 +58,7 @@ class MiscellaneousController extends Controller
         ]);
 
         try {
-            MailUtils::mail(
+            MailModuleMain::mail(
                 $validated['from_name'],
                 $validated['from_email'],
                 $validated['to'],
