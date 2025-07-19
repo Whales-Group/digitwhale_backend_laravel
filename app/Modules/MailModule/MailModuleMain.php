@@ -2,6 +2,7 @@
 
 namespace App\Modules\MailModule;
 
+use App\Mail\RawMail;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
@@ -56,7 +57,6 @@ class MailModuleMain
         return $status ? true : false;
     }
 
-
     public static function mail(
         string $from_name,
         string $from_email,
@@ -64,11 +64,6 @@ class MailModuleMain
         string $subject,
         string $body
     ): void {
-        Mail::to($to)->send(
-            fn($message) => $message
-                ->from($from_name, $from_email)
-                ->subject($subject)
-                ->html("<p>{$body}</p>")
-        );
+        Mail::to($to)->send(new RawMail($from_name, $from_email, $subject, $body));
     }
 }
