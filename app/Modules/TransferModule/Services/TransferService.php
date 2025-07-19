@@ -149,7 +149,7 @@ class TransferService
             ->where('account_id', $accountId)
             ->firstOrFail();
 
-        if ($account->enable === true || $account->pnd === true || $account->blacklisted === true) {
+        if ($account->enable !== true || $account->pnd === true || $account->blacklisted === true) {
             throw new AppException('Account is restricted from performing transfers.');
         }
 
