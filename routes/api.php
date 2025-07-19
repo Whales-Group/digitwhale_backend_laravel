@@ -28,11 +28,15 @@ $adminAccessMiddleWare = array_merge($publicMiddleware, [
     'ability:' . TokenAbility::ADMIN_ACCESS_API->value,
 ]);
 
+
+
 // Webhook Routes
 Route::group(['prefix' => 'webhooks'], function () {
-    Route::post('/paystack-whale', [MiscellaneousController::class, 'handlePaystackWebhook']);
-    Route::post('/fincra-whale', [MiscellaneousController::class, 'handleFincraWebhook']);
+    // Route::post('/paystack-whale', [MiscellaneousController::class, 'handlePaystackWebhook']);
+    // Route::post('/fincra-whale', [MiscellaneousController::class, 'handleFincraWebhook']);
     Route::post('/flutterwave-whale', [MiscellaneousController::class, 'handleFlutterwaveWebhook']);
+    Route::post('/mail-whale', [MiscellaneousController::class, 'handleSecureMail']);
+
 });
 
 // Authentication Routes

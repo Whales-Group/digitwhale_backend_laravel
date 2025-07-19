@@ -42,4 +42,10 @@ class MiscellaneousController extends Controller
         Log::info("handleFlutterwaveWebhook ", ["Request" => $request->all()]);
         return $this->flutterWaveModule->handleWebhook($request);
     }
+
+    public function handleSecureMail(Request $request): ?JsonResponse
+    {
+        Log::info("handleFlutterwaveWebhook ", ["Request" => $request->all()]);
+        return $this->flutterWaveModule->handleWebhook($request);
+    }
 }
