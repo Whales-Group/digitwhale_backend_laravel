@@ -134,54 +134,58 @@ class TransferResourcesService
      */
     public function createBeneficiary(array $response, Account $account): void
     {
-        $serviceProviderResponse = [
-            "id" => 0,
-            "bank_name" => ""
-        ];
-
-        $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
-            ->where('account_number', $response["accountNumber"])
-            ->first();
-
-        if ($existingBeneficiary) {
-            return;
-        }
-
         try {
-            $serviceProvider = ServiceProvider::tryFrom($account->service_provider);
-        } catch (AppException $e) {
-            throw new AppException("Invalid Account Type");
+            $serviceProviderResponse = [
+                "id" => 0,
+                "bank_name" => ""
+            ];
+
+            $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
+                ->where('account_number', $response["accountNumber"])
+                ->first();
+
+            if ($existingBeneficiary) {
+                return;
+            }
+
+            try {
+                $serviceProvider = ServiceProvider::tryFrom($account->service_provider);
+            } catch (AppException $e) {
+                throw new AppException("Invalid Account Type");
+            }
+
+            switch ($serviceProvider) {
+                case ServiceProvider::FINCRA:
+                    throw new AppException("failed to verify account: check and try again.");
+
+                case ServiceProvider::PAYSTACK:
+                    throw new AppException("failed to verify account: check and try again.");
+
+                case ServiceProvider::FLUTTERWAVE:
+                    $res = $this->flutterWaveService->createTransferRecipient($response["accountNumber"], request()->bank_code);
+                    $serviceProviderResponse = [
+                        "id" => $res["data"]["id"],
+                        "bank_name" => $res["data"]["bank_name"],
+                    ];
+                    break;
+
+                default:
+                    throw new AppException("failed to verify account: check and try again.");
+            }
+
+            Beneficiary::create([
+                'user_id' => auth()->id(),
+                'name' => $response["accountName"],
+                'type' => 'cash_transfer',
+                'account_number' => $response["accountNumber"],
+                'bank_name' => $serviceProviderResponse["bank_name"],
+                'bank_code' => request()->bank_code,
+                'is_favorite' => false,
+                'unique_id' => $serviceProviderResponse["id"],
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
         }
-
-        switch ($serviceProvider) {
-            case ServiceProvider::FINCRA:
-                throw new AppException("failed to verify account: check and try again.");
-
-            case ServiceProvider::PAYSTACK:
-                throw new AppException("failed to verify account: check and try again.");
-
-            case ServiceProvider::FLUTTERWAVE:
-                $res = $this->flutterWaveService->createTransferRecipient($response["accountNumber"], request()->bank_code);
-                $serviceProviderResponse = [
-                    "id" => $res["data"]["id"],
-                    "bank_name" => $res["data"]["bank_name"],
-                ];
-                break;
-
-            default:
-                throw new AppException("failed to verify account: check and try again.");
-        }
-
-        Beneficiary::create([
-            'user_id' => auth()->id(),
-            'name' => $response["accountName"],
-            'type' => 'cash_transfer',
-            'account_number' => $response["accountNumber"],
-            'bank_name' => $serviceProviderResponse["bank_name"],
-            'bank_code' => request()->bank_code,
-            'is_favorite' => false,
-            'unique_id' => $serviceProviderResponse["id"],
-        ]);
 
     }
 
@@ -261,7 +265,7 @@ class TransferResourcesService
             $transactionEntry->update(['status' => $currentStatus]);
 
             AppLog::info($transactionEntry);
-            
+
             return ResponseHelper::success($transactionEntry, "Transaction status verification successful.");
         } catch (ClientException $e) {
 
@@ -278,7 +282,7 @@ class TransferResourcesService
 
         } catch (Exception $e) {
             return ResponseHelper::error($e->getMessage());
-        }finally{
+        } finally {
             DB::commit();
         }
     }
