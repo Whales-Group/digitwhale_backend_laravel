@@ -178,6 +178,7 @@ class TransferResourcesService
                 'name' => $response["accountName"],
                 'type' => 'cash_transfer',
                 'account_number' => $response["accountNumber"],
+                'account_id' => $account->account_id,
                 'bank_name' => $serviceProviderResponse["bank_name"],
                 'bank_code' => request()->bank_code,
                 'is_favorite' => false,

@@ -28,6 +28,7 @@ class Beneficiary extends Model
         'description',
         'is_favorite',
         'unique_id',
+        'account_id'
     ];
 
     /**
