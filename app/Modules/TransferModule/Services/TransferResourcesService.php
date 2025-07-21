@@ -144,6 +144,14 @@ class TransferResourcesService
                 ->where('account_number', $response["accountNumber"])
                 ->first();
 
+            $existinBenAccount = Account::firstWhere('account_number', $response["accountNumber"]);
+
+            if ($existinBenAccount) {
+                $existingBeneficiary = Beneficiary::where('user_id', auth()->id())
+                    ->where('account_id', $existinBenAccount->account_id)
+                    ->first();
+            }
+
             if ($existingBeneficiary) {
                 return;
             }
